@@ -13,13 +13,13 @@ import UI
 /// dependencies that have not yet been read, and something in SwiftUI's macOS
 /// startup path resolves `defaultDatabase` before `App.init()` runs — so
 /// bootstrapping there is silently ignored and every `@FetchAll` reads
-/// SQLiteData's blank `:memory:` fallback. `plans/gotchas.md` has the details.
+/// SQLiteData's blank `:memory:` fallback. `docs/gotchas.md` has the details.
 /// Do not "simplify" this into `App.init()`.
 @main
 enum Entry {
     /// `--scratch-database` runs on a disposable database and its own user
     /// defaults, and accepts commands. The real app does neither — see
-    /// `plans/commands.md`.
+    /// `docs/commands.md`.
     static let isScratch = CommandLine.arguments.contains("--scratch-database")
 
     /// Made here rather than in the `App`, for the same ordering reason: a

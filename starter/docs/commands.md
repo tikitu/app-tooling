@@ -122,4 +122,4 @@ captures the window by id, so nothing is activated and no pointer moves.
 an old copy still running is where stale screenshots come from.
 
 Keys can be pressed without focus too: `scripts/send-keys.swift <pid> down
-right return` posts them to the process. See `plans/keyboard.md`.
+right return` posts them to the process. See `docs/keyboard.md`.

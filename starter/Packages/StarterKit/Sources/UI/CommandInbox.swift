@@ -3,7 +3,7 @@ import IssueReporting
 import OSLog
 
 /// Runs commands handed to the app from outside, so a script can drive it
-/// without clicks and without taking focus. See `plans/commands.md`.
+/// without clicks and without taking focus. See `docs/commands.md`.
 ///
 /// A sender writes `inbox.json` into the `Commands` directory of the app's
 /// Application Support, then posts the Darwin notification

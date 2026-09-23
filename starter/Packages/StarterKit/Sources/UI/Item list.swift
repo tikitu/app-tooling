@@ -1,7 +1,7 @@
 import Core
 import SwiftUI
 
-/// The list of items. Keyboard-driven, per `plans/keyboard.md`: it has focus
+/// The list of items. Keyboard-driven, per `docs/keyboard.md`: it has focus
 /// and its first row selected when the window opens; ↑↓ move; Return toggles
 /// done; → opens the actions beside the selection; ⌫ deletes. Acting on the
 /// selection moves it on to the next row.
@@ -54,7 +54,7 @@ struct ItemList: View {
             // The list takes focus once, when the rows first arrive.
             // `defaultFocus` alone is not enough: it is only evaluated when
             // the window becomes key, which a background launch never does
-            // (`plans/gotchas.md`).
+            // (`docs/gotchas.md`).
             if !hasTakenFocus, !new.isEmpty {
                 hasTakenFocus = true
                 isFocused = true

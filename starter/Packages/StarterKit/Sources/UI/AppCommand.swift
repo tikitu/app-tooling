@@ -7,7 +7,7 @@ import Foundation
 /// ``CommandInbox``, which is how a scripted run drives the app without clicks.
 /// Because both go through ``AppModel/perform(_:)``, a script exercises the
 /// same code a key press does. **A control that bypasses `perform` is a bug.**
-/// Adding one means adding its command, its row in `plans/commands.md`, and its
+/// Adding one means adding its command, its row in `docs/commands.md`, and its
 /// case in the decoder.
 ///
 /// Items are referred to by title, matched exactly. A title more than one

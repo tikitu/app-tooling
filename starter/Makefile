@@ -185,7 +185,7 @@ print-version:
 
 # Every launch quits any running copy first — `open` would otherwise just
 # bring the old one forward, and `open -n` leaves old copies whose windows
-# screenshots then come from (plans/gotchas.md).
+# screenshots then come from (docs/gotchas.md).
 define quit-running
 	@if pgrep -f "$(APP)/Contents/MacOS/" >/dev/null; then \
 	  osascript -e 'tell application id "$(BUNDLE_ID)" to quit' >/dev/null 2>&1 || true; \
@@ -209,7 +209,7 @@ run-background: build
 	@echo "✓ launched in the background"
 
 # The app on a disposable database and its own user defaults, accepting
-# commands from scripts/send-commands.sh. See plans/commands.md. Always in the
+# commands from scripts/send-commands.sh. See docs/commands.md. Always in the
 # background: this is the target for scripted checks.
 CONTAINER   := $(HOME)/Library/Containers/$(BUNDLE_ID)/Data
 SCRATCH_DIR := $(CONTAINER)/tmp/Starter-scratch
@@ -223,7 +223,7 @@ scratch-reset:
 	$(quit-running)
 	rm -rf "$(SCRATCH_DIR)"
 	@# `defaults delete`, not `rm`: cfprefsd caches the file, and a plist
-	@# removed underneath it comes back with the old values (plans/gotchas.md).
+	@# removed underneath it comes back with the old values (docs/gotchas.md).
 	-defaults delete "$(CONTAINER)/Library/Preferences/$(BUNDLE_ID).scratch" 2>/dev/null
 	@echo "✓ removed the scratch database and settings (takes effect at the next run-scratch)"
 
@@ -265,7 +265,7 @@ register: build
 
 # NOT scripts/: swift-format mangles a `#!/usr/bin/env swift` script, folding
 # the shebang and the comment block beneath it into one ever-growing line.
-# See plans/gotchas.md.
+# See docs/gotchas.md.
 SWIFT_FORMAT_PATHS := Packages
 
 fmt:

@@ -6,7 +6,7 @@
 // Events go to the process, not the focused app, so the laptop stays usable
 // while the app is driven. Names: up down left right return escape space
 // delete tab, or a single character, optionally prefixed with modifiers:
-// shift+down, cmd+a. See plans/keyboard.md.
+// shift+down, cmd+a. See docs/keyboard.md.
 import CoreGraphics
 import Foundation
 

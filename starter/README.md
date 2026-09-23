@@ -1,30 +1,96 @@
 # Starter
 
-A Mac app. Describe it here: what it is for, in a paragraph.
+A Mac app. Describe it here: what it is for, and what it deliberately does
+not do.
 
 Mac only, built with SwiftPM (no Xcode project), on the Point-Free libraries.
 Data lives in a SQLite file in the app's container, settings in its user
 defaults.
 
-## Build and run
+## Making it yours (delete this section once done)
 
-```sh
-make run          # build and launch
-make test         # the test suite
-make install      # copy to /Applications
-make help         # everything else
-```
+`scripts/new-app.sh` has already named the app. By hand:
+
+- `Resources/Info.plist`: `NSHumanReadableCopyright`, and
+  `LSApplicationCategoryType` if utilities is wrong.
+- `Makefile`: `TEAM_ID` and `DEVELOPER_NAME`, once you want `make dist`.
+- `scripts/make-icon.swift`: the app's own mark.
+- The paragraph above: what the app is for.
+- `Item` in `Core/Schema.swift` is a placeholder, there so the commands, the
+  keyboard and the tests have something to work on. Replace it — and its
+  migration, and `docs/commands.md` — with the real model. Nothing has run
+  that migration yet, so editing it is fine *until the first real launch*.
+
+## Build and run
 
 Needs macOS 26 and a Swift 6.2 toolchain (Xcode). There is no Xcode project:
 SwiftPM builds it and `build.sh` bundles and signs it, ad-hoc by default.
 
-Read [PLAN.md](PLAN.md) next, then [PROGRESS.md](PROGRESS.md).
+```sh
+make check           # compile (fast gate)
+make test            # the test suite
+make run             # build and launch, in front
+make run-background  # build and launch behind whatever has focus
+make run-scratch     # in the background, on scratch data, accepting commands
+make screenshot      # build/window.png, by window id, without focus
+make fmt             # reformat every Swift file in place
+make lint            # format check + semgrep
+make install         # copy to /Applications
+make help            # everything else
+
+scripts/send-commands.sh '<json>'   # drive a run-scratch app
+```
+
+Every `run` target quits a running copy first. `run` is for a person at the
+keyboard; `run-background` and `run-scratch` are for agents, so that a check
+never pulls the window in front of someone working.
+
+## Shape of the repo
+
+```
+Packages/StarterKit/
+  Core            the data: schema, migrations, bootstrap
+  UI              AppModel, AppCommand, the command inbox, every view
+  StarterMac      the app — a SwiftPM executable; its `Entry` prepares
+                  dependencies before SwiftUI starts
+Makefile build.sh             swift build + bundle + ad-hoc codesign
+Resources/ StarterMac/        Info.plist; entitlements (sandboxed)
+scripts/                      icon, send-commands, send-keys, window-id
+semgrep/                      rules for invariants that fail silently
+docs/                         how the app works, in depth
+```
+
+Dependencies are pinned: `Packages/StarterKit/Package.resolved` is committed
+and every build uses it (`--force-resolved-versions`). `make outdated` says
+what could move; `make update-pins` moves it, and the diff is the review.
+
+## Documentation
+
+- **`docs/commands.md`** — driving the app from a script: every command,
+  the inbox transport, the scratch mode.
+- **`docs/keyboard.md`** — the list's keyboard model: explicit selection on
+  the model, → for actions, acting moves on, and verifying it without focus.
+- **`docs/gotchas.md`** — traps. Every one fails silently. Read before
+  "simplifying" anything odd.
+- **`semgrep/README.md`** — the lint rules and their documents.
+- **`AGENTS.md`** — instructions for coding agents.
+
+## Persistence
+
+| What | Where | Why there |
+|---|---|---|
+| Items | SQLite, `Application Support/Starter/Starter.sqlite` in the container | a list that grows, queried and observed (`@FetchAll`) |
+| Show Done | user defaults, via Sharing's `@Shared(.appStorage)` (`UI/Settings.swift`) | a single value |
+| Selection | memory | a session's state |
+
+Migrations are append-only and the database is never erased on schema change
+(`semgrep/docs/erase-on-schema-change.md`).
 
 ## Where this came from
 
 The structure (a SwiftPM-only Mac build driven by `make` and `build.sh`, the
 sign-notarize-staple release pipeline, and making a new app by copying and
-running one rename script) is due to Thomas Ptacek's
+running one script) is due to Thomas Ptacek's
 [swiftui-app](https://github.com/tqbf/swiftui-app) template. It has been
 reworked for a particular way of working: the Point-Free libraries, pinned
 dependencies, a command inbox so an agent can drive and check the app

@@ -14,7 +14,7 @@ private let logger = Logger(subsystem: "org.example.starter", category: "AppMode
 /// Every button, key and menu item calls ``perform(_:)`` (through
 /// ``attempt(_:)``), and so does ``CommandInbox``. That is what makes a
 /// scripted run exercise the same code a key press does. See
-/// `plans/commands.md`.
+/// `docs/commands.md`.
 @MainActor
 @Observable
 public final class AppModel {
@@ -139,7 +139,7 @@ extension AppModel {
     }
 
     /// Performs a command on the selected items, then moves the selection to
-    /// the next row — "acting moves on" (`plans/keyboard.md`).
+    /// the next row — "acting moves on" (`docs/keyboard.md`).
     public func actOnSelection(_ command: ([String]) -> AppCommand) {
         let chosen = selectedItems
         guard !chosen.isEmpty else { return }

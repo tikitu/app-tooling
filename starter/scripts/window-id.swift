@@ -6,7 +6,7 @@
 //
 // Exits non-zero, with a message, if there is no such window — or more than
 // one process owning one, which means an old copy is still running and the
-// screenshot could come from it (plans/gotchas.md).
+// screenshot could come from it (docs/gotchas.md).
 import CoreGraphics
 import Foundation
 

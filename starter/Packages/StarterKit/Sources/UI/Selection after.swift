@@ -4,7 +4,7 @@
 /// Working through a list means acting on a row and landing on the next one,
 /// as Mail does after a delete. So the answer is **the first row after the
 /// acted-on ones that is not itself one of them**, falling back to the nearest
-/// one before them when they were at the end. `plans/keyboard.md` has the
+/// one before them when they were at the end. `docs/keyboard.md` has the
 /// pattern.
 public enum SelectionAfter {
     /// `unavailable` are rows that cannot be landed on either — ones that

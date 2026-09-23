@@ -11,11 +11,14 @@ iOS) apps with agents, gathered in one place. It has two readers:
 Pieces that live elsewhere, and how to get them, are in
 [external.md](external.md).
 
-**To start a new Mac app**, copy [`starter/`](starter/) and run its rename
+**To start a new Mac app**, copy [`starter/`](starter/) and run its setup
 script: `cp -R starter ~/code/MyApp && cd ~/code/MyApp && git init &&
-scripts/rename.sh MyApp`. It is say-out-loud with the app taken out, and
-brings most of what is listed below with it. Its `PLAN.md` has the rest of
-the first steps.
+scripts/new-app.sh MyApp --with all`. The technical setup always comes;
+how the project is *run* (tracking in markdown, commit and merge rules) is a
+set of practices chosen with `--with`, described in
+[`starter/practices/README.md`](starter/practices/README.md). An agent
+setting up a project should ask the user which practices they want. The
+starter's `README.md` has the rest of the first steps.
 
 **Status: mostly an index.** Each item below is a sentence or two and a note
 of where it was seen. The shape of this file is expected to change a lot as
@@ -39,10 +42,15 @@ abandoned repo. It is not a reference; don't confuse it with
 
 ---
 
-## 1. Working agreements (`CLAUDE.md`)
+## 1. Working agreements (`AGENTS.md`)
 
-- **One copy of the agreements.** `CLAUDE.md` holds them; `AGENTS.md` just
-  points at it. *Seen in:* ReadingRecord, say-out-loud.
+The commit, merge and docs rules here are opt-in practices in the starter;
+the verification rules are core.
+
+
+- **One copy of the agreements, in `AGENTS.md`.** Claude Code reads
+  `AGENTS.md` when there is no `CLAUDE.md` (since 2.1.277), so no pointer
+  file is needed.
 - **Commit straight to `main`; never merge a PR yourself.** Commit
   granularity replaces branches: a provisional change gets its own commit so
   it can be dropped. *Seen in:* all of the lineage.
@@ -58,6 +66,10 @@ abandoned repo. It is not a reference; don't confuse it with
   *Seen in:* author-alert, ReadingRecord, say-out-loud.
 
 ## 2. Documentation shape
+
+`PLAN.md`, `PROGRESS.md` and `PROBLEMS.md` are one opt-in practice in the
+starter (`markdown-tracking`); `docs/` and the gotchas file are core.
+
 
 - **`PLAN.md` as the index, depth in `plans/*.md`.** "Read PLAN.md and
   PROGRESS.md" should be the complete onboarding for a new session. *Seen

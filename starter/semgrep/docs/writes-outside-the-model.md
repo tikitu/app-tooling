@@ -15,12 +15,12 @@ clicked. What breaks is everything else: a script cannot mark an item done,
 the menu bar's Mark Done (⌘↩) would be a second implementation that can drift
 from the first, and a test of `perform(.setDone)` would pass while the
 checkbox did something different. Nothing reports that; the checks simply stop
-covering the thing people use. `plans/commands.md` has the invariant.
+covering the thing people use. `docs/commands.md` has the invariant.
 
 ## What to do instead
 
 Add a case to `AppCommand`, its decoding in `CommandFile.swift`, its row in
-`plans/commands.md`, and perform it with `model.attempt(…)`.
+`docs/commands.md`, and perform it with `model.attempt(…)`.
 
 ## When a finding is not a bug
 

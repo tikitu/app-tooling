@@ -2,7 +2,7 @@ import Core
 import Foundation
 
 /// The JSON a command inbox holds. The format is documented, with examples,
-/// in `plans/commands.md`; `CommandFileTests` decodes those examples verbatim,
+/// in `docs/commands.md`; `CommandFileTests` decodes those examples verbatim,
 /// so the document and the decoder cannot drift apart.
 ///
 /// Strict on purpose: an unknown command or an unknown field is an error, not

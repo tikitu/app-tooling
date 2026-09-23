@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # send-commands.sh — drive the running app with commands, without clicks and
-# without taking focus. See plans/commands.md for the command format.
+# without taking focus. See docs/commands.md for the command format.
 #
 # Usage:
 #   scripts/send-commands.sh '<json>'      # needs the app started by `make run-scratch`

@@ -3,7 +3,7 @@ import SwiftUI
 /// A keyboard menu in a popover: ↑↓ move, Return performs, ← or Esc closes, a
 /// click performs. A real `NSMenu` would do this for free, but SwiftUI cannot
 /// open one from a key press; a list in a popover is the nearest thing that
-/// takes focus reliably. See `plans/keyboard.md`.
+/// takes focus reliably. See `docs/keyboard.md`.
 struct ActionMenu: View {
     struct Entry: Identifiable {
         let id: String

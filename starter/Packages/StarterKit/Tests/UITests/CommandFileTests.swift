@@ -7,12 +7,12 @@ import Testing
 
 @Suite
 struct CommandFileTests {
-    /// Every JSON block in `plans/commands.md` that holds `"commands"`, which
+    /// Every JSON block in `docs/commands.md` that holds `"commands"`, which
     /// are the request examples. Read from the document itself, so the
     /// document cannot drift from the decoder.
     static let documentedRequests: [String] = {
         let url = URL(filePath: #filePath).deletingLastPathComponent().appending(
-            path: "../../../../plans/commands.md")
+            path: "../../../../docs/commands.md")
         let text = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
         return text.components(separatedBy: "```json\n").dropFirst().compactMap { block in
             let json = block.components(separatedBy: "```").first ?? ""

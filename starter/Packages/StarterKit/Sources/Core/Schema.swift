@@ -22,7 +22,7 @@ extension DependencyValues {
     /// It runs the *real* migrator, so a preview sees the schema the app
     /// sees. Previews that install nothing read SQLiteData's blank `:memory:`
     /// fallback and show an empty screen that looks like "no data yet" — see
-    /// `plans/gotchas.md`.
+    /// `docs/gotchas.md`.
     public mutating func bootstrapPreviewDatabase(seed: ((Database) throws -> Void)? = nil) throws {
         let database = try DatabaseQueue(path: ":memory:")
         try starterMigrator().migrate(database)
@@ -39,7 +39,7 @@ extension DependencyValues {
         let url = try starterDatabaseURL(scratch: scratch)
         // `path(percentEncoded: false)`, not `path()`: the RFC 3986 accessor
         // keeps the escaping, and "Application Support" arrives at SQLite as
-        // "Application%20Support". See `plans/gotchas.md`.
+        // "Application%20Support". See `docs/gotchas.md`.
         let path = url.path(percentEncoded: false)
         logger.notice("database at \(path, privacy: .public)")
 
