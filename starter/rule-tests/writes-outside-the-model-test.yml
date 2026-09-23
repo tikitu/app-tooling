@@ -1,0 +1,7 @@
+id: writes-outside-the-model
+valid:
+  - "try data.write(to: url)"
+  - "try data.write(to: url, options: .atomic)"
+invalid:
+  - "try database.write { db in try Item.delete().execute(db) }"
+  - "try database.write(seed)"

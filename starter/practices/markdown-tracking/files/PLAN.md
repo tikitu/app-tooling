@@ -16,7 +16,7 @@ next.
   the model, → for actions, acting moves on, and verifying it without focus.
 - **`docs/gotchas.md`** — traps. Every one fails silently. Read before
   "simplifying" anything odd.
-- **`semgrep/README.md`** — the lint rules and their documents.
+- **`rules/README.md`** — the lint rules, and what to do when one fires.
 - **`PROGRESS.md`** — running log of what has been done, in order.
 - **`PROBLEMS.md`** — open questions, and the reasoning behind settled ones.
 - **`AGENTS.md`** — instructions for coding agents.

@@ -1,7 +1,7 @@
 # Platforms are split by package, not by `#if`
 
-**Rule:** `platform-conditional-compilation`, in
-`semgrep/platform-conditionals.yml`
+**Rule:** `platform-conditionals`, in `rules/platform-conditionals.yml`, tested by
+`rule-tests/platform-conditionals-test.yml`
 
 ## The rule
 
@@ -45,17 +45,19 @@ implementation.
 
 A dependency's API that genuinely differs by platform, with no sensible
 split — rare. Say why in a comment and suppress with
-`// nosemgrep: platform-conditional-compilation`.
+`// ast-grep-ignore: platform-conditionals`.
 
 ## What would break the rule
 
-It is a regular expression over lines beginning `#if` or `#elseif` that
-mention `os(`, `canImport(` or `targetEnvironment(`. A condition split across
-lines, or built from a custom compilation flag set per platform, slips
-past; widen the pattern if either appears.
+It matches `#if` and `#elseif` directives (so not comments) whose text
+mentions `os(`, `canImport(` or `targetEnvironment(`. A condition built from
+a custom compilation flag set per platform slips past; widen the rule if one
+appears.
 
-## Validated against
+## Known exceptions
 
-A reconstruction: a file with `#if os(macOS)`, `#elseif canImport(UIKit)`
-and `#if DEBUG` gives two findings, the first two. The template as it is
-gives none.
+None yet.
+
+## Tested by
+
+`#if os(macOS)`, `#elseif canImport(UIKit)` and `#if targetEnvironment(simulator)` are flagged; `#if DEBUG` and a comment mentioning `#if os(macOS)` are not.

@@ -1,7 +1,7 @@
 # Database writes belong to the model
 
-**Rule:** `database-write-outside-the-model`, in
-`semgrep/writes-outside-the-model.yml`
+**Rule:** `writes-outside-the-model`, in `rules/writes-outside-the-model.yml`, tested by
+`rule-tests/writes-outside-the-model-test.yml`
 
 ## The rule
 
@@ -28,16 +28,23 @@ Form state is the one exception to "every control performs a command", and
 it is already outside this rule: the remembered settings are user defaults
 written through `@Shared`, not the database. If a view ever genuinely needs a
 database write that is not a user action — there is none today — suppress
-inline with `// nosemgrep: database-write-outside-the-model` and say why.
+inline with `// ast-grep-ignore: writes-outside-the-model` and say why.
 
 ## What would break the rule
 
-It recognises `.write { … }` and `.write(…)` on anything, in the `UI` target
-only, except `.write(to: …)`, which is `Data` writing a file — the command
-inbox's result, which the first version of the rule flagged. A write moved into a helper in another target and called from a view
-slips past; so would a view in a new target.
+It recognises `.write { … }` and `.write(…)` on anything, in the `UI` and
+`MacUI` targets only, except `.write(to: …)`, which is `Data` writing a file
+(the command inbox's result). A write moved into a helper in another target
+and called from a view slips past; so would a view in a new target, until it
+is added to the rule's `files`.
 
-## Validated against
+## Known exceptions
 
-A reconstruction: a view calling `database.write` itself is
-flagged; `AppModel.swift`'s writes are not.
+None yet.
+
+## Tested by
+
+`database.write { … }` and `database.write(seed)` are flagged; `data.write(to: url)` and
+`data.write(to: url, options: .atomic)` are not. The second of those was
+missed at first, because `$$$` cannot span the arguments after a label; the
+test is what caught it.

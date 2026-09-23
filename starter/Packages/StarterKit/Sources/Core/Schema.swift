@@ -71,7 +71,7 @@ public func starterDatabaseURL(scratch: Bool = false) throws -> URL {
 ///
 /// `eraseDatabaseOnSchemaChange` is deliberately **not** set, even in DEBUG:
 /// `make run` is a debug build against the real data. Add a migration; never
-/// edit one that has run. `semgrep/docs/erase-on-schema-change.md`.
+/// edit one that has run. `rules/erase-on-schema-change.md`.
 public func starterMigrator() -> DatabaseMigrator {
     var migrator = DatabaseMigrator()
 

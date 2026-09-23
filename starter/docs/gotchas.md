@@ -41,7 +41,7 @@ does run in a background window.
 ## `URL.path()` keeps the percent-encoding
 
 `Application Support` arrives as `Application%20Support`. Always
-`path(percentEncoded: false)`. Enforced by `semgrep/url-path.yml`.
+`path(percentEncoded: false)`. Enforced by `rules/url-path.yml`.
 
 ## `open -n` leaves old copies running, and screenshots come from them
 
@@ -78,13 +78,9 @@ Always `/usr/bin/log show --predicate 'subsystem == "org.example.starter"'`.
 
 It moves a `#if` onto the end of the previous line, which does not compile —
 so `make check` after `make fmt`. (Platform `#if`s are banned outright,
-`semgrep/docs/platform-conditionals.md`; this still bites `#if DEBUG`.) And it folds a `#!/usr/bin/env swift`
+`rules/platform-conditionals.md`; this still bites `#if DEBUG`.) And it folds a `#!/usr/bin/env swift`
 shebang together with the comments beneath it, so `scripts/` is not
 formatted (`SWIFT_FORMAT_PATHS := Packages`).
-
-## Semgrep scans only what git tracks
-
-`git add` before `make semgrep`, or new files are skipped.
 
 ## Reading the container prompts, once per process
 

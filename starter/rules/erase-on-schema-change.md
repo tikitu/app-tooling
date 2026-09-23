@@ -1,7 +1,7 @@
 # Never erase the database on schema change
 
-**Rule:** `erase-database-on-schema-change`, in
-`semgrep/erase-on-schema-change.yml`
+**Rule:** `erase-on-schema-change`, in `rules/erase-on-schema-change.yml`, tested by
+`rule-tests/erase-on-schema-change-test.yml`
 
 ## The rule
 
@@ -38,9 +38,10 @@ throwaway, delete the database file by hand, knowingly.
 
 ## When a finding is not a bug
 
-- **In a test**, where every database is temporary. `Tests/` is excluded.
+- **In a test**, where every database is temporary. `Tests/` is in the
+  rule's `ignores`.
 - **In a preview-only or sample database** that can never be pointed at the
-  real file. Say so in a comment, and add the path to the rule's `exclude`
+  real file. Say so in a comment, and add the path to the rule's `ignores`
   rather than suppressing inline, so the exception is visible in one place.
 
 ## What would break the rule
@@ -50,13 +51,10 @@ Assigning a variable (`= isDebug`), or setting it through a helper, slips
 past; so does the property being renamed in a future GRDB. Widen the pattern
 if either happens rather than trusting silence.
 
-## Validated against
+## Known exceptions
 
-No real history here yet, so against reconstructions of the two shapes the
-library's documentation uses, both of which it flags:
+None yet.
 
-- `migrator.eraseDatabaseOnSchemaChange = true` inside `#if DEBUG`.
-- The same with no conditional.
+## Tested by
 
-And not flagged: the current `Schema.swift`, which only mentions the flag in
-a comment, and `= false`.
+`migrator.eraseDatabaseOnSchemaChange = true`, bare and inside `#if DEBUG`, are flagged; `= false` is not. The template's `Schema.swift`, which mentions the flag only in a comment, gives no finding.

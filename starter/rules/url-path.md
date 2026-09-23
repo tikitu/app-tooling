@@ -1,6 +1,7 @@
 # `URL.path()` keeps the percent-encoding
 
-**Rule:** `url-path-keeps-percent-encoding`, in `semgrep/url-path.yml`
+**Rule:** `url-path`, in `rules/url-path.yml`, tested by
+`rule-tests/url-path-test.yml`
 
 It has cost an evening in an earlier app.
 
@@ -31,14 +32,17 @@ yet".
 
 When the escaped form is what is wanted — building another URL string by
 hand. There is no such case in the template; if one appears, say why in a
-comment and suppress with `// nosemgrep: url-path-keeps-percent-encoding`.
+comment and suppress with `// ast-grep-ignore: url-path`.
 
 ## What would break the rule
 
 It matches the zero-argument call only. `path` (the deprecated property) is
 not flagged, because it does *not* percent-encode.
 
-## Validated against
+## Known exceptions
 
-A reconstruction: `let path = url.path()` in `bootstrapDatabase` is flagged;
-the file as it is, with `path(percentEncoded: false)`, is not.
+None yet.
+
+## Tested by
+
+`url.path()` is flagged; `url.path(percentEncoded: false)` is not.

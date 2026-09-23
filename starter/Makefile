@@ -61,7 +61,7 @@ NOTES_FILE       ?=
         screenshot clean install uninstall register help \
         icon check-version notary-setup sign zip-notary notarize staple zip-release \
         checksum verify-release dist github-release print-version \
-        fmt fmt-check lint semgrep
+        fmt fmt-check lint rules
 
 all: build
 
@@ -86,8 +86,8 @@ help:
 	@echo "Lint / format:"
 	@echo "  fmt               Reformat every Swift file in place (swift format)"
 	@echo "  fmt-check         Fail if any Swift file is not formatted"
-	@echo "  semgrep           Run the semgrep rules (see semgrep/README.md)"
-	@echo "  lint              fmt-check + semgrep — the whole non-compiling gate"
+	@echo "  rules             Test the ast-grep rules, then scan (see rules/README.md)"
+	@echo "  lint              fmt-check + rules — the whole non-compiling gate"
 	@echo ""
 	@echo "Local install:"
 	@echo "  install           Copy $(APP_NAME).app to /Applications/ and register it"
@@ -297,8 +297,9 @@ register: build
 # toolchain rather than with a pin of its own. Configuration is .swift-format
 # at the repo root.
 #
-# Semgrep is the other half and catches something different: invariants that
-# fail *silently*. See semgrep/README.md.
+# The ast-grep rules are the other half and catch something different:
+# mistakes that fail *silently*, or keep coming back. Each rule sits beside a
+# document saying why it exists, and has a test. See rules/README.md.
 # ---------------------------------------------------------------------------
 
 # NOT scripts/: swift-format mangles a `#!/usr/bin/env swift` script, folding
@@ -314,18 +315,16 @@ fmt-check:
 	@swift format lint --configuration .swift-format --recursive --strict $(SWIFT_FORMAT_PATHS) \
 	  && echo "✓ formatting clean"
 
-# Semgrep scans only git-tracked files, so a new file is invisible until it is
-# staged. Hence the reminder rather than a silent pass.
-semgrep:
-	@command -v semgrep >/dev/null 2>&1 || { \
-	  echo "  ✗ semgrep not installed (brew install semgrep)"; exit 1; }
-	@UNTRACKED=$$(git ls-files --others --exclude-standard Packages | head -1); \
-	  if [ -n "$$UNTRACKED" ]; then \
-	    echo "  ! untracked files under Packages/ — semgrep will skip them; git add first"; \
-	  fi
-	semgrep scan --config semgrep --error Packages
+# The tests first: a rule whose pattern has quietly stopped matching would
+# otherwise pass every scan.
+rules:
+	@command -v ast-grep >/dev/null 2>&1 || { \
+	  echo "  ✗ ast-grep not installed (brew install ast-grep)"; exit 1; }
+	@ast-grep test --skip-snapshot-tests
+	ast-grep scan Packages
+	@echo "✓ rules clean"
 
-lint: fmt-check semgrep
+lint: fmt-check rules
 	@echo "✓ lint clean"
 
 # ---------------------------------------------------------------------------

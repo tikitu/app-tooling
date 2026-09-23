@@ -34,7 +34,7 @@ make run-background  # build and launch behind whatever has focus
 make run-scratch     # in the background, on scratch data, accepting commands
 make screenshot      # build/window.png, by window id, without focus
 make fmt             # reformat every Swift file in place
-make lint            # format check + semgrep
+make lint            # format check + ast-grep rules
 make install         # copy to /Applications
 make help            # everything else
 
@@ -58,14 +58,15 @@ Packages/StarterMacKit/       macOS only
 Makefile build.sh             swift build + bundle + ad-hoc codesign
 Resources/ StarterMac/        Info.plist; entitlements (sandboxed)
 scripts/                      icon, send-commands, send-keys, window-id
-semgrep/                      rules for invariants that fail silently
+rules/ rule-tests/            ast-grep rules for mistakes that fail silently,
+                              each with its document and its test
 docs/                         how the app works, in depth
 ```
 
 **Platforms are split by package, not by `#if`.** `StarterKit` declares
 macOS and iOS, and `make check` compiles it for iOS, so Mac-only API cannot
 creep into it even with no iOS app yet; `StarterMacKit` declares macOS only.
-A Semgrep rule forbids `#if os(…)` (`semgrep/docs/platform-conditionals.md`).
+A lint rule forbids `#if os(…)` (`rules/platform-conditionals.md`).
 Checking for iOS needs Xcode's iOS platform (`xcodebuild -downloadPlatform
 iOS`).
 
@@ -83,7 +84,7 @@ together, and the diff is the review.
   the model, → for actions, acting moves on, and verifying it without focus.
 - **`docs/gotchas.md`** — traps. Every one fails silently. Read before
   "simplifying" anything odd.
-- **`semgrep/README.md`** — the lint rules and their documents.
+- **`rules/README.md`** — the lint rules, and what to do when one fires.
 - **`AGENTS.md`** — instructions for coding agents.
 
 ## Persistence
@@ -95,7 +96,7 @@ together, and the diff is the review.
 | Selection | memory | a session's state |
 
 Migrations are append-only and the database is never erased on schema change
-(`semgrep/docs/erase-on-schema-change.md`).
+(`rules/erase-on-schema-change.md`).
 
 ## Where this came from
 

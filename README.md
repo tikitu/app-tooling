@@ -39,7 +39,7 @@ Always, as the core:
 - **Platforms split by package, not by `#if`.** A shared package that
   declares macOS and iOS and is compiled for iOS by `make check`, so Mac-only
   API cannot creep in before there is an iOS app; a Mac-only package for the
-  app. A Semgrep rule forbids `#if os(…)`.
+  app. A lint rule forbids `#if os(…)`.
 - **Pinned dependencies.** Each package's `Package.resolved` is committed and
   every build uses it; every build also checks the two packages pin the same
   versions (`make check-pins`). `make outdated` and `make update-pins` make
@@ -54,9 +54,12 @@ Always, as the core:
   `make run-background` is the agent's.
 - **Keyboard-driven lists on the Mac.** Explicit selection on the model, →
   for an actions menu, and the selection moving on after acting.
-- **Lint.** `swift format` with one canonical form, and Semgrep rules for
-  mistakes that fail silently, each paired with a document saying why it
-  exists and when a finding is not a bug.
+- **Lint rules that carry their own reasoning.** ast-grep rules for mistakes
+  that fail silently or keep coming back, each beside a document saying why
+  it exists and what to do when it fires, and each with a test that shows it
+  firing. `AGENTS.md` tells agents to read the document before working
+  around a rule, and to turn recurring mistakes into new rules. Plus
+  `swift format` with one canonical form.
 - **`docs/gotchas.md`.** Traps that looked like something else, and why the
   odd-looking code that avoids them is there.
 - **`AGENTS.md`.** The instructions for all of the above. Claude Code reads
@@ -86,8 +89,6 @@ in brackets is where to look.
 - **Snapshot tests, reviewed before committed.** In an interactive session
   the human sees before and after, never the half-finished states between.
   *(ReadingRecord)*
-- **ast-grep instead of Semgrep.** The `rule-with-rationale` skill is the
-  same rules-with-documents idea on a different engine; untried here.
 - **iOS gotchas.** `xcrun devicectl device copy from` can leave a 0-byte
   file, so a failed copy reads as missing data.
 

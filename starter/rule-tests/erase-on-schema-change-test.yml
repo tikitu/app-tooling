@@ -1,0 +1,6 @@
+id: erase-on-schema-change
+valid:
+  - "migrator.eraseDatabaseOnSchemaChange = false"
+invalid:
+  - "migrator.eraseDatabaseOnSchemaChange = true"
+  - "#if DEBUG\nmigrator.eraseDatabaseOnSchemaChange = true\n#endif"

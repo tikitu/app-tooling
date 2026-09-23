@@ -46,7 +46,7 @@ SwiftUI, so its CSS-flavoured advice needs translating.
 
 Xcode 26 or later provides everything the build needs: `swift`, `swift
 format`, `codesign`, `notarytool` and the simulators. Beyond that, two tools
-come from Homebrew: `semgrep` for the lint rules, and `xcodegen` to generate
+come from Homebrew: `ast-grep` for the lint rules, and `xcodegen` to generate
 the iOS project in repos that have an iOS app. The GitHub CLI, `gh`, is only
 needed to publish a release. Each `Makefile` checks for what it uses and
 says what to install if something is missing.

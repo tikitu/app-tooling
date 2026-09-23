@@ -1,0 +1,19 @@
+id: writes-outside-the-model
+language: swift
+severity: error
+message: "A database write in a view bypasses AppModel.perform(_:): a path no script can reach."
+note: |
+  Add an AppCommand for it and perform that.
+  Read rules/writes-outside-the-model.md before working around this.
+files: ["**/Sources/UI/**", "**/Sources/MacUI/**"]
+ignores: ["**/Sources/UI/AppModel.swift"]
+rule:
+  any:
+    - pattern: $DB.write { $$$ }
+    - pattern: $DB.write($$$ARGS)
+  # Writing a file (`Data.write(to:)`, the command inbox's result) is not a
+  # database write. `$$$` cannot span arguments after a label, hence two.
+  not:
+    any:
+      - pattern: "$X.write(to: $A)"
+      - pattern: "$X.write(to: $A, $$$REST)"

@@ -44,7 +44,7 @@ commands. `docs/` has the depth.
   `Packages/StarterKit` is shared and must compile for iOS as well as the
   Mac (`make check` does both); Mac-only code goes in
   `Packages/StarterMacKit`. The reasons are in
-  `semgrep/docs/platform-conditionals.md`.
+  `rules/platform-conditionals.md`.
 
 * Default actor isolation is **nonisolated in every target**, UI included.
   Mark `@MainActor` explicitly where it is needed.
@@ -63,13 +63,14 @@ commands. `docs/` has the depth.
   `respectsExistingLineBreaks: false`, so there is one canonical form. Run
   `make check` after `make fmt`: see the `#if` trap in `docs/gotchas.md`.
 
-* Run `make lint` (format check + Semgrep) before concluding work is finished.
-  The Semgrep rules encode invariants that fail *silently*; each points at a
-  document in `semgrep/docs/` saying why it exists and when a finding is not a
-  bug. Read that before working around one. Semgrep scans only git-tracked
-  files, so **`git add` first**.
+* Run `make lint` (format check + ast-grep rules) before concluding work is
+  finished. The rules catch mistakes that fail *silently*. **When one fires,
+  read its `.md` in `rules/` before doing anything else**: it says whether to
+  fix the code, allow an exception, improve the rule, or retire it, and how.
+  Never suppress a rule without recording why in its document.
 
-* When a mistake recurs, or fails silently, make it a rule: a Semgrep rule
-  paired with a document, following `semgrep/README.md`.
+* **When a mistake recurs, or fails silently, make it a rule**: a check, the
+  document that explains it (written first), and a test that shows it firing.
+  `rules/README.md` has the convention.
 
 <!-- practices -->
