@@ -40,6 +40,11 @@ reconstructing why something is the way it is.
 **`no-self-merge`** — an agent may open pull requests but never merge them,
 so a human always sees the change land.
 
+**`snapshot-review`** — only relevant if the project uses snapshot tests
+(many will not). In a session with a person, re-recorded snapshots wait for
+their review before being committed, so they compare the real before with
+the real after rather than a series of half-finished states.
+
 ## Adding a practice
 
 A directory here holding `summary` (one line, shown by `--list`),

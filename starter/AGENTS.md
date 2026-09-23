@@ -27,6 +27,10 @@ commands. `docs/` has the depth.
   anything that looks needlessly odd. Every trap in it fails *silently*. When
   you find a new one, add it.
 
+* **Before adding a second screen, read `docs/screens.md`; before adding an
+  iOS app, read `docs/ios.md`.** Both are patterns worked out in earlier
+  apps, with the traps that shaped them.
+
 ## Swift
 
 * This project follows the Point-Free way. **Start with the `pfw-pfw` skill**
