@@ -18,14 +18,22 @@ than the finished shape.
 ## Point-Free Way skills
 
 The `pfw-*` skills are Point-Free's guidance for their own libraries, and
-they need a Point-Free subscription. Install their command-line tool from
-Homebrew (`brew install pointfreeco/tap/pfw`), sign in with `pfw login`, then
-`pfw install --tool claude` fetches the skills. Run the install again from
+they need a Point-Free subscription. It's not strictly necessary to use these
+skills, but recommended if you can afford the subscription.
+
+With a subscription: install their command-line tool from
+Homebrew (`brew install pointfreeco/tap/pfw`), then run `pfw install`. It
+opens a browser login if it needs one, and installs the skills for every
+agent tool it finds (`--tool claude` limits it to one). Run it again from
 time to time to pick up new versions.
 
 The libraries themselves (SQLiteData, Dependencies, CustomDump and the rest)
 need no setup: SwiftPM fetches them at the versions pinned in each project's
 `Package.resolved`.
+
+If you don't have a subscription, the libraries are themselves well-documented.
+Use the local checkout provided by SwiftPM (which includes their documentation
+sources) and direct access to the source code to use them more effectively.
 
 ## SwiftUI Pro
 
