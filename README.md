@@ -58,8 +58,8 @@ Always, as the core:
   `AGENTS.md` when there is no `CLAUDE.md` (since 2.1.277), so it is the only
   instruction file.
 
-Chosen at creation, as practices: markdown project tracking
-(`PLAN.md`/`PROGRESS.md`/`PROBLEMS.md`), docs in step with behaviour,
+Optional extras which can be chosen at project-creation time: markdown project
+tracking (`PLAN.md`/`PROGRESS.md`/`PROBLEMS.md`), docs in step with behaviour,
 commit-to-main, commit hygiene, and no self-merge.
 
 ## Also here
