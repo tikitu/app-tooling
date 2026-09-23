@@ -144,8 +144,8 @@ abandoned repo. It is not a reference; don't confuse it with
 
 ## 8. Skills and rule books
 
-- **`swiftui-pro`, `macos-design`, `typography-designer`.** Consulted before
-  and after UI decisions. *Seen in:* every `CLAUDE.md` in the lineage.
+- **`swiftui-pro`, `macos-design`.** Consulted before and after UI
+  decisions. *Seen in:* every `CLAUDE.md` in the lineage.
 - **`pfw-*` skills.** The Point-Free libraries' own guidance. *Seen in:*
   every `CLAUDE.md` in the lineage.
 - **`SWIFTUI-RULES.md`.** An inherited book of imperative rules, each with
@@ -172,5 +172,3 @@ breaking `#if` between modifiers.
 - Should the lineage's template become a real starter here (like
   `reference-swiftui-app`), or stay a set of separate pieces?
 - Which parts are Mac-only, and which apply to any Swift project?
-- `typography-designer` is named in every `CLAUDE.md` but isn't installed in
-  this environment. Where does it live?
