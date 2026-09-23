@@ -11,10 +11,15 @@ iOS) apps with agents, gathered in one place. It has two readers:
 Pieces that live elsewhere, and how to get them, are in
 [external.md](external.md).
 
-**Status: an index, nothing more.** Each item below is a sentence or two and
-a note of where it was seen. No tools have been brought in yet. The shape of
-this file is expected to change a lot as we try small experiments and keep
-what works.
+**To start a new Mac app**, copy [`starter/`](starter/) and run its rename
+script: `cp -R starter ~/code/MyApp && cd ~/code/MyApp && git init &&
+scripts/rename.sh MyApp`. It is say-out-loud with the app taken out, and
+brings most of what is listed below with it. Its `PLAN.md` has the rest of
+the first steps.
+
+**Status: mostly an index.** Each item below is a sentence or two and a note
+of where it was seen. The shape of this file is expected to change a lot as
+we try small experiments and keep what works.
 
 ---
 

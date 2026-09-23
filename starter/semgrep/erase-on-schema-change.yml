@@ -1,0 +1,15 @@
+rules:
+  - id: erase-database-on-schema-change
+    languages: [swift]
+    severity: ERROR
+    message: >-
+      `eraseDatabaseOnSchemaChange` deletes the whole database whenever a
+      migration is edited, and `make run` is a debug build against the real
+      data. Write a new migration instead of editing an applied one.
+
+      Why this matters, and the cases where it is fine:
+      semgrep/docs/erase-on-schema-change.md
+    paths:
+      exclude:
+        - "**/Tests/**"
+    pattern: $M.eraseDatabaseOnSchemaChange = true

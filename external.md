@@ -7,13 +7,14 @@ get each one.
 ## The starter template
 
 The Mac build system (the `Makefile`, `build.sh`, the SwiftPM-only `.app`
-bundling and the notarization pipeline) and `SWIFTUI-RULES.md` both started as
-Thomas Ptacek's SwiftUI macOS app template, at
-[github.com/tqbf/swiftui-app](https://github.com/tqbf/swiftui-app). Clone it,
-copy the directory to start a new app, and run its `scripts/rename.sh` with
-the new app's name. Its own `PLAN.md` walks through the first five minutes.
-The repos in this lineage have grown well past it, so it's the seed rather
-than the finished shape.
+bundling and the notarization pipeline), the copy-then-rename way of starting
+an app, and `SWIFTUI-RULES.md` all started as Thomas Ptacek's SwiftUI macOS
+app template, at
+[github.com/tqbf/swiftui-app](https://github.com/tqbf/swiftui-app).
+
+You don't need to fetch it: this repo's own `starter/` grew out of it and
+replaces it, reworked for the way these apps are built. It's worth reading
+for its `SWIFTUI-RULES.md`, which `starter/` doesn't carry.
 
 ## Point-Free Way skills
 

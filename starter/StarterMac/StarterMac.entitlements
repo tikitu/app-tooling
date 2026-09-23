@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  The App Sandbox is ON. The app's data is its own SQLite file and its own
+	  user defaults, both inside its container. Add entitlements one at a time,
+	  each with a comment saying what needs it.
+	-->
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+</dict>
+</plist>

@@ -1,0 +1,13 @@
+rules:
+  - id: url-path-keeps-percent-encoding
+    languages: [swift]
+    severity: ERROR
+    message: >-
+      `URL.path()` returns the path percent-encoded, so "Application Support"
+      becomes "Application%20Support" — a directory that does not exist.
+      Handed to SQLite, a subprocess, or FileManager, it fails or writes somewhere
+      else, quietly. Use `path(percentEncoded: false)`.
+
+      Why this matters, and the cases where it is fine:
+      semgrep/docs/url-path.md
+    pattern: $URL.path()
