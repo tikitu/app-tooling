@@ -80,7 +80,3 @@ snapshot tests) reviewing re-recorded snapshots before committing them.
 - **[`SWIFTUI-RULES.md`](SWIFTUI-RULES.md).** SwiftUI-on-the-Mac rules, each
   with the failure that taught it: transition crashes, layout, stale caches,
   rows, toolbars, Charts. Complements the `swiftui-pro` skill.
-
-## Open questions
-
-- Which parts are Mac-only, and which apply to any Swift project?
