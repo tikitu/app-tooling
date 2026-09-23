@@ -21,8 +21,10 @@ The `pfw-*` skills are Point-Free's guidance for their own libraries, and
 they need a Point-Free subscription. It's not strictly necessary to use these
 skills, but recommended if you can afford the subscription.
 
-With a subscription: install their command-line tool from
-Homebrew (`brew install pointfreeco/tap/pfw`), then run `pfw install`. It
+With a subscription, install their command-line tool from Homebrew. Recent
+Homebrew ignores third-party taps until you trust them, so first
+`brew trust --formula pointfreeco/tap/pfw` (just this formula, not the whole
+tap), then `brew install pointfreeco/tap/pfw`. Then run `pfw install`. It
 opens a browser login if it needs one, and installs the skills for every
 agent tool it finds (`--tool claude` limits it to one). Run it again from
 time to time to pick up new versions.
