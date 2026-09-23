@@ -24,7 +24,10 @@ what works.
 | `~/code/author-alert` | Copied from when-did-you-last; added `swift-format` and "verify without taking focus". |
 | `~/code/ReadingRecord` | An older app lifted into the lineage's shape afterwards (`plans/restructure.md` is the record of how). Origin of the Mac screen and keyboard-queue patterns. |
 | `~/code/say-out-loud` | The newest, started from ReadingRecord's conventions. The cleanest current example of the whole set. |
-| `~/code/WhenDidYouLast` | Capitalised, no hyphens. An earlier Xcode-project app on SQLiteData. The other repos call it abandoned and **not a reference**; kept here only as the "before" picture. |
+
+`~/code/WhenDidYouLast` (capitalised, no hyphens) is a different, older,
+abandoned repo. It is not a reference; don't confuse it with
+`when-did-you-last`.
 
 ---
 
@@ -98,7 +101,7 @@ what works.
 
 - **The Point-Free stack.** SQLiteData, StructuredQueries, Dependencies,
   Sharing, IssueReporting, CustomDump, Swift Testing; start from the
-  `pfw-pfw` skill. *Seen in:* every repo, including the abandoned one.
+  `pfw-pfw` skill. *Seen in:* every repo in the lineage.
 - **Every control performs an `AppCommand` via `AppModel.perform(_:)`.** A
   button that does its own work is a path no script can reach, and so never
   gets checked. *Seen in:* ReadingRecord, say-out-loud, when-did-you-last.
