@@ -40,6 +40,12 @@ commands. `docs/` has the depth.
   equality on *values*, so a failure prints a diff. Keep plain `#expect` for
   counts, booleans, `nil` checks and `throws`.
 
+* **Platform code goes in its platform's package, never behind `#if os(…)`.**
+  `Packages/StarterKit` is shared and must compile for iOS as well as the
+  Mac (`make check` does both); Mac-only code goes in
+  `Packages/StarterMacKit`. The reasons are in
+  `semgrep/docs/platform-conditionals.md`.
+
 * Default actor isolation is **nonisolated in every target**, UI included.
   Mark `@MainActor` explicitly where it is needed.
 

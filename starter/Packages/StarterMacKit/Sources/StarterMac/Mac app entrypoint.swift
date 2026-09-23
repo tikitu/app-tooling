@@ -2,6 +2,7 @@ import Core
 import Dependencies
 import Foundation
 import IssueReporting
+import MacUI
 import SQLiteData
 import SwiftUI
 import UI

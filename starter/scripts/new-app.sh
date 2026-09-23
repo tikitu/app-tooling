@@ -77,7 +77,7 @@ for practice in $chosen; do
 	}
 done
 
-rm -rf build .build dist Packages/StarterKit/.build Packages/StarterKit/.swiftpm
+rm -rf build .build dist Packages/*/.build Packages/*/.swiftpm
 
 # Practices: each adds its section to AGENTS.md, in place of the marker, and
 # copies its files in. Done before renaming, so their text is renamed too.

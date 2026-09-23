@@ -11,12 +11,14 @@ import PackageDescription
 //     which code actually has to be on the main actor.
 let shared: [SwiftSetting] = [.swiftLanguageMode(.v6), .defaultIsolation(nil)]
 
+// The shared half: the data, the model, the commands, and views that make
+// sense on any platform. It declares iOS as well as macOS, and `make check`
+// compiles it for iOS, so a Mac-only API here is a build error today rather
+// than a pile of `#if os(macOS)` the day an iOS app arrives. Mac-only code
+// lives in StarterMacKit, whose manifest says macOS and nothing else.
 let package = Package(
-    name: "StarterKit", platforms: [.macOS(.v26)],
-    products: [
-        .library(name: "Core", targets: ["Core"]), .library(name: "UI", targets: ["UI"]),
-        .executable(name: "StarterMac", targets: ["StarterMac"]),
-    ],
+    name: "StarterKit", platforms: [.macOS(.v26), .iOS(.v26)],
+    products: [.library(name: "Core", targets: ["Core"]), .library(name: "UI", targets: ["UI"])],
     dependencies: [
         .package(url: "https://github.com/pointfreeco/sqlite-data", from: "1.12.0"),
         .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.17.1"),
@@ -40,10 +42,6 @@ let package = Package(
                 .product(name: "IssueReporting", package: "xctest-dynamic-overlay"),
                 .product(name: "Sharing", package: "swift-sharing"),
             ], swiftSettings: shared),
-        // The Mac app. Pure SwiftPM — `build.sh` wraps this executable in a
-        // bundle; there is no Xcode project for it and there is not meant to
-        // be one.
-        .executableTarget(name: "StarterMac", dependencies: ["Core", "UI"], swiftSettings: shared),
         .testTarget(
             name: "CoreTests",
             dependencies: [

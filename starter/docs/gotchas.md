@@ -77,7 +77,8 @@ Always `/usr/bin/log show --predicate 'subsystem == "org.example.starter"'`.
 ## `swift format` breaks a `#if` between view modifiers, and mangles scripts
 
 It moves a `#if` onto the end of the previous line, which does not compile —
-so `make check` after `make fmt`. And it folds a `#!/usr/bin/env swift`
+so `make check` after `make fmt`. (Platform `#if`s are banned outright,
+`semgrep/docs/platform-conditionals.md`; this still bites `#if DEBUG`.) And it folds a `#!/usr/bin/env swift`
 shebang together with the comments beneath it, so `scripts/` is not
 formatted (`SWIFT_FORMAT_PATHS := Packages`).
 

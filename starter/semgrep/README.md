@@ -34,6 +34,7 @@ catch does not need one.
 |---|---|---|
 | `erase-on-schema-change.yml` | [docs/erase-on-schema-change.md](docs/erase-on-schema-change.md) | The migrator never erases the database on a schema change |
 | `url-path.yml` | [docs/url-path.md](docs/url-path.md) | Filesystem paths come from `path(percentEncoded: false)`, never `path()` |
+| `platform-conditionals.yml` | [docs/platform-conditionals.md](docs/platform-conditionals.md) | Platform code is split by package, never by `#if os(…)` |
 | `writes-outside-the-model.yml` | [docs/writes-outside-the-model.md](docs/writes-outside-the-model.md) | In the UI target only `AppModel` writes to the database |
 
 ## Adding a rule

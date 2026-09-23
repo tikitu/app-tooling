@@ -18,7 +18,7 @@
 set -euo pipefail
 
 CONFIG="${1:-debug}"
-PACKAGE_PATH="Packages/StarterKit"
+PACKAGE_PATH="Packages/StarterMacKit"
 # The SwiftPM executable target and the .app it ends up inside are named
 # differently: the target says it is the Mac app, the bundle is what you see
 # in the Dock.

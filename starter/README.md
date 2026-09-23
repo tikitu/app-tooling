@@ -48,9 +48,11 @@ never pulls the window in front of someone working.
 ## Shape of the repo
 
 ```
-Packages/StarterKit/
+Packages/StarterKit/          shared: macOS and iOS
   Core            the data: schema, migrations, bootstrap
-  UI              AppModel, AppCommand, the command inbox, every view
+  UI              AppModel, AppCommand, the command inbox, shared views
+Packages/StarterMacKit/       macOS only
+  MacUI           the window, the list, the menu bar
   StarterMac      the app — a SwiftPM executable; its `Entry` prepares
                   dependencies before SwiftUI starts
 Makefile build.sh             swift build + bundle + ad-hoc codesign
@@ -60,9 +62,18 @@ semgrep/                      rules for invariants that fail silently
 docs/                         how the app works, in depth
 ```
 
-Dependencies are pinned: `Packages/StarterKit/Package.resolved` is committed
-and every build uses it (`--force-resolved-versions`). `make outdated` says
-what could move; `make update-pins` moves it, and the diff is the review.
+**Platforms are split by package, not by `#if`.** `StarterKit` declares
+macOS and iOS, and `make check` compiles it for iOS, so Mac-only API cannot
+creep into it even with no iOS app yet; `StarterMacKit` declares macOS only.
+A Semgrep rule forbids `#if os(…)` (`semgrep/docs/platform-conditionals.md`).
+Checking for iOS needs Xcode's iOS platform (`xcodebuild -downloadPlatform
+iOS`).
+
+**Dependencies are pinned.** Each package's `Package.resolved` is committed
+and every build uses it (`--force-resolved-versions`). The two resolve
+separately, so every build also runs `make check-pins`, which fails if they
+disagree. `make outdated` says what could move; `make update-pins` moves both
+together, and the diff is the review.
 
 ## Documentation
 

@@ -1,6 +1,7 @@
 import Core
 import Sharing
 import SwiftUI
+import UI
 
 /// The one window: the list, a field to add to it, and a status bar.
 public struct MainWindow: View {

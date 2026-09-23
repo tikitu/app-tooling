@@ -1,0 +1,13 @@
+rules:
+  - id: platform-conditional-compilation
+    languages: [swift]
+    severity: ERROR
+    message: >-
+      Platform code is separated by package, not by `#if`: StarterKit is
+      shared (and compiled for iOS by `make check`), StarterMacKit is macOS
+      only. Move this code to the package for its platform instead of
+      guarding it.
+
+      Why this matters, and the cases where it is fine:
+      semgrep/docs/platform-conditionals.md
+    pattern-regex: '^\s*#(if|elseif)\b.*\b(os|canImport|targetEnvironment)\s*\('

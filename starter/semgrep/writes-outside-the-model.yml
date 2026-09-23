@@ -12,6 +12,7 @@ rules:
     paths:
       include:
         - "**/Sources/UI/**"
+        - "**/Sources/MacUI/**"
       exclude:
         - "**/Sources/UI/AppModel.swift"
     patterns:

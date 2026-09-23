@@ -10,7 +10,12 @@
 #   make help      # full target list
 
 CONFIG       := debug
-PACKAGE      := Packages/StarterKit
+# Two packages, split by platform rather than by `#if`: SHARED declares macOS
+# and iOS and holds everything that is not Mac-specific; PACKAGE is macOS only
+# and holds the Mac app. `check` compiles SHARED for iOS too, so it stays
+# platform-neutral even while there is no iOS app.
+SHARED       := Packages/StarterKit
+PACKAGE      := Packages/StarterMacKit
 APP          := build/Starter.app
 BUNDLE_ID    := org.example.starter
 LSREGISTER   := /System/Library/Frameworks/CoreServices.framework/Versions/Current/Frameworks/LaunchServices.framework/Versions/Current/Support/lsregister
@@ -52,7 +57,7 @@ NOTARY_PROFILE ?= starter-notary
 
 NOTES_FILE       ?=
 
-.PHONY: all deps outdated update-pins build check test release run run-background run-scratch scratch-reset \
+.PHONY: all deps outdated update-pins check-pins check-shared-ios build check test release run run-background run-scratch scratch-reset \
         screenshot clean install uninstall register help \
         icon check-version notary-setup sign zip-notary notarize staple zip-release \
         checksum verify-release dist github-release print-version \
@@ -63,7 +68,7 @@ all: build
 help:
 	@echo "Build:"
 	@echo "  make / build      Build $(CONFIG) into ./$(APP)  (default)"
-	@echo "  check             Compile only (swift build) — no bundle/sign; CI/agent gate"
+	@echo "  check             Compile only — the Mac app, and the shared package for iOS; CI/agent gate"
 	@echo "  test              Run the SwiftPM test suite"
 	@echo "  release           Build release into ./$(APP)"
 	@echo "  run               Build and launch $(APP_NAME), in front, as if opened from Finder"
@@ -75,7 +80,8 @@ help:
 	@echo "  clean             Remove ./build/ ./.build/ ./dist/"
 	@echo "  deps              Verify build prerequisites (auto-run before build)"
 	@echo "  outdated          List dependencies with newer versions allowed (changes nothing)"
-	@echo "  update-pins       Re-resolve to the newest allowed versions; review the diff"
+	@echo "  update-pins       Re-resolve both packages to the newest allowed versions; review the diff"
+	@echo "  check-pins        Check the two packages pin the same versions (run by every build)"
 	@echo ""
 	@echo "Lint / format:"
 	@echo "  fmt               Reformat every Swift file in place (swift format)"
@@ -116,11 +122,14 @@ deps:
 	  echo "    from https://swift.org/install/macos/, then re-run."; exit 1; }
 	@SW_LINE=$$(swift --version 2>&1 | head -1); \
 	echo "  ✓ $$SW_LINE"
-	@[ -f $(PACKAGE)/Package.swift ] || { echo "  ✗ $(PACKAGE)/Package.swift not found. Run make from the repo root."; exit 1; }
-	@[ -f $(PACKAGE)/Package.resolved ] || { \
-	  echo "  ✗ $(PACKAGE)/Package.resolved is missing: dependencies are pinned, and a build"; \
-	  echo "    without the lockfile would resolve afresh. Restore it from git."; exit 1; }
-	@echo "  ✓ $(PACKAGE)/Package.resolved present"
+	@for pkg in $(SHARED) $(PACKAGE); do \
+	  [ -f $$pkg/Package.swift ] || { echo "  ✗ $$pkg/Package.swift not found. Run make from the repo root."; exit 1; }; \
+	  [ -f $$pkg/Package.resolved ] || { \
+	    echo "  ✗ $$pkg/Package.resolved is missing: dependencies are pinned, and a build"; \
+	    echo "    without the lockfile would resolve afresh. Restore it from git."; exit 1; }; \
+	done
+	@echo "  ✓ Package.resolved present in both packages"
+	@$(MAKE) -s check-pins
 	@[ -x ./build.sh ] || { echo "  ✗ ./build.sh missing or not executable."; exit 1; }
 	@echo "→ Prerequisites OK."
 
@@ -131,16 +140,30 @@ deps:
 # fails rather than re-resolving (--force-resolved-versions). Moving a pin is a
 # deliberate, reviewable change: `make outdated` says what could move,
 # `make update-pins` moves it, and the diff of Package.resolved is the review.
+#
+# The two packages resolve separately, so each has its own Package.resolved,
+# and nothing in SwiftPM stops them drifting apart: the Mac app would then be
+# built against one version of a library and tested against another.
+# `check-pins` fails the build when they disagree; `update-pins` moves both
+# together.
 # ---------------------------------------------------------------------------
 
 SWIFT_PINNED := --force-resolved-versions
 
 outdated:
+	@swift package --package-path $(SHARED) update --dry-run
 	@swift package --package-path $(PACKAGE) update --dry-run
 
 update-pins:
+	swift package --package-path $(SHARED) update
 	swift package --package-path $(PACKAGE) update
-	@git --no-pager diff --stat -- $(PACKAGE)/Package.resolved
+	@$(MAKE) -s check-pins
+	@git --no-pager diff --stat -- $(SHARED)/Package.resolved $(PACKAGE)/Package.resolved
+
+check-pins:
+	@python3 scripts/check-pins.py $(SHARED)/Package.resolved $(PACKAGE)/Package.resolved \
+	  || { echo "  ✗ the two Package.resolved files disagree — run 'make update-pins'"; exit 1; }
+	@echo "  ✓ dependency pins agree"
 
 # ---------------------------------------------------------------------------
 # Build (delegates to ./build.sh: swift build + bundle + codesign)
@@ -165,13 +188,28 @@ build: deps $(APP_ICON)
 release: deps $(APP_ICON)
 	SIGN_IDENTITY="$(DEV_IDENTITY)" VERSION="$(VERSION)" ./build.sh release
 
-# Compile-only gate — no .app, no signing. CI / agent verification.
-check: deps
+# Compile-only gate — no .app, no signing. CI / agent verification. Building
+# the Mac package compiles the shared one for the Mac along the way.
+check: deps check-shared-ios
 	swift build --package-path $(PACKAGE) -c $(CONFIG) $(SWIFT_PINNED)
 	@echo "✓ compiles ($(CONFIG))"
 
+# The shared package, compiled for iOS. This is what keeps it free of Mac-only
+# API without an iOS app to find out: `import AppKit` there, or any
+# macOS-only modifier, fails here. Needs Xcode's iOS platform
+# (`xcodebuild -downloadPlatform iOS`).
+IOS_CHECK_DIR := build/ios-check
+
+check-shared-ios:
+	@cd $(SHARED) && xcodebuild -scheme StarterKit-Package -destination 'generic/platform=iOS' \
+	  -derivedDataPath $(CURDIR)/$(IOS_CHECK_DIR) -onlyUsePackageVersionsFromResolvedFile \
+	  -quiet build
+	@echo "✓ shared package compiles for iOS"
+
+# The tests live with the shared code; the Mac package is views and the
+# entry point.
 test: deps
-	swift test --package-path $(PACKAGE) $(SWIFT_PINNED)
+	swift test --package-path $(SHARED) $(SWIFT_PINNED)
 	@echo "✓ tests pass"
 
 print-version:
@@ -295,7 +333,7 @@ lint: fmt-check semgrep
 # ---------------------------------------------------------------------------
 
 clean:
-	rm -rf build .build $(PACKAGE)/.build $(DIST_DIR)
+	rm -rf build .build $(SHARED)/.build $(PACKAGE)/.build $(DIST_DIR)
 	@echo "✓ removed build/, .build/, and $(DIST_DIR)/"
 
 # ---------------------------------------------------------------------------

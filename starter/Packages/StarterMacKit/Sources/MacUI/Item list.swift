@@ -1,5 +1,6 @@
 import Core
 import SwiftUI
+import UI
 
 /// The list of items. Keyboard-driven, per `docs/keyboard.md`: it has focus
 /// and its first row selected when the window opens; ↑↓ move; Return toggles
