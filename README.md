@@ -1,5 +1,11 @@
 # app-tooling
 
+> **Made with an AI coding agent.** This repository was written largely by an
+> LLM coding agent (Claude, in Claude Code), working under my direction and
+> review, as were the apps it was distilled from. I say so up front so that
+> anyone who would rather not use work made this way can decide that for
+> themselves.
+
 The technical setup I use to build Mac (and iOS) apps with agents, gathered
 in one place. It has two readers:
 
@@ -80,3 +86,7 @@ snapshot tests) reviewing re-recorded snapshots before committing them.
 - **[`SWIFTUI-RULES.md`](SWIFTUI-RULES.md).** SwiftUI-on-the-Mac rules, each
   with the failure that taught it: transition crashes, layout, stale caches,
   rows, toolbars, Charts. Complements the `swiftui-pro` skill.
+
+## Licence
+
+MIT; see [LICENSE](LICENSE).
