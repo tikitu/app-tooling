@@ -42,7 +42,10 @@ git-ignored so is its lockfile. Its package graph is exactly
 `StarterIOSKit`'s, so `make ios-project` copies that package's
 `Package.resolved` into
 `apps/ios/Starter.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/`, and
-every `xcodebuild` passes `-onlyUsePackageVersionsFromResolvedFile`.
+every `xcodebuild` passes the Makefile's `$(XCODE_FLAGS)`:
+`-onlyUsePackageVersionsFromResolvedFile`, and `-skipMacroValidation`, since
+`xcodebuild` refuses untrusted package macros and the Point-Free libraries
+are full of them (`docs/gotchas.md`).
 `check-pins` then compares three lockfiles instead of two, and `update-pins`
 updates all three packages.
 

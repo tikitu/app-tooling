@@ -69,6 +69,18 @@ persisting. Set anything a script needs through `configure`. Reading is fine.
 memory and writes it back. `make scratch-reset` uses `defaults delete`, which
 goes through cfprefsd.
 
+## `xcodebuild` refuses package macros until they are trusted
+
+The Point-Free libraries are built on Swift macros. `swift build` and
+`swift test` use them without asking, but `xcodebuild` fails with "Macro …
+must be enabled before it can be used" until each macro package has been
+trusted — in Xcode, by clicking "Trust & Enable" in a dialog. A machine where
+someone once did that builds fine, which hides the problem until CI or a
+fresh checkout on another Mac. So every `xcodebuild` in the Makefile passes
+`-skipMacroValidation` (`XCODE_FLAGS`); that is safe to do wholesale because
+the dependencies are pinned, and new macro code only arrives through a
+reviewed `make update-pins`.
+
 ## `log` is shadowed in zsh
 
 `log show …` prints nothing and exits 0 in zsh, where `log` is a builtin.

@@ -200,10 +200,18 @@ check: deps check-shared-ios
 # (`xcodebuild -downloadPlatform iOS`).
 IOS_CHECK_DIR := build/ios-check
 
+# Every xcodebuild of the packages passes these. Pinned, as with swift build.
+# And macros enabled: the Point-Free libraries are built on Swift macros, and
+# xcodebuild refuses a package's macros until they are trusted — in Xcode by
+# clicking "Trust & Enable", which a script or a fresh machine cannot do.
+# `swift build` does not ask. Trusting them wholesale is reasonable here
+# because every dependency is pinned, so new macro code only arrives through
+# a reviewed `make update-pins`.
+XCODE_FLAGS := -onlyUsePackageVersionsFromResolvedFile -skipMacroValidation
+
 check-shared-ios:
 	@cd $(SHARED) && xcodebuild -scheme StarterKit-Package -destination 'generic/platform=iOS' \
-	  -derivedDataPath $(CURDIR)/$(IOS_CHECK_DIR) -onlyUsePackageVersionsFromResolvedFile \
-	  -quiet build
+	  -derivedDataPath $(CURDIR)/$(IOS_CHECK_DIR) $(XCODE_FLAGS) -quiet build
 	@echo "✓ shared package compiles for iOS"
 
 # The tests live with the shared code; the Mac package is views and the
