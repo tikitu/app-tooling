@@ -27,7 +27,7 @@ we try small experiments and keep what works.
 
 | Repo | Role |
 |---|---|
-| `~/code/personal-time-tracking` | The earliest of the lineage. Two-package split, SwiftPM Mac build, Semgrep-with-docs, `SWIFTUI-RULES.md`. Contains `reference-swiftui-app/`, an outside template the build system was lifted from. |
+| `~/code/personal-time-tracking` | The earliest of the lineage. Two-package split, SwiftPM Mac build, Semgrep-with-docs, `SWIFTUI-RULES.md`. Its build system came from an outside template, credited in `starter/README.md`. |
 | `~/code/when-did-you-last` | Copied from personal-time-tracking; added the command inbox, pinned dependencies, nonisolated default. |
 | `~/code/author-alert` | Copied from when-did-you-last; added `swift-format` and "verify without taking focus". |
 | `~/code/ReadingRecord` | An older app lifted into the lineage's shape afterwards (`plans/restructure.md` is the record of how). Origin of the Mac screen and keyboard-queue patterns. |
@@ -80,7 +80,7 @@ abandoned repo. It is not a reference; don't confuse it with
 
 - **Mac build with SwiftPM only, no Xcode project.** `Makefile` + `build.sh`
   run `swift build`, assemble the `.app`, and sign it ad hoc. *Seen in:* all
-  of the lineage; from `reference-swiftui-app`.
+  of the lineage.
 - **`make` as the single entry point.** `check`, `test`, `run`, `fmt`,
   `lint`, `help`, the same names in every repo. *Seen in:* all of the lineage.
 - **iOS via XcodeGen, project git-ignored.** `apps/ios/project.yml` is the
@@ -156,9 +156,10 @@ abandoned repo. It is not a reference; don't confuse it with
   decisions. *Seen in:* every `CLAUDE.md` in the lineage.
 - **`pfw-*` skills.** The Point-Free libraries' own guidance. *Seen in:*
   every `CLAUDE.md` in the lineage.
-- **`SWIFTUI-RULES.md`.** An inherited book of imperative rules, each with
-  the failure that taught it. *Seen in:* personal-time-tracking,
-  when-did-you-last, author-alert.
+- **[`SWIFTUI-RULES.md`](SWIFTUI-RULES.md).** SwiftUI-on-the-Mac rules, each
+  with the failure that taught it: transition crashes, layout, stale caches,
+  rows, toolbars, Charts. Trimmed from the copy the lineage inherited. *Seen
+  in:* personal-time-tracking, when-did-you-last, author-alert.
 - **Project-local skill for iOS package testing.** An early experiment.
   *Seen in:* ReadingRecord `.claude/skills/`.
 
@@ -177,6 +178,4 @@ breaking `#if` between modifiers.
 
 - How does a new project consume this: copy files in, point `CLAUDE.md` here,
   install skills globally, or a mix?
-- Should the lineage's template become a real starter here (like
-  `reference-swiftui-app`), or stay a set of separate pieces?
 - Which parts are Mac-only, and which apply to any Swift project?
