@@ -11,6 +11,11 @@ from. What was dropped: process advice this repo already covers
 (`PROGRESS.md`, gotchas, commit messages), rules tied to that template's own
 app, and idioms that predate macOS 26.
 
+They sit alongside the `swiftui-pro` skill rather than repeating it. That
+skill reviews for modern API, data flow, accessibility and style; these are
+the failures on the Mac that compile, pass their tests, and then break at
+runtime. Where the two touch, they agree.
+
 > **The meta-rule.** SwiftUI's compile-time guarantees are weaker than they
 > look. Tests catch logic; they miss layout, constraint, animation and
 > hosting bugs. **A passing test suite is not a passing app.** Every
@@ -226,9 +231,10 @@ row is the affordance keyboard users navigate by.
 
 ### 5.1 Use semantic font styles, not sizes.
 
-`.font(.caption).fontWeight(.medium)`, not `.font(.system(size: 11,
-weight: .medium))`. Where a control brings its own typography (button
-styles, `LabeledContent`), don't override it.
+`.font(.callout)`, not `.font(.system(size: 12))`; for emphasis, `.bold()`,
+which lets the system pick the right weight for the context. Reach for other
+weights only with a reason. Where a control brings its own typography
+(button styles, `LabeledContent`), don't override it.
 
 ### 5.2 Don't build formatters in `body`.
 
