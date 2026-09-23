@@ -8,6 +8,9 @@ iOS) apps with agents, gathered in one place. It has two readers:
 - **A human**, who wants to know what each part is, what it does for you,
   and above all *why* I prefer it.
 
+Pieces that live elsewhere, and how to get them, are in
+[external.md](external.md).
+
 **Status: an index, nothing more.** Each item below is a sentence or two and
 a note of where it was seen. No tools have been brought in yet. The shape of
 this file is expected to change a lot as we try small experiments and keep
