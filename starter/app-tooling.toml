@@ -1,0 +1,13 @@
+# Conventions this project takes from app-tooling. patterns/README.md there
+# explains this file; each pattern's apply.md, at the release named here,
+# says how it was applied and how to update it.
+source = "https://github.com/tikitu/app-tooling"
+
+# The release of the starter this project was made from. "unreleased" means
+# it was copied from between releases; see the commit it was made in.
+starter = "unreleased"
+
+# Carried by the starter from the start. The Mac half only: an iOS app added
+# later follows the pattern's apply.md for the rest.
+[patterns.git-commit-stamp]
+release = "unreleased"

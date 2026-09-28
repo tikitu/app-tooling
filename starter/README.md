@@ -57,7 +57,10 @@ Packages/StarterMacKit/       macOS only
                   dependencies before SwiftUI starts
 Makefile build.sh             swift build + bundle + ad-hoc codesign
 Resources/ StarterMac/        Info.plist; entitlements (sandboxed)
-scripts/                      icon, send-commands, send-keys, window-id
+scripts/                      icon, send-commands, send-keys, window-id,
+                              stamp-git-commit (the commit, into the bundle)
+app-tooling.toml              which app-tooling conventions this follows,
+                              at which release
 rules/ rule-tests/            ast-grep rules for mistakes that fail silently,
                               each with its document and its test
 docs/                         how the app works, in depth

@@ -23,6 +23,11 @@ commands. `docs/` has the depth.
   exception; what *commits* is the command, and `configure` is the scripted
   way to set remembered options.
 
+* **Which build is this?** `plutil -extract AppGitCommit raw
+  build/Starter.app/Contents/Info.plist` gives the commit a bundle was built
+  from, with `-dirty` if there were uncommitted changes. Check it before
+  concluding that a running app shows (or lacks) a change.
+
 * Read `docs/gotchas.md` before touching startup, the database bootstrap, or
   anything that looks needlessly odd. Every trap in it fails *silently*. When
   you find a new one, add it.

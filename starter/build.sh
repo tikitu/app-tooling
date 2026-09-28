@@ -78,6 +78,10 @@ else
 	echo "  (no $BUILD_DIR/AppIcon.icns — run 'make icon'; bundling without one)"
 fi
 
+# Which commit this is, for `plutil -extract AppGitCommit raw …/Info.plist`.
+# Before signing, so the signature covers it.
+scripts/stamp-git-commit.sh "$APP/Contents/Info.plist"
+
 # ---------------------------------------------------------------------------
 # Codesign — ad-hoc by default, so `make run` works on a machine with no
 # certs at all. The sandbox entitlement needs a signature to take effect;
