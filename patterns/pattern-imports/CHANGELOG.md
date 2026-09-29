@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+Agent instructions live in `AGENTS.md` only. A project that has a
+`CLAUDE.md` moves its content into `AGENTS.md` and deletes it (`apply.md`,
+step 5), since Claude Code reads `AGENTS.md` only when there is no
+`CLAUDE.md`.
+
 First version: `peru.yaml` pins app-tooling at one commit and imports each
 pattern's files and docs; `mk/app-tooling.mk` provides `app-tooling-update`
 and `app-tooling-check`. The update refuses while an imported file has been
