@@ -6,7 +6,8 @@ Read [`README.md`](README.md) first for what this does and why.
 
 - **Already adopted:** `scripts/stamp-git-commit.sh` exists, and
   `app-tooling.toml` has `[patterns.git-commit-stamp]`. To update, follow
-  `CHANGELOG.md` from the recorded release; `diff` the project's scripts
+  `CHANGELOG.md` from the recorded release or commit (`patterns/README.md`
+  says how for each); `diff` the project's scripts
   against `files/scripts/` to see what copying them again would change.
 - **Something else doing this job.** Look for:
   - a run-script phase in `project.yml` (`preBuildScripts`,
@@ -115,6 +116,9 @@ commit a bundle is.
 [patterns.git-commit-stamp]
 release = "vX.Y.Z"
 ```
+
+or, when applied from a branch, `branch = "…"` and `commit = "…"` in place
+of `release`.
 
 ## Verify
 

@@ -10,7 +10,8 @@ The first release.
 
 - **Patterns** (`patterns/`): conventions packaged to be applied to
   existing projects and kept up to date there, with an `app-tooling.toml`
-  in each project recording which it has, at which release.
+  in each project recording which it has, at a release or on a branch
+  (with the commit it was applied from).
 - **Inbox** (`inbox/`): where improvements found in other projects wait to
   become patterns.
 - **`git-commit-stamp`**, the first pattern: builds record their commit;

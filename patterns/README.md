@@ -12,15 +12,31 @@ instructions.
 ## Referring to app-tooling from elsewhere
 
 Everything outside this repository refers to it as
-**`https://github.com/tikitu/app-tooling`, at a release tag**
-(`v0.1.0`), never at `main`, and never by a path on someone's machine:
+**`https://github.com/tikitu/app-tooling`**, never by a path on someone's
+machine, and at one of two things:
 
-    https://github.com/tikitu/app-tooling/tree/v0.1.0/patterns/git-commit-stamp
+- **A release tag** (`v0.1.0`), the usual case. A tag says exactly which
+  text a project was brought into line with, and stays true when `main`
+  moves on. What a release is, and how to make one, is in
+  [`RELEASING.md`](../RELEASING.md); what changed in each is in
+  [`CHANGELOG.md`](../CHANGELOG.md).
 
-A tag says exactly which text a project was brought into line with, and it
-stays true when `main` moves on. What a release is, and how to make one, is
-in [`RELEASING.md`](../RELEASING.md); what changed in each is in
-[`CHANGELOG.md`](../CHANGELOG.md).
+      https://github.com/tikitu/app-tooling/tree/v0.1.0/patterns/git-commit-stamp
+
+- **A branch**, for a pattern that is being worked out: tried in a project
+  before it is released, or changed there while it is still moving. A branch
+  moves, so a reference to one always carries the commit it was read at as
+  well. Links to what was applied use the commit; the branch name says where
+  to look for what came after.
+
+      https://github.com/tikitu/app-tooling/tree/98cc38b/patterns/git-commit-stamp
+
+  The branch must be pushed, since other projects read it from GitHub. Merge
+  it into `main` with a merge commit, not a squash, so the commits projects
+  recorded stay in `main`'s history once the branch is deleted.
+
+Never `main` itself: a project tracking `main` has no release that says what
+it has, and no branch that anyone is deliberately moving.
 
 ## What a pattern is made of
 
@@ -92,7 +108,8 @@ is what makes "which of these projects are behind?" answerable:
 
 ```toml
 # Conventions this project takes from app-tooling. Each pattern's apply.md,
-# at the release named here, says how it was applied and how to update it.
+# at the release or commit named here, says how it was applied and how to
+# update it.
 source = "https://github.com/tikitu/app-tooling"
 
 [patterns.git-commit-stamp]
@@ -105,12 +122,30 @@ deviations = ["Mac app keeps its date-based CFBundleVersion"]
 [declined.ast-grep-rules]
 release = "v0.1.0"
 reason = "keeps its Semgrep rules until they are ported"
+
+# Tracking a branch rather than a release:
+[patterns.testflight]
+branch = "testflight"
+commit = "3f2a9c1"
 ```
 
-- **`release`** is the tag the pattern was applied or last updated from.
-  While trying out a pattern that is not yet released, write the commit
-  instead (`commit = "e153fb6"`) and replace it with the release once there
-  is one.
+Each entry names what it was applied or last updated from, in one of two
+forms:
+
+- **`release`**: the tag.
+- **`branch` and `commit`**: the branch it follows, and the commit of that
+  branch it was applied or last updated from. Both are required: the branch
+  says where later changes will appear, the commit says which of them this
+  project already has.
+
+A project can mix the two, entry by entry: most patterns at a release, one
+on a branch while it is being worked out.
+
+- **`deviations`** and **`[declined.*]`** matter as much as what was
+  adopted. Without them, the next agent to bring the project up to date will
+  "fix" what was chosen on purpose. A pattern is declined *at* a release (or
+  a branch and commit) because it may change enough later to be worth
+  another look.
 - **`deviations`** and **`[declined.*]`** matter as much as what was
   adopted. Without them, the next agent to bring the project up to date will
   "fix" what was chosen on purpose. A pattern is declined *at* a release
@@ -123,19 +158,34 @@ the starter already carries.
 
 1. Read the project's `app-tooling.toml`, if it has one. If the pattern is
    declined there, stop and say so.
-2. Read the pattern's `README.md` and `apply.md` **at the release you are
-   applying** (the latest, unless told otherwise).
+2. Read the pattern's `README.md` and `apply.md` **at the release or
+   branch you are applying**: the latest release unless told otherwise, and
+   a branch only when asked for one. For a branch, note the commit you read
+   (`git ls-remote https://github.com/tikitu/app-tooling <branch>`), since
+   the branch may move while you work.
 3. Work through **Detect**. If the project already solves this problem its
    own way, stop and describe both to the user before replacing anything:
    the project's way may be better, and then it belongs here instead.
 4. Fill in the **Parameters**, then do the **Steps**.
 5. Run **Verify**, and report what it showed.
 6. Add or update the pattern's entry in `app-tooling.toml`.
-7. Commit in the project, naming the pattern and the release.
+7. Commit in the project, naming the pattern and the release, or the
+   branch and commit.
 
-To **update** a pattern a project already has: read its `CHANGELOG.md` for
-every release after the one recorded, do what each entry says, verify, and
-update the recorded release.
+To **update** a pattern a project already has:
+
+- **At a release:** read its `CHANGELOG.md` for every release after the one
+  recorded, do what each entry says, verify, and update the recorded
+  release.
+- **On a branch:** the changes since are
+  `git diff <commit>..origin/<branch> -- patterns/<name>`, and the catch-up
+  steps are the `CHANGELOG.md` entries that diff adds. Do them, verify, and
+  record the branch's new commit.
+- **Moving from a branch to a release**, once the branch has been released
+  (`git tag --contains <commit>` names a tag): apply what the pattern's
+  `CHANGELOG.md` says changed after the recorded commit up to that release,
+  then replace `branch` and `commit` with `release`. Do this rather than
+  following a branch once it is merged; it will not move again.
 
 ## Checking a set of projects
 
@@ -150,7 +200,10 @@ projects = ["~/code/MyApp", "~/code/OtherApp"]
 An agent asked to check them reads each project's `app-tooling.toml`,
 compares it with each pattern's `CHANGELOG.md`, and reports, per project,
 which patterns are missing, which are behind and by which releases, and
-which are declined. It changes nothing without being asked.
+which are declined. For an entry on a branch it reports whether the branch
+has moved past the recorded commit in that pattern's directory, and whether
+the branch has since been released or deleted, in which case the entry
+should move to a release. It changes nothing without being asked.
 
 ## Where new patterns come from
 

@@ -2,9 +2,10 @@
 
 Projects refer to app-tooling by release: `app-tooling.toml` in each one
 names the tag it was brought into line with, and links go to
-`https://github.com/tikitu/app-tooling/tree/<tag>/…`. A release is what
-makes those references mean something, so make one whenever a change is
-ready to be applied elsewhere, rather than letting projects point at `main`.
+`https://github.com/tikitu/app-tooling/tree/<tag>/…`. A project can follow a
+branch instead while a pattern is being worked out (`patterns/README.md`),
+but that is meant to end in a release: make one whenever a change is ready
+to be applied elsewhere, and the projects on its branch then move to it.
 
 ## Version numbers
 
@@ -38,6 +39,9 @@ ready to be applied elsewhere, rather than letting projects point at `main`.
 
 5. **Start the next round**: add `## Unreleased` back at the top of
    `CHANGELOG.md` when the next change lands, not before.
+
+A branch that projects follow is merged with a merge commit, not squashed,
+so the commits they recorded stay in `main`'s history.
 
 A tag is never moved or reused. A mistake in a release is fixed by the next
 one.

@@ -23,5 +23,9 @@ applying a pattern to a project are in `patterns/README.md`.
 * **Promote from `inbox/` only once it has been verified in a project**,
   and delete the inbox item in the same commit.
 
+* **Projects may follow a branch** (`patterns/README.md`). Do not rewrite
+  history on a pushed branch, and do not squash-merge one: projects record
+  its commits.
+
 * Releases are made by the user; `RELEASING.md` has the steps. Do not tag
   or push a release unasked.
