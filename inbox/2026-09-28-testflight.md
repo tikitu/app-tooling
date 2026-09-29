@@ -11,4 +11,4 @@ What is known so far:
 - Per project it will need the team id, bundle id, scheme, and an App Store
   Connect API key, which must stay out of the repository.
 - Shape: a Makefile fragment (`mk/testflight.mk`) plus an
-  `ExportOptions.plist`, so that updating it is copying files again.
+  `ExportOptions.plist`, imported by peru like the other patterns.
