@@ -96,11 +96,11 @@ because it may change enough later to be worth another look.
 
 | Target | Does |
 |---|---|
-| `app-tooling-update` | Moves `rev:` to the newest commit of `reup:`, imports it, and prints the `CHANGELOG.md` entries the update added: the catch-up steps |
-| `app-tooling-check` | Fails if any imported file differs from what `rev:` says: edited in place, or an update half done |
+| `app-tooling-check` | Fails, naming them, if any imported file differs from what `rev:` has: edited or deleted in this project, or an update half done. Leaves the tree as it was |
+| `app-tooling-update` | Runs the check, and refuses if it fails. Otherwise moves `rev:` to the newest commit of `reup:`, imports it, and prints the `CHANGELOG.md` entries the update added: the catch-up steps |
 
 Both need a clean tree, and `uv` (`brew install uv`), which runs peru at a
-pinned version.
+pinned version. Both take `APP_TOOLING_LOCAL` (below).
 
 ## Applying a new pattern (for an agent)
 
@@ -126,7 +126,9 @@ pinned version.
 
 ## Updating (for an agent)
 
-1. `make app-tooling-update`, on a clean tree.
+1. `make app-tooling-update`, on a clean tree. If it refuses because
+   imported files were changed here, see the next section; do not work
+   around the refusal.
 2. Do what each `CHANGELOG.md` entry it printed says, and run the
    **Verify** of each pattern that changed.
 3. Commit the update and the catch-up together, naming the old and new
@@ -135,12 +137,53 @@ pinned version.
 To move from a branch to a release, once the branch has been released, set
 `reup:` to the tag and update as above.
 
+## Local changes to imported files
+
+Imported files are never edited in the project. Updates replace them whole,
+so an edit would be lost silently; that is why `app-tooling-update` refuses
+while any imported file differs from the pin, and names the files.
+
+**There is deliberately no merge.** Upstream and the project changing the
+same file is a disagreement about what the pattern should be, and it is
+settled by a decision, not by merging text. When the update refuses, each
+file it names goes one of two ways:
+
+1. **Move the change into app-tooling.** The default. Make it there: as a
+   parameter, if it is really about this project, or as a fix to the
+   pattern, if it is not. It then meets any upstream change to the same
+   file once, in app-tooling, where both can be seen. Then put the pinned
+   version back in the project (`uvx peru@1.3.5 sync --force` overwrites the
+   edited files with what `rev:` has), commit, and update to the commit that
+   has the change: on a branch, if it is still being tried out.
+
+2. **Take the file over.** When this project really does need its own
+   version. In `peru.yaml`, add to the pattern's rule a `drop:` naming the
+   file by its path in app-tooling (`drop` comes before `export`, so the
+   path starts at the repository root):
+
+   ```yaml
+   rule git-commit-stamp:
+       # Taken over by this project: see app-tooling.toml.
+       drop: patterns/git-commit-stamp/files/scripts/stamp-git-commit.sh
+       export: patterns/git-commit-stamp/files
+   ```
+
+   peru now treats the file as one it used to import, and wants to delete
+   it: run `uvx peru@1.3.5 sync --force`, then `git checkout -- <file>` to
+   keep the project's version. Record it under the pattern's `deviations` in
+   `app-tooling.toml`, with the reason, and commit. From then on updates
+   leave the file alone. Upstream changes to it still appear in the
+   pattern's `CHANGELOG.md`; whether and how to carry them over by hand is
+   the project's decision, each time.
+
+If someone wants to merge by hand, they can (the old and new versions are
+in app-tooling's history), but it is not a path the tooling offers.
+
 ## Working with a local checkout of app-tooling
 
-- **Unpushed commits:**
-  `make app-tooling-update APP_TOOLING_LOCAL=~/code/app-tooling` reads them
-  from the checkout. `peru.yaml` still names GitHub, so push them before
-  anyone else syncs.
+- **Unpushed commits:** `APP_TOOLING_LOCAL=~/code/app-tooling`, given to
+  either make target, reads them from the checkout. `peru.yaml` still names
+  GitHub, so push them before anyone else syncs.
 - **Uncommitted changes**, while working on a pattern:
   `uvx peru@1.3.5 override add app-tooling ~/code/app-tooling`, then
   `uvx peru@1.3.5 sync`, imports straight from the working tree. The
@@ -151,5 +194,6 @@ To move from a branch to a release, once the branch has been released, set
 
 `.peru/` is git-ignored, so in a fresh clone peru does not know the
 committed files are its own, and a plain `peru sync` refuses to overwrite
-them. `make app-tooling-check` (which syncs with `--force`) is the first
-thing to run; after it, peru knows its files again.
+them. Both make targets handle this (the check syncs with `--force` onto a
+clean tree and reads the diff); after either, peru knows its files again.
+Run a plain `peru sync` only after one of them.
