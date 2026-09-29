@@ -1,14 +1,8 @@
-# Conventions this project takes from app-tooling. patterns/README.md there
-# explains this file; each pattern's apply.md, at the release (or branch and
-# commit) named here, says how it was applied and how to update it.
-source = "https://github.com/tikitu/app-tooling"
+# Conventions this project takes from app-tooling, beyond what peru.yaml
+# records. docs/app-tooling/pattern-imports/README.md explains this file.
 
-# The release of the starter this project was made from. "unreleased" means
-# it was copied from a branch: replace every "unreleased" below with
-# branch = "<branch>" and commit = "<commit>" of the copy it came from.
-starter = "unreleased"
+[patterns.pattern-imports]
 
-# Carried by the starter from the start. The Mac half only: an iOS app added
-# later follows the pattern's apply.md for the rest.
+# The Mac half only; an iOS app added later follows the pattern's apply.md
+# (docs/app-tooling/git-commit-stamp/apply.md) for the rest.
 [patterns.git-commit-stamp]
-release = "unreleased"

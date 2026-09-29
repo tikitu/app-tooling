@@ -1,0 +1,24 @@
+# Conventions taken from app-tooling; see
+# docs/app-tooling/pattern-imports/README.md.
+imports:
+    app-tooling|pattern-imports: ./
+    app-tooling|pattern-imports-docs: docs/app-tooling/pattern-imports/
+    app-tooling|git-commit-stamp: ./
+    app-tooling|git-commit-stamp-docs: docs/app-tooling/git-commit-stamp/
+
+git module app-tooling:
+    url: https://github.com/tikitu/app-tooling
+    reup: patterns
+    rev: b9e2990e423e76b69a2d4321bdc0908c19d15d7c
+
+rule pattern-imports:
+    export: patterns/pattern-imports/files
+rule pattern-imports-docs:
+    pick: [patterns/pattern-imports/README.md, patterns/pattern-imports/apply.md, patterns/pattern-imports/CHANGELOG.md]
+    export: patterns/pattern-imports
+
+rule git-commit-stamp:
+    export: patterns/git-commit-stamp/files
+rule git-commit-stamp-docs:
+    pick: [patterns/git-commit-stamp/README.md, patterns/git-commit-stamp/apply.md, patterns/git-commit-stamp/CHANGELOG.md]
+    export: patterns/git-commit-stamp

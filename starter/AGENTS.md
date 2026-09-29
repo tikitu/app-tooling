@@ -36,6 +36,16 @@ commands. `docs/` has the depth.
   iOS app, read `docs/ios.md`.** Both are patterns worked out in earlier
   apps, with the traps that shaped them.
 
+## Conventions from app-tooling
+
+Some of this project's tooling is imported from app-tooling by peru:
+`peru.yaml` says what, and at which commit. **Never edit an imported file
+in place**; the change belongs in app-tooling. How to apply a new pattern,
+update, or work against a local checkout is in
+`docs/app-tooling/pattern-imports/README.md`. `app-tooling.toml` records
+this project's parameters, deliberate deviations and declined patterns;
+read it before changing anything a pattern covers.
+
 ## Swift
 
 * This project follows the Point-Free way. **Start with the `pfw-pfw` skill**

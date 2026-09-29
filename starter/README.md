@@ -16,6 +16,9 @@ defaults.
 - `Makefile`: `TEAM_ID` and `DEVELOPER_NAME`, once you want `make dist`.
 - `scripts/make-icon.swift`: the app's own mark.
 - The paragraph above: what the app is for.
+- `peru.yaml` follows whatever app-tooling branch or release the template
+  was copied from. Set `reup:` to the latest release tag, then
+  `make app-tooling-update` (docs/app-tooling/pattern-imports/README.md).
 - `Item` in `Core/Schema.swift` is a placeholder, there so the commands, the
   keyboard and the tests have something to work on. Replace it — and its
   migration, and `docs/commands.md` — with the real model. Nothing has run
@@ -59,8 +62,8 @@ Makefile build.sh             swift build + bundle + ad-hoc codesign
 Resources/ StarterMac/        Info.plist; entitlements (sandboxed)
 scripts/                      icon, send-commands, send-keys, window-id,
                               stamp-git-commit (the commit, into the bundle)
-app-tooling.toml              which app-tooling conventions this follows,
-                              at which release
+peru.yaml  app-tooling.toml   conventions imported from app-tooling, the
+mk/  docs/app-tooling/        commit they are at, and this app's choices
 rules/ rule-tests/            ast-grep rules for mistakes that fail silently,
                               each with its document and its test
 docs/                         how the app works, in depth

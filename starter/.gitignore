@@ -15,6 +15,9 @@ xcuserdata/
 # Package.resolved is deliberately NOT ignored: dependencies are pinned, and a
 # lockfile that is not committed pins nothing.
 
+# peru's cache and state. peru.yaml, and the files it imports, are committed.
+.peru/
+
 # ---------------------------------------------------------------------------
 # macOS / agents
 # ---------------------------------------------------------------------------
