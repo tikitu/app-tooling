@@ -7,6 +7,10 @@ others are applied with.
 
 - **Already adopted:** `peru.yaml` has a `git module app-tooling`, and
   `mk/app-tooling.mk` exists. Nothing to do.
+- **A `CLAUDE.md`** (with or without an `AGENTS.md` pointing at it): the
+  project's instructions belong in `AGENTS.md` alone. Claude Code reads
+  `AGENTS.md` only when there is no `CLAUDE.md`, and every other agent tool
+  reads `AGENTS.md`. Step 5 moves them.
 - **Other uses of peru:** a `peru.yaml` without an app-tooling module. Add
   to it rather than beside it.
 - **Files copied from app-tooling by hand:** scripts, rules or docs whose
@@ -61,7 +65,10 @@ project's style.
 **4. `app-tooling.toml`** at the repository root, with the header comment
 from `README.md` and nothing else yet; each pattern adds its entry.
 
-**5. `AGENTS.md`** (or `CLAUDE.md`), a section:
+**5. `AGENTS.md`**. If the project has a `CLAUDE.md`, first move its
+content into `AGENTS.md` (replacing any pointer there), delete `CLAUDE.md`,
+and change references to it in the project's docs; history, such as a
+progress log, stays as it was. Then add a section:
 
 ```markdown
 ## Conventions from app-tooling
