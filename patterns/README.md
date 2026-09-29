@@ -97,9 +97,13 @@ whether the shared part has a file to itself. So:
 
 If a project needs a change to a shared file, that is a change to the
 pattern: make it here, with a parameter if it is really project-specific.
-The alternative is for the project to take the file over, as a recorded
-deviation. There is no tooling for merging a project's edits with a
-pattern's, and there will not be: it would make diverging the easy path
+Better still, where it fits, the project builds on the file without
+changing it (its own target around an imported one, say), which a pattern
+makes possible by having seams to build on: parameters, targets meant to be
+depended on, scripts that do one thing. Taking the file over, as a recorded
+deviation, is the last resort, since it gives up every later improvement.
+There is no tooling for merging a project's edits with a pattern's, and
+there will not be: it would make diverging the easy path
 ([`pattern-imports`](pattern-imports/README.md#local-changes-to-imported-files)).
 
 ## Checking a set of projects

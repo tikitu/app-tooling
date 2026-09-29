@@ -145,21 +145,41 @@ while any imported file differs from the pin, and names the files.
 
 **There is deliberately no merge.** Upstream and the project changing the
 same file is a disagreement about what the pattern should be, and it is
-settled by a decision, not by merging text. When the update refuses, each
-file it names goes one of two ways:
+settled by a decision, not by merging text. When the update refuses, first
+put the pinned version back (`uvx peru@1.3.5 sync --force` overwrites the
+edited files with what `rev:` has), and then find the change a home. In
+order of preference:
 
-1. **Move the change into app-tooling.** The default. Make it there: as a
-   parameter, if it is really about this project, or as a fix to the
-   pattern, if it is not. It then meets any upstream change to the same
-   file once, in app-tooling, where both can be seen. Then put the pinned
-   version back in the project (`uvx peru@1.3.5 sync --force` overwrites the
-   edited files with what `rev:` has), commit, and update to the commit that
-   has the change: on a branch, if it is still being tried out.
+1. **Build on the imported file, without changing it.** The best answer,
+   when it can be done well: the project keeps its improvement *and* every
+   future improvement to the pattern. The change goes somewhere the project
+   owns that uses the imported file: a target of its own that runs the
+   imported one and then does more; a make variable or argument the
+   imported file already takes; a small script of the project's that calls
+   the imported script; a rule in the project's own rule directory beside
+   the imported ones. How to do it is a judgement, case by case, and the
+   test is whether it is robust and obvious to the next reader. Something
+   that *rewrites* the imported file's behaviour from outside (a
+   find-and-replace over a make fragment on every build, redefining its
+   targets, patching a script before running it) fails that test: it is
+   brittle, it breaks silently when the pattern changes, and it hides what
+   actually runs. If the only way to build on the file is one of those, the
+   pattern is missing a seam, which is the next option.
 
-2. **Take the file over.** When this project really does need its own
-   version. In `peru.yaml`, add to the pattern's rule a `drop:` naming the
-   file by its path in app-tooling (`drop` comes before `export`, so the
-   path starts at the repository root):
+2. **Change app-tooling.** When the improvement is good for every project,
+   make it in the pattern. When it is about this project but the pattern
+   gives it nowhere to go, add that place to the pattern: a parameter, a
+   hook, a target meant to be built on, so that option 1 becomes possible.
+   Either way, it meets any upstream change to the same file once, in
+   app-tooling, where both can be seen. Then update the project to the
+   commit that has it: on a branch, if it is still being tried out.
+
+3. **Take the file over.** The last resort, because it opts the project
+   out of every future improvement to that file: only when the project
+   really does need its own version and neither of the above can give it.
+   In `peru.yaml`, add to the pattern's rule a `drop:` naming the file by
+   its path in app-tooling (`drop` comes before `export`, so the path starts
+   at the repository root):
 
    ```yaml
    rule git-commit-stamp:
@@ -169,9 +189,10 @@ file it names goes one of two ways:
    ```
 
    peru now treats the file as one it used to import, and wants to delete
-   it: run `uvx peru@1.3.5 sync --force`, then `git checkout -- <file>` to
-   keep the project's version. Record it under the pattern's `deviations` in
-   `app-tooling.toml`, with the reason, and commit. From then on updates
+   it: run `uvx peru@1.3.5 sync --force`, then restore the project's version
+   (`git checkout <commit that has it> -- <file>`). Record it under the
+   pattern's `deviations` in `app-tooling.toml`, with the reason and with
+   why options 1 and 2 could not work, and commit. From then on updates
    leave the file alone. Upstream changes to it still appear in the
    pattern's `CHANGELOG.md`; whether and how to carry them over by hand is
    the project's decision, each time.

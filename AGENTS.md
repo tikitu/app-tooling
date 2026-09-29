@@ -19,9 +19,14 @@ patterns is in `patterns/pattern-imports/README.md`; how to write one, in
 
 * **Never add tooling that merges a project's edits to imported files with
   a pattern's changes**, or that makes such a merge easy. Diverging from a
-  pattern is a decision (move the change here, or take the file over as a
-  recorded deviation), and it must not become the path of least resistance.
-  Anyone can still merge by hand.
+  pattern is a decision (build on the imported file without changing it,
+  move the change here, or, last, take the file over as a recorded
+  deviation), and it must not become the path of least resistance. Anyone
+  can still merge by hand.
+
+* **When a project cannot build on a pattern without editing it, the
+  pattern is missing a seam.** Add one (a parameter, a target meant to be
+  depended on) rather than letting projects take files over.
 
 * **Pattern documents are read inside other projects** (imported to
   `docs/app-tooling/<pattern>/`): link outside the pattern's directory by
