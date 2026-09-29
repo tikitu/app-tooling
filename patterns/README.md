@@ -86,8 +86,8 @@ whether the shared part has a file to itself. So:
 
 - **Shared logic goes in a file the project does not edit**: a script, a
   Makefile fragment to `include`, a rule file. Anything project-specific
-  comes in through arguments, environment or make variables. peru then
-  replaces it whole on an update, and refuses to if it was edited.
+  comes in through arguments, environment or make variables. An update
+  replaces it whole, and refuses to run while it has been edited.
 - **Each such file names its pattern in its header**, and says it is
   imported, so that someone who finds it in a project knows not to edit it
   there and where to go instead.
@@ -97,6 +97,10 @@ whether the shared part has a file to itself. So:
 
 If a project needs a change to a shared file, that is a change to the
 pattern: make it here, with a parameter if it is really project-specific.
+The alternative is for the project to take the file over, as a recorded
+deviation. There is no tooling for merging a project's edits with a
+pattern's, and there will not be: it would make diverging the easy path
+([`pattern-imports`](pattern-imports/README.md#local-changes-to-imported-files)).
 
 ## Checking a set of projects
 
