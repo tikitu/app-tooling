@@ -4,11 +4,12 @@ Read [`README.md`](README.md) first for what this does and why.
 
 ## Detect
 
-- **Already adopted:** `scripts/stamp-git-commit.sh` exists, and
-  `app-tooling.toml` has `[patterns.git-commit-stamp]`. To update, follow
-  `CHANGELOG.md` from the recorded release or commit (`patterns/README.md`
-  says how for each); `diff` the project's scripts
-  against `files/scripts/` to see what copying them again would change.
+- **Already adopted:** `peru.yaml` imports `app-tooling|git-commit-stamp`.
+  Updates come with `make app-tooling-update`.
+- **Copied by hand, before peru:** `scripts/stamp-git-commit.sh` exists but
+  `peru.yaml` does not import it. `diff` it against `files/scripts/`, then
+  delete the copy and import it (step 1); a difference is either an old copy
+  or a local change that belongs in app-tooling.
 - **Something else doing this job.** Look for:
   - a run-script phase in `project.yml` (`preBuildScripts`,
     `postCompileScripts`, `postBuildScripts`) that calls `git`, `PlistBuddy`
@@ -39,8 +40,31 @@ skips step 4.
 
 ## Steps
 
-**1. Copy the scripts** from `files/scripts/` to `scripts/`, keeping them
-executable. `device-which-commit.sh` only if the project has an iOS app.
+The project must already have `pattern-imports`: a `peru.yaml` with the
+`app-tooling` module.
+
+**1. Import the pattern.** In `peru.yaml`, under `imports:`:
+
+```yaml
+    app-tooling|git-commit-stamp: ./
+    app-tooling|git-commit-stamp-docs: docs/app-tooling/git-commit-stamp/
+```
+
+and beside the other rules:
+
+```yaml
+rule git-commit-stamp:
+    export: patterns/git-commit-stamp/files
+rule git-commit-stamp-docs:
+    pick: [patterns/git-commit-stamp/README.md, patterns/git-commit-stamp/apply.md, patterns/git-commit-stamp/CHANGELOG.md]
+    export: patterns/git-commit-stamp
+```
+
+Then `uvx peru@1.3.5 sync`, which puts `scripts/stamp-git-commit.sh` and
+`scripts/device-which-commit.sh` in place, executable. A project with no iOS
+app can leave out `device-which-commit.sh` by adding
+`pick: patterns/git-commit-stamp/files/scripts/stamp-git-commit.sh` to the
+first rule.
 
 **2. Add the build phase** to the iOS app target in `project.yml`, beside
 its `dependencies:`:
@@ -110,15 +134,13 @@ describes the Mac build, that
 `plutil -extract AppGitCommit raw <app>/Contents/Info.plist` says which
 commit a bundle is.
 
-**7. Record it** in `app-tooling.toml`:
+**7. Record it** in `app-tooling.toml`, with any parameter that is not
+obvious and any deviation:
 
 ```toml
 [patterns.git-commit-stamp]
-release = "vX.Y.Z"
+params = { ios_target = "MyApp" }
 ```
-
-or, when applied from a branch, `branch = "…"` and `commit = "…"` in place
-of `release`.
 
 ## Verify
 

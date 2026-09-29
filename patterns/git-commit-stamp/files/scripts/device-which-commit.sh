@@ -3,11 +3,10 @@
 # device-which-commit.sh — say which commit the app installed on a device was
 # built from.
 #
-# From the app-tooling pattern `git-commit-stamp`
-# (https://github.com/tikitu/app-tooling, patterns/git-commit-stamp); the
-# project's app-tooling.toml records which release this copy came from.
-# Keep project-specific changes out of this file, so that updating it means
-# copying it again.
+# Imported by peru from the app-tooling pattern `git-commit-stamp`
+# (https://github.com/tikitu/app-tooling). Never edit it here: `peru sync`
+# refuses to overwrite a changed copy, and the change belongs in app-tooling.
+# docs/app-tooling/git-commit-stamp/ says what it is for.
 #
 # Usage:
 #   scripts/device-which-commit.sh <device> <bundle-id>

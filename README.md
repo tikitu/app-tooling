@@ -42,10 +42,12 @@ are in [external.md](external.md).
 
 [`patterns/`](patterns/README.md) holds conventions packaged for apps that
 already exist: each says how to recognise what a project has already, what
-to change, and how to check it worked. A project records what it has taken,
-and at which release, in an `app-tooling.toml`, so it can be brought up to
-date later. Refer to this repository from elsewhere by release tag, never
-by `main` ([`RELEASING.md`](RELEASING.md), [`CHANGELOG.md`](CHANGELOG.md)).
+to change, and how to check it worked. Projects import them with
+[peru](https://github.com/buildinspace/peru), pinned at one commit of this
+repository, following a release tag or a branch; `make app-tooling-update`
+brings a project up to date and prints the steps it needs. Start with
+[`patterns/pattern-imports`](patterns/pattern-imports/README.md).
+Releases: [`RELEASING.md`](RELEASING.md), [`CHANGELOG.md`](CHANGELOG.md).
 
 Improvements found in other projects start in [`inbox/`](inbox/README.md).
 
@@ -81,8 +83,9 @@ Always, as the core:
   around a rule, and to turn recurring mistakes into new rules. Plus
   `swift format` with one canonical form.
 - **Every build knows its commit.** `AppGitCommit` in the bundle's
-  `Info.plist` (the `git-commit-stamp` pattern), and an `app-tooling.toml`
-  recording which conventions the project follows.
+  `Info.plist` (the `git-commit-stamp` pattern).
+- **Patterns, from the start.** A `peru.yaml` importing the patterns the
+  starter carries, so a new app is updated like any other.
 - **`docs/gotchas.md`.** Traps that looked like something else, and why the
   odd-looking code that avoids them is there.
 - **Patterns for when the app grows.** `docs/screens.md`: a second screen

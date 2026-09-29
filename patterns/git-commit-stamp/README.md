@@ -62,7 +62,8 @@ stamping `unknown`, because `unknown` read back later looks like an answer.
 ## What it asks of a project
 
 - A git checkout at build time (always true for these apps).
-- For iOS: an XcodeGen `project.yml`, as in the starter's `docs/ios.md`.
+- For iOS: an XcodeGen `project.yml`, as in the starter's
+  [`docs/ios.md`](https://github.com/tikitu/app-tooling/blob/main/starter/docs/ios.md).
 - For the Mac: a `build.sh` that assembles the bundle, as the starter's
   does.
 
@@ -72,9 +73,12 @@ choice.
 
 ## Files
 
-| File | Goes to |
+Imported by peru, never edited in a project:
+
+| File | Imported as |
 |---|---|
 | `files/scripts/stamp-git-commit.sh` | `scripts/stamp-git-commit.sh` |
-| `files/scripts/device-which-commit.sh` | `scripts/device-which-commit.sh` (iOS only) |
+| `files/scripts/device-which-commit.sh` | `scripts/device-which-commit.sh` (used only with an iOS app) |
 
-`apply.md` has the steps; `CHANGELOG.md` what changed between releases.
+Requires the `pattern-imports` pattern. `apply.md` has the steps;
+`CHANGELOG.md` what changed between releases.

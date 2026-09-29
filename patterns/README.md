@@ -5,38 +5,28 @@ is one convention, packaged so that an agent can bring an existing project
 into line with it, and bring it up to date later.
 
 A pattern can be anything that has proved itself in one app and would help
-another: a script, a Makefile target, a build phase, an ast-grep rule, a
+another: a script, a Makefile fragment, a build phase, an ast-grep rule, a
 change to how a project is laid out. It may carry files, or only
 instructions.
 
-## Referring to app-tooling from elsewhere
+This page is for writing and changing patterns. How a project takes them,
+records them and updates them is the first pattern,
+[`pattern-imports`](pattern-imports/README.md), which every project takes
+first.
 
-Everything outside this repository refers to it as
-**`https://github.com/tikitu/app-tooling`**, never by a path on someone's
-machine, and at one of two things:
+## How projects get them
 
-- **A release tag** (`v0.1.0`), the usual case. A tag says exactly which
-  text a project was brought into line with, and stays true when `main`
-  moves on. What a release is, and how to make one, is in
-  [`RELEASING.md`](../RELEASING.md); what changed in each is in
-  [`CHANGELOG.md`](../CHANGELOG.md).
+Projects import patterns with [peru](https://github.com/buildinspace/peru),
+from `https://github.com/tikitu/app-tooling`, pinned at one commit for all
+of a project's patterns. A project follows a release tag, or a branch while
+a pattern is being worked out; it records the commit either way, so a moved
+tag or branch changes nothing until the project updates, and then shows as
+a diff. A project can read from a local checkout instead of GitHub.
+[`pattern-imports/README.md`](pattern-imports/README.md) has the details.
 
-      https://github.com/tikitu/app-tooling/tree/v0.1.0/patterns/git-commit-stamp
-
-- **A branch**, for a pattern that is being worked out: tried in a project
-  before it is released, or changed there while it is still moving. A branch
-  moves, so a reference to one always carries the commit it was read at as
-  well. Links to what was applied use the commit; the branch name says where
-  to look for what came after.
-
-      https://github.com/tikitu/app-tooling/tree/98cc38b/patterns/git-commit-stamp
-
-  The branch must be pushed, since other projects read it from GitHub. Merge
-  it into `main` with a merge commit, not a squash, so the commits projects
-  recorded stay in `main`'s history once the branch is deleted.
-
-Never `main` itself: a project tracking `main` has no release that says what
-it has, and no branch that anyone is deliberately moving.
+Because a project is at one commit for everything, patterns are always used
+with the versions of each other they were written beside. That is why there
+are no per-pattern versions, and no need to resolve them.
 
 ## What a pattern is made of
 
@@ -44,148 +34,69 @@ it has, and no branch that anyone is deliberately moving.
 patterns/<name>/
   README.md      what it does, why it is preferred, what it costs
   apply.md       for an agent: detect, parameters, steps, verify
-  CHANGELOG.md   what changed, under the release it shipped in
-  files/         files copied into a project as they are (optional)
+  CHANGELOG.md   what changed, and what a project must do to catch up
+  files/         imported into the project root as they are laid out
 ```
+
+A project imports `files/` at its root, and the three documents into
+`docs/app-tooling/<name>/`. So the documents are read *inside other
+projects*: link to anything outside the pattern's own directory by its full
+`https://github.com/tikitu/app-tooling/…` URL, never by a relative path.
 
 **`README.md`** is for the person deciding whether to adopt it. Say what
 problem it solves, in terms of the failure it prevents; what it asks of a
-project (tools, settings, a build phase); and what it does *not* do.
-Name the patterns it requires, if any.
+project (tools, settings, a build phase); and what it does *not* do. Name
+the patterns it requires, if any; "requires" means "take that one too",
+nothing more.
 
 **`apply.md`** is for the agent doing the work, in a project that was not
-built from the starter and may already have part of this, or an older
-version of it. It has four sections, always in this order:
+built from the starter and may already have part of this, or something else
+doing the same job. It has four sections, always in this order:
 
-1. **Detect.** How to tell whether the project already has the pattern, an
-   earlier release of it, or something else doing the same job. Name the
-   files, targets and settings to look for. What counts as "something else
-   doing the same job" is the important part: that is where a project that
-   solved the problem its own way is recognised, rather than given a second
-   solution beside the first.
+1. **Detect.** How to tell whether the project already has the pattern, or
+   something else doing the same job. Name the files, targets and settings
+   to look for. That second part is the important one: it is where a
+   project that solved the problem its own way is recognised, rather than
+   given a second solution beside the first.
 2. **Parameters.** What differs between projects (names, paths, bundle
    ids), and where in a project to find each one.
-3. **Steps.** What to change. Where a step changes a file the project owns
-   (its `Makefile`, `project.yml`, `AGENTS.md`), give the text to add and
-   say where it goes.
+3. **Steps.** The first step is always the pattern's two rules and imports
+   for `peru.yaml`, given as text to add. After that, what to change. Where
+   a step changes a file the project owns (its `Makefile`, `project.yml`,
+   `AGENTS.md`), give the text to add and say where it goes.
 4. **Verify.** Commands that show it worked, and what their output should
    be. A command that prints nothing and exits 0 proves nothing; say what to
    check instead.
 
-**`CHANGELOG.md`** lists changes under the release that shipped them, newest
-first, with an `Unreleased` section at the top while work is in progress.
-Each entry says what a project that already has the pattern must do to catch
-up ("copy `scripts/x.sh` again", "add `--flag` to the build phase"). This is
-what an update is made from, so an entry that only says "improved" is not
-enough.
+**`CHANGELOG.md`** lists changes newest first, under the release that
+shipped them, with `## Unreleased` at the top while work is in progress.
+Each entry says what a project that already has the pattern must do to
+catch up ("add `--flag` to the build phase", "run `make x` once"). A
+project's update prints exactly the entries it added, as its to-do list,
+so an entry that only says "improved" is not enough. Changes to `files/`
+alone arrive with the update and need no step; say so if it matters.
 
 **`files/`** is laid out as it goes into the project: `files/scripts/x.sh`
-becomes `scripts/x.sh`.
+becomes `scripts/x.sh`. Two patterns must not import the same path.
 
-## Seams: shared files are copied whole
+## Seams: shared files are never edited in a project
 
 The difference between an update that is easy and one that is a merge is
 whether the shared part has a file to itself. So:
 
 - **Shared logic goes in a file the project does not edit**: a script, a
   Makefile fragment to `include`, a rule file. Anything project-specific
-  comes in through arguments, environment or make variables. Updating is
-  then copying the file again and reading the diff.
-- **Each such file names its pattern in its header**, so that someone who
-  finds it in a project can find where it came from.
+  comes in through arguments, environment or make variables. peru then
+  replaces it whole on an update, and refuses to if it was edited.
+- **Each such file names its pattern in its header**, and says it is
+  imported, so that someone who finds it in a project knows not to edit it
+  there and where to go instead.
 - **What has to go in a project's own files is kept small** (a build phase
-  that calls the script, a target that calls it) and is given in
-  `apply.md` as text to add.
+  that calls the script, an `include`) and is given in `apply.md` as text
+  to add.
 
 If a project needs a change to a shared file, that is a change to the
-pattern: make it here, with a parameter if it is really project-specific,
-and not in the copy.
-
-## The record in each project
-
-Every project that takes patterns has an `app-tooling.toml` at its root. It
-is what makes "which of these projects are behind?" answerable:
-
-```toml
-# Conventions this project takes from app-tooling. Each pattern's apply.md,
-# at the release or commit named here, says how it was applied and how to
-# update it.
-source = "https://github.com/tikitu/app-tooling"
-
-[patterns.git-commit-stamp]
-release = "v0.1.0"
-# What was filled in for the pattern's parameters, when it is not obvious.
-params = { ios_target = "MyApp", device = "My iPhone" }
-# Where this project departs from the pattern on purpose, and why.
-deviations = ["Mac app keeps its date-based CFBundleVersion"]
-
-[declined.ast-grep-rules]
-release = "v0.1.0"
-reason = "keeps its Semgrep rules until they are ported"
-
-# Tracking a branch rather than a release:
-[patterns.testflight]
-branch = "testflight"
-commit = "3f2a9c1"
-```
-
-Each entry names what it was applied or last updated from, in one of two
-forms:
-
-- **`release`**: the tag.
-- **`branch` and `commit`**: the branch it follows, and the commit of that
-  branch it was applied or last updated from. Both are required: the branch
-  says where later changes will appear, the commit says which of them this
-  project already has.
-
-A project can mix the two, entry by entry: most patterns at a release, one
-on a branch while it is being worked out.
-
-- **`deviations`** and **`[declined.*]`** matter as much as what was
-  adopted. Without them, the next agent to bring the project up to date will
-  "fix" what was chosen on purpose. A pattern is declined *at* a release (or
-  a branch and commit) because it may change enough later to be worth
-  another look.
-- **`deviations`** and **`[declined.*]`** matter as much as what was
-  adopted. Without them, the next agent to bring the project up to date will
-  "fix" what was chosen on purpose. A pattern is declined *at* a release
-  because it may change enough later to be worth another look.
-
-A project made from the starter has this file from the start, listing what
-the starter already carries.
-
-## Applying a pattern (for an agent)
-
-1. Read the project's `app-tooling.toml`, if it has one. If the pattern is
-   declined there, stop and say so.
-2. Read the pattern's `README.md` and `apply.md` **at the release or
-   branch you are applying**: the latest release unless told otherwise, and
-   a branch only when asked for one. For a branch, note the commit you read
-   (`git ls-remote https://github.com/tikitu/app-tooling <branch>`), since
-   the branch may move while you work.
-3. Work through **Detect**. If the project already solves this problem its
-   own way, stop and describe both to the user before replacing anything:
-   the project's way may be better, and then it belongs here instead.
-4. Fill in the **Parameters**, then do the **Steps**.
-5. Run **Verify**, and report what it showed.
-6. Add or update the pattern's entry in `app-tooling.toml`.
-7. Commit in the project, naming the pattern and the release, or the
-   branch and commit.
-
-To **update** a pattern a project already has:
-
-- **At a release:** read its `CHANGELOG.md` for every release after the one
-  recorded, do what each entry says, verify, and update the recorded
-  release.
-- **On a branch:** the changes since are
-  `git diff <commit>..origin/<branch> -- patterns/<name>`, and the catch-up
-  steps are the `CHANGELOG.md` entries that diff adds. Do them, verify, and
-  record the branch's new commit.
-- **Moving from a branch to a release**, once the branch has been released
-  (`git tag --contains <commit>` names a tag): apply what the pattern's
-  `CHANGELOG.md` says changed after the recorded commit up to that release,
-  then replace `branch` and `commit` with `release`. Do this rather than
-  following a branch once it is merged; it will not move again.
+pattern: make it here, with a parameter if it is really project-specific.
 
 ## Checking a set of projects
 
@@ -197,13 +108,12 @@ repository:
 projects = ["~/code/MyApp", "~/code/OtherApp"]
 ```
 
-An agent asked to check them reads each project's `app-tooling.toml`,
-compares it with each pattern's `CHANGELOG.md`, and reports, per project,
-which patterns are missing, which are behind and by which releases, and
-which are declined. For an entry on a branch it reports whether the branch
-has moved past the recorded commit in that pattern's directory, and whether
-the branch has since been released or deleted, in which case the entry
-should move to a release. It changes nothing without being asked.
+An agent asked to check them reads, for each project, `peru.yaml` (the
+`reup:` it follows and the `rev:` it is at) and `app-tooling.toml`, and
+reports which patterns it has, which it lacks or has declined, and how far
+its `rev:` is behind its `reup:` (`git log --oneline <rev>..<reup> --
+patterns/`, in this repository). It flags a project following a branch that
+has since been released or deleted. It changes nothing without being asked.
 
 ## Where new patterns come from
 
@@ -217,13 +127,15 @@ A pattern is ready when:
 - nothing in it names a particular app, person or machine, except as an
   example;
 - every file in `files/` names its pattern in its header;
+- its documents link outside their directory only by full URL;
 - its `CHANGELOG.md` has an entry.
 
-If the starter should carry it too, change the starter in the same commit,
-and list the pattern in `starter/app-tooling.toml`.
+If the starter should carry it too, add it to `starter/peru.yaml`;
+[`AGENTS.md`](../AGENTS.md) has the order of commits that needs.
 
 ## The patterns
 
 | Pattern | What it does |
 |---|---|
+| [`pattern-imports`](pattern-imports/README.md) | How a project takes patterns: `peru.yaml`, `app-tooling.toml`, `make app-tooling-update` and `app-tooling-check`. Every project takes it first |
 | [`git-commit-stamp`](git-commit-stamp/README.md) | Every build records the commit it came from; `make ios-device-which` says which commit is on the phone |
