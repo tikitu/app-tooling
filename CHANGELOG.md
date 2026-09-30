@@ -19,5 +19,9 @@ The first release.
   become patterns.
 - **`git-commit-stamp`**, the first pattern: builds record their commit;
   `make ios-device-which` reads back which commit is on a phone.
+- **`testflight`**: `make testflight-validate` and `make testflight-upload`
+  send the iOS app to App Store Connect from a clean commit, with the
+  commit count as the build number. Its README explains why distribution
+  signing moves a CloudKit app to the Production environment.
 - **The starter** takes both patterns through peru, and stamps its Mac
   builds with their commit.
