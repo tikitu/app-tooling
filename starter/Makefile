@@ -57,6 +57,10 @@ NOTARY_PROFILE ?= starter-notary
 
 NOTES_FILE       ?=
 
+# app-tooling-update and app-tooling-check, for the conventions imported from
+# app-tooling (peru.yaml; docs/app-tooling/pattern-imports/README.md).
+include mk/app-tooling.mk
+
 .PHONY: all deps outdated update-pins check-pins check-shared-ios build check test release run run-background run-scratch scratch-reset \
         screenshot clean install uninstall register help \
         icon check-version notary-setup sign zip-notary notarize staple zip-release \
@@ -82,6 +86,8 @@ help:
 	@echo "  outdated          List dependencies with newer versions allowed (changes nothing)"
 	@echo "  update-pins       Re-resolve both packages to the newest allowed versions; review the diff"
 	@echo "  check-pins        Check the two packages pin the same versions (run by every build)"
+	@echo "  app-tooling-update  Move to the newest app-tooling commit peru.yaml follows; prints the steps"
+	@echo "  app-tooling-check   Check files imported from app-tooling match peru.yaml's pin"
 	@echo ""
 	@echo "Lint / format:"
 	@echo "  fmt               Reformat every Swift file in place (swift format)"

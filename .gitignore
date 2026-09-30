@@ -1,1 +1,4 @@
 .DS_Store
+
+# Your own list of projects that take patterns from here (patterns/README.md)
+fleet.local.toml

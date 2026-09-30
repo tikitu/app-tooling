@@ -47,8 +47,11 @@ SwiftUI, so its CSS-flavoured advice needs translating.
 Xcode 26 or later provides everything the build needs: `swift`, `swift
 format`, `codesign`, `notarytool` and the simulators. Beyond that, two tools
 come from Homebrew: `ast-grep` for the lint rules, and `xcodegen` to generate
-the iOS project in repos that have an iOS app. The GitHub CLI, `gh`, is only
-needed to publish a release. Each `Makefile` checks for what it uses and
+the iOS project in repos that have an iOS app. `uv`, also from Homebrew, runs
+[peru](https://github.com/buildinspace/peru) at a pinned version
+(`uvx peru@1.3.5`), which imports the conventions a project takes from this
+repository; it is only needed to add or update them, never to build. The
+GitHub CLI, `gh`, is only needed to publish a release. Each `Makefile` checks for what it uses and
 says what to install if something is missing.
 
 ## An Apple Developer account

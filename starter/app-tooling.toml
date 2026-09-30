@@ -1,0 +1,8 @@
+# Conventions this project takes from app-tooling, beyond what peru.yaml
+# records. docs/app-tooling/pattern-imports/README.md explains this file.
+
+[patterns.pattern-imports]
+
+# The Mac half only; an iOS app added later follows the pattern's apply.md
+# (docs/app-tooling/git-commit-stamp/apply.md) for the rest.
+[patterns.git-commit-stamp]

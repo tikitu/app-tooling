@@ -7,10 +7,13 @@
 > themselves.
 
 The technical setup I use to build Mac (and iOS) apps with agents, gathered
-in one place. It has two readers:
+in one place.
 
-- **An agent in a new project**, pointed here to pick up the conventions and
-  the tooling.
+There are three ways in:
+
+- **An agent in a new project**, which starts from the starter.
+- **An agent in an existing project**, bringing it into line with a
+  pattern, or up to date with one it already has.
 - **A human**, who wants to know what each part is, what it does for you,
   and above all *why* I prefer it.
 
@@ -34,6 +37,19 @@ explains each practice and why you might want it.
 
 Pieces that live elsewhere (skills, command-line tools) and how to get them
 are in [external.md](external.md).
+
+## Bringing an existing app into line
+
+[`patterns/`](patterns/README.md) holds conventions packaged for apps that
+already exist: each says how to recognise what a project has already, what
+to change, and how to check it worked. Projects import them with
+[peru](https://github.com/buildinspace/peru), pinned at one commit of this
+repository, following a release tag or a branch; `make app-tooling-update`
+brings a project up to date and prints the steps it needs. Start with
+[`patterns/pattern-imports`](patterns/pattern-imports/README.md).
+Releases: [`RELEASING.md`](RELEASING.md), [`CHANGELOG.md`](CHANGELOG.md).
+
+Improvements found in other projects start in [`inbox/`](inbox/README.md).
 
 ## What the starter brings
 
@@ -66,6 +82,10 @@ Always, as the core:
   firing. `AGENTS.md` tells agents to read the document before working
   around a rule, and to turn recurring mistakes into new rules. Plus
   `swift format` with one canonical form.
+- **Every build knows its commit.** `AppGitCommit` in the bundle's
+  `Info.plist` (the `git-commit-stamp` pattern).
+- **Patterns, from the start.** A `peru.yaml` importing the patterns the
+  starter carries, so a new app is updated like any other.
 - **`docs/gotchas.md`.** Traps that looked like something else, and why the
   odd-looking code that avoids them is there.
 - **Patterns for when the app grows.** `docs/screens.md`: a second screen

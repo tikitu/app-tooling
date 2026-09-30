@@ -27,6 +27,10 @@ usage() { sed -n '3,22p' "$0" >&2; exit 2; }
 	echo "✗ run this from the root of an unused copy of the template" >&2
 	exit 1
 }
+command -v uvx >/dev/null 2>&1 || {
+	echo "✗ uv is needed to restore the files imported from app-tooling (brew install uv)" >&2
+	exit 1
+}
 available=$(cd practices && for d in */; do echo "${d%/}"; done)
 
 if [ "${1:-}" = "--list" ]; then
@@ -120,6 +124,11 @@ done
 # A longer or shorter name moves line breaks; put them back where the
 # formatter wants them, so `make lint` passes from the start.
 swift format --configuration .swift-format --recursive --in-place Packages
+
+# The renaming above also rewrote files imported from app-tooling (its docs
+# say "starter"). Put them back as peru.yaml's rev has them, which also
+# checks that the copy is complete.
+uvx peru@1.3.5 sync --force --quiet
 
 rm -- "$0"
 

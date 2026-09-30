@@ -23,6 +23,11 @@ commands. `docs/` has the depth.
   exception; what *commits* is the command, and `configure` is the scripted
   way to set remembered options.
 
+* **Which build is this?** `plutil -extract AppGitCommit raw
+  build/Starter.app/Contents/Info.plist` gives the commit a bundle was built
+  from, with `-dirty` if there were uncommitted changes. Check it before
+  concluding that a running app shows (or lacks) a change.
+
 * Read `docs/gotchas.md` before touching startup, the database bootstrap, or
   anything that looks needlessly odd. Every trap in it fails *silently*. When
   you find a new one, add it.
@@ -30,6 +35,16 @@ commands. `docs/` has the depth.
 * **Before adding a second screen, read `docs/screens.md`; before adding an
   iOS app, read `docs/ios.md`.** Both are patterns worked out in earlier
   apps, with the traps that shaped them.
+
+## Conventions from app-tooling
+
+Some of this project's tooling is imported from app-tooling by peru:
+`peru.yaml` says what, and at which commit. **Never edit an imported file
+in place**; the change belongs in app-tooling. How to apply a new pattern,
+update, or work against a local checkout is in
+`docs/app-tooling/pattern-imports/README.md`. `app-tooling.toml` records
+this project's parameters, deliberate deviations and declined patterns;
+read it before changing anything a pattern covers.
 
 ## Swift
 

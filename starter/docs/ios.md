@@ -58,7 +58,18 @@ updates all three packages.
 | `ios-test` | the iOS package's suite on a simulator (`xcodebuild test -workspace Packages/StarterIOSKit`) |
 | `ios-run` | install and launch on the booted simulator with `xcrun simctl` |
 | `ios-device-build`, `ios-device-run` | sign for real (`-allowProvisioningUpdates`) and install with `xcrun devicectl` |
+| `ios-device-which` | which commit the app on the device was built from |
 | `ios-clean` | delete the generated project |
+
+## Which commit is on the phone
+
+The Mac build already records its commit (`AppGitCommit` in the bundle's
+`Info.plist`, written by `scripts/stamp-git-commit.sh`). The iOS app needs
+the same, as a build phase so that installs from Xcode's Run button are
+stamped too, and with `CFBundleVersion` set from the commit, since that is
+all a phone will report. The pattern is already imported:
+`docs/app-tooling/git-commit-stamp/apply.md` has the build phase, the
+`ios-device-which` target and the reasons.
 
 `xcrun simctl` drives the simulator without taking focus, as the Mac
 targets do; there is no equivalent of `send-keys` for the simulator, so
