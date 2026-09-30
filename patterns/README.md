@@ -147,3 +147,4 @@ If the starter should carry it too, add it to `starter/peru.yaml`;
 |---|---|
 | [`pattern-imports`](pattern-imports/README.md) | How a project takes patterns: `peru.yaml`, `app-tooling.toml`, `make app-tooling-update` and `app-tooling-check`. Every project takes it first |
 | [`git-commit-stamp`](git-commit-stamp/README.md) | Every build records the commit it came from; `make ios-device-which` says which commit is on the phone |
+| [`testflight`](testflight/README.md) | `make testflight-upload` archives a clean commit and uploads it to TestFlight; `make testflight-validate` checks without uploading |

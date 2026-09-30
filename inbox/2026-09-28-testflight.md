@@ -1,5 +1,8 @@
 # TestFlight as the way the iOS apps are distributed
 
+**In progress** on the `testflight` branch, as `patterns/testflight`; this
+item goes when it has been verified by a real upload.
+
 **Idea.** One pattern for archiving and uploading to TestFlight, applied to
 every project with an iOS app, in place of installing from Xcode.
 
