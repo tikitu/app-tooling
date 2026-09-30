@@ -19,5 +19,9 @@ The first release.
   become patterns.
 - **`git-commit-stamp`**, the first pattern: builds record their commit;
   `make ios-device-which` reads back which commit is on a phone.
+- **`privileged-helper`**: a Mac app runs one command as root through a
+  launchd daemon in its bundle (`SMAppService.daemon`), allowed once,
+  instead of the password dialog every time. Documents only: the shape
+  of the code, the traps, and what was found about trust.
 - **The starter** takes both patterns through peru, and stamps its Mac
   builds with their commit.
