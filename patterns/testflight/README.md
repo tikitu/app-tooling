@@ -79,10 +79,19 @@ of its data:
   (or the reverse) switches that device's environment. Keep development
   installs to the simulator or a spare device once a device runs TestFlight
   builds.
-- The local data on a device is kept across the install, but what the sync
-  engine makes of state recorded against the other environment is the app's
-  own question, and worth a backup and a test before a device with real
-  data moves.
+- The local data on a device is kept across the install, but **the sync
+  engine's saved state may not be.** SQLiteData, for one, keeps its state
+  per container, not per environment, and uploads existing rows only for
+  tables it has not synced before: a device that switches with its old
+  state uploads only rows changed afterwards, and the new environment is
+  silently partial. A device has to enter the new environment with fresh
+  sync state, and the app has to do the reset (`devicectl` cannot delete
+  files on a device). Check what the app's own sync engine does before
+  planning the move.
+- Xcode refuses to export for App Store Connect with Development
+  (`iCloudContainerEnvironment`), but development profiles allow
+  Production. The simplest end state is usually **every** build on
+  Production, so a device never switches between the two.
 
 `apply.md` stops at this for any app with iCloud entitlements, so that the
 move is planned with the app's owner rather than discovered.
