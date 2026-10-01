@@ -21,3 +21,11 @@ The first release.
   `make ios-device-which` reads back which commit is on a phone.
 - **The starter** takes both patterns through peru, and stamps its Mac
   builds with their commit.
+- **The starter's commands are `async`.** `AppModel.perform(_:)` and the
+  command inbox can wait for a command (Touch ID, a dialog, a helper
+  process) and report its outcome; the inbox file is taken before its
+  commands run, so a second notification cannot run it twice. Controls
+  still call `attempt(_:)` without awaiting: it starts the command with
+  `Task.immediate`, so one that does not wait has finished when it returns.
+  Nothing for an existing project to do; one that wants the same follows
+  the starter's `AppModel`, `CommandInbox` and `docs/commands.md`.

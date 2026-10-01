@@ -7,8 +7,9 @@ import OSLog
 ///
 /// A sender writes `inbox.json` into the `Commands` directory of the app's
 /// Application Support, then posts the Darwin notification
-/// ``notificationName``. The app runs the commands in order, stopping at the
-/// first failure, removes the inbox and writes `result.json` beside it. An
+/// ``notificationName``. The app removes the inbox, runs the commands in
+/// order, stopping at the first failure, and writes `result.json` beside it,
+/// once the last has finished, however long it waited. An
 /// inbox already waiting at launch runs as soon as the app starts.
 ///
 /// **Only started under `--scratch-database`**, so a command can never touch
@@ -37,19 +38,22 @@ public final class CommandInbox {
             isObserving = true
             CFNotificationCenterAddObserver(
                 CFNotificationCenterGetDarwinNotifyCenter(), nil,
-                { _, _, _, _, _ in Task { @MainActor in CommandInbox.shared.processInbox() } },
-                Self.notificationName as CFString, nil, .deliverImmediately)
+                { _, _, _, _, _ in Task { @MainActor in await CommandInbox.shared.processInbox() }
+                }, Self.notificationName as CFString, nil, .deliverImmediately)
         }
         logger.notice(
             "accepting commands in \(self.directory.path(percentEncoded: false), privacy: .public)")
-        processInbox()
+        Task { await processInbox() }
     }
 
-    func processInbox() {
+    func processInbox() async {
         guard let model, let data = try? Data(contentsOf: inboxURL) else { return }
+        // Taken before its commands run, and not run if it cannot be taken:
+        // a command can wait, and a second notification meanwhile would run
+        // the same file again.
+        guard (try? FileManager.default.removeItem(at: inboxURL)) != nil else { return }
+        let result = await Self.run(data, on: model)
         withErrorReporting {
-            try FileManager.default.removeItem(at: inboxURL)
-            let result = Self.run(data, on: model)
             try FileManager.default.createDirectory(
                 at: directory, withIntermediateDirectories: true)
             try Self.encoder.encode(result).write(to: resultURL, options: .atomic)
@@ -59,7 +63,7 @@ public final class CommandInbox {
         }
     }
 
-    static func run(_ data: Data, on model: AppModel) -> CommandResult {
+    static func run(_ data: Data, on model: AppModel) async -> CommandResult {
         let file: CommandFile
         do { file = try JSONDecoder().decode(CommandFile.self, from: data) } catch {
             return CommandResult(error: "could not read commands: \(error)")
@@ -67,7 +71,7 @@ public final class CommandInbox {
         var result = CommandResult(requestID: file.id)
         for command in file.commands {
             do {
-                let message = try model.perform(command)
+                let message = try await model.perform(command)
                 result.completed.append(.init(command: command.name, message: message))
             } catch {
                 result.error = "\(command.name) failed: \(error)"

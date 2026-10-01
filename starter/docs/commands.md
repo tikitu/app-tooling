@@ -18,6 +18,14 @@ exercises the same code a key press does. A control that does its work itself
 is a bug, because it is a path no script can reach — and a path no script can
 reach is a path nobody checks.
 
+`perform` is `async`, so a command can wait for what it needs (Touch ID, a
+dialog, another process) and still report its outcome. Controls call
+`attempt(_:)`, which starts the command at once and returns its task; a
+command that does not wait has finished before `attempt` returns, so a
+button behaves as if it were synchronous. While one command waits, others
+can run: a command that waits says what happens to a second one meanwhile
+(refusing it as "busy" is the usual answer).
+
 The deliberate exception is *form state*: typing into the add field, and the
 Show Done toggle, write their values directly, as any form does. What
 *commits* is a command (`add`), and `configure` is the scripted way to set the
@@ -41,8 +49,10 @@ A Darwin notification carries no arguments, so the commands go in a file:
    Application Support (in its container), writing it aside and moving it into
    place so the app never reads half a file.
 2. The sender posts the Darwin notification `org.example.starter.commands`.
-3. The app runs the commands **in order, stopping at the first failure**,
-   deletes the inbox, and writes `result.json` beside it.
+3. The app deletes the inbox, runs the commands **in order, stopping at the
+   first failure**, and writes `result.json` beside it. A command can wait
+   (`perform` is `async`); the result is written once the last one has
+   finished, so it says what happened, not what was started.
 4. The sender reads `result.json` and exits non-zero if it holds an `error`.
 
 An inbox already waiting when the app launches runs at startup.
