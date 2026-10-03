@@ -32,3 +32,4 @@ line in the commit message saying why.
 - [2026-09-28 Keep a log of device installs](2026-09-28-device-install-log.md)
 - [2026-09-28 TestFlight as the way the iOS apps are distributed](2026-09-28-testflight.md)
 - [2026-10-01 Refuse development installs on TestFlight devices](2026-10-01-testflight-only-devices.md)
+- [2026-10-02 Where a release's notes file goes: not in `dist/`](2026-10-02-release-notes-file.md)
