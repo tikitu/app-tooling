@@ -24,6 +24,9 @@ particular "iCloud and CloudKit".
   deployed, which clients move and when, a backup), and record the decision
   in `app-tooling.toml`. For `aps-environment` alone, tell the user that
   TestFlight builds register for production push.
+- **Entitlements that need Apple's approval to distribute**, such as
+  `com.apple.developer.family-controls`: see README's "When not to use
+  it", and ask the user before going on.
 - **Requirements:** `peru.yaml` imports `git-commit-stamp`; there is an
   XcodeGen `project.yml` and a make target that generates the project. If
   not, those come first.

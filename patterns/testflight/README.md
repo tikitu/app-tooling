@@ -13,6 +13,15 @@ device signed into the tester's account can install and update it, without
 the Mac. It is also the path to the App Store, so an app that goes there
 later has been through the same signing and checks all along.
 
+## When not to use it
+
+- **A capability Apple must approve for distribution.** Some entitlements,
+  such as Family Controls (`com.apple.developer.family-controls`, for
+  Screen Time data), work in development builds but need Apple's explicit
+  approval before any distributed build, TestFlight included. That approval
+  can take a long time. For a personal app, installing from Xcode is
+  usually worth more than asking.
+
 ## What it does
 
 `scripts/testflight.sh` (through `make testflight-validate` and
