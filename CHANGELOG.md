@@ -37,3 +37,7 @@ The first release.
   `Task.immediate`, so one that does not wait has finished when it returns.
   Nothing for an existing project to do; one that wants the same follows
   the starter's `AppModel`, `CommandInbox` and `docs/commands.md`.
+- **`ios-simulators`** (draft): the project's own simulators, by names no
+  Xcode release changes, on the newest iOS and the phone's;
+  `make ios-sims` after an Xcode update. Simulator builds are signed to
+  run locally, since unsigned ones do not open.
