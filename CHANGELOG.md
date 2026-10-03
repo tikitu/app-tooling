@@ -19,12 +19,16 @@ The first release.
   become patterns.
 - **`git-commit-stamp`**, the first pattern: builds record their commit;
   `make ios-device-which` reads back which commit is on a phone.
+- **`testflight`**: `make testflight-validate` and `make testflight-upload`
+  send the iOS app to App Store Connect from a clean commit, with the
+  commit count as the build number. Its README explains why distribution
+  signing moves a CloudKit app to the Production environment.
 - **`privileged-helper`**: a Mac app runs one command as root through a
   launchd daemon in its bundle (`SMAppService.daemon`), allowed once,
   instead of the password dialog every time. Documents only: the shape
   of the code, the traps, and what was found about trust.
-- **The starter** takes both patterns through peru, and stamps its Mac
-  builds with their commit.
+- **The starter** takes `pattern-imports` and `git-commit-stamp` through
+  peru, and stamps its Mac builds with their commit.
 - **The starter's commands are `async`.** `AppModel.perform(_:)` and the
   command inbox can wait for a command (Touch ID, a dialog, a helper
   process) and report its outcome; the inbox file is taken before its
