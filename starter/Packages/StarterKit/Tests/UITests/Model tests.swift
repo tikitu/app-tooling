@@ -19,7 +19,7 @@ struct ModelTests {
     /// A model with `titles` added, in order, and the list loaded.
     func model(with titles: [String]) async throws -> AppModel {
         let model = AppModel()
-        for title in titles { try model.perform(.add(title: title)) }
+        for title in titles { try await model.perform(.add(title: title)) }
         try await model.$items.load()
         return model
     }
@@ -34,38 +34,54 @@ struct ModelTests {
     @Test
     func `an empty title is refused`() async throws {
         let model = try await model(with: [])
-        #expect(throws: CommandError.emptyTitle) { try model.perform(.add(title: "  ")) }
+        await #expect(throws: CommandError.emptyTitle) {
+            try await model.perform(.add(title: "  "))
+        }
     }
 
     @Test
     func `items are referred to by a title that is exact and unique`() async throws {
         let model = try await model(with: ["a", "b", "b"])
-        #expect(throws: CommandError.noSuchItem("A")) { try model.perform(.select(["A"])) }
-        #expect(throws: CommandError.ambiguousTitle("b")) { try model.perform(.select(["b"])) }
-        try model.perform(.select(["a"]))
+        await #expect(throws: CommandError.noSuchItem("A")) {
+            try await model.perform(.select(["A"]))
+        }
+        await #expect(throws: CommandError.ambiguousTitle("b")) {
+            try await model.perform(.select(["b"]))
+        }
+        try await model.perform(.select(["a"]))
         expectNoDifference(model.selectedItems.map(\.title), ["a"])
     }
 
     @Test
     func `acting on the selection moves it to the next row`() async throws {
         let model = try await model(with: ["a", "b", "c"])
-        try model.perform(.select(["a"]))
-        model.actOnSelection { .setDone($0, true) }
+        try await model.perform(.select(["a"]))
+        await model.actOnSelection { .setDone($0, true) }.value
         expectNoDifference(model.selectedItems.map(\.title), ["b"])
         try await model.$items.load()
         expectNoDifference(model.items.filter(\.isDone).map(\.title), ["a"])
 
-        model.actOnSelection { .delete($0) }
+        await model.actOnSelection { .delete($0) }.value
         try await model.$items.load()
         expectNoDifference(model.items.map(\.title), ["a", "c"])
         expectNoDifference(model.selectedItems.map(\.title), ["c"])
     }
 
     @Test
+    func `a command that does not wait has finished when attempt returns`() async throws {
+        let model = try await model(with: ["a"])
+        // Not awaited: a control's action cannot await, and relies on this.
+        model.attempt(.select(["a"]))
+        expectNoDifference(model.selectedItems.map(\.title), ["a"])
+        model.attempt(.select(["nope"]))
+        expectNoDifference(model.lastError, "no item 'nope'")
+    }
+
+    @Test
     func `hiding done items narrows the list`() async throws {
         let model = try await model(with: ["a", "b"])
-        try model.perform(.setDone(["a"], true))
-        try model.perform(.configure(.init(showsDone: false)))
+        try await model.perform(.setDone(["a"], true))
+        try await model.perform(.configure(.init(showsDone: false)))
         try await model.$items.load()
         expectNoDifference(model.visibleItems.map(\.title), ["b"])
         #expect(model.showsDone == false)

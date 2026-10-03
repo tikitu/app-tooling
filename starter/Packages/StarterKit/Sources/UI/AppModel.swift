@@ -53,11 +53,14 @@ public final class AppModel {
     /// Performs `command` and describes what happened, for a command file's
     /// result.
     ///
-    /// Synchronous on purpose, so a command file never blocks the app. A
-    /// command that has to wait for something should start a task and report
-    /// *that*; a script that needs the outcome reads the state the task writes.
+    /// Async, so that a command can wait for what it needs (Touch ID, a
+    /// dialog, a helper process) and report the outcome, not that it
+    /// started. Waiting suspends; it does not block the app. But other
+    /// commands can run while one waits, so a command that waits decides
+    /// what a second one meanwhile does: refusing it with an error of its
+    /// own ("busy") is the usual answer. None of the starter's commands wait.
     @discardableResult
-    public func perform(_ command: AppCommand) throws -> String {
+    public func perform(_ command: AppCommand) async throws -> String {
         switch command {
         case .configure(let configuration): return configure(configuration)
 
@@ -66,7 +69,7 @@ public final class AppModel {
             guard !title.isEmpty else { throw CommandError.emptyTitle }
             let id = uuid()
             let now = self.now
-            try database.write { db in
+            try write { db in
                 try Item.insert { Item.Draft(title: title, createdAt: now, id: id) }.execute(db)
             }
             selection = [id]
@@ -79,18 +82,24 @@ public final class AppModel {
 
         case .setDone(let titles, let isDone):
             let ids = try titles.map(item(titled:)).map(\.id)
-            try database.write { db in
+            try write { db in
                 try Item.where { $0.id.in(ids) }.update { $0.isDone = isDone }.execute(db)
             }
             return "marked \(ids.count) item(s) \(isDone ? "done" : "not done")"
 
         case .delete(let titles):
             let ids = try titles.map(item(titled:)).map(\.id)
-            try database.write { db in try Item.where { $0.id.in(ids) }.delete().execute(db) }
+            try write { db in try Item.where { $0.id.in(ids) }.delete().execute(db) }
             selection.subtract(ids)
             return "deleted \(ids.count) item(s)"
         }
     }
+
+    /// The database's synchronous write, on the main actor, as before
+    /// `perform` was async. Inside an async function `database.write` is the
+    /// async overload, which suspends, so a command that only writes would
+    /// no longer have finished when ``attempt(_:)`` returns.
+    private func write(_ updates: (Database) throws -> Void) throws { try database.write(updates) }
 
     private func configure(_ configuration: AppCommand.Configuration) -> String {
         var changed: [String] = []
@@ -128,10 +137,20 @@ extension AppModel {
     ///
     /// Controls call this; ``CommandInbox`` calls `perform` directly, because
     /// a command file wants the error in its result.
-    public func attempt(_ command: AppCommand) {
+    ///
+    /// Returns at once, so a control's action can call it, with the task
+    /// doing the work: `await model.attempt(…).value` for the outcome. The
+    /// task starts immediately, so a command that does not wait has finished
+    /// by the time this returns.
+    @discardableResult
+    public func attempt(_ command: AppCommand) -> Task<Void, Never> {
+        Task.immediate { await run(command) }
+    }
+
+    private func run(_ command: AppCommand) async {
         do {
             lastError = nil
-            try perform(command)
+            try await perform(command)
         } catch {
             logger.error("\(command.name) failed: \(error)")
             lastError = "\(error)"
@@ -139,12 +158,19 @@ extension AppModel {
     }
 
     /// Performs a command on the selected items, then moves the selection to
-    /// the next row — "acting moves on" (`docs/keyboard.md`).
-    public func actOnSelection(_ command: ([String]) -> AppCommand) {
+    /// the next row — "acting moves on" (`docs/keyboard.md`). Returns at once,
+    /// as ``attempt(_:)`` does.
+    @discardableResult
+    public func actOnSelection(_ command: ([String]) -> AppCommand) -> Task<Void, Never> {
         let chosen = selectedItems
-        guard !chosen.isEmpty else { return }
+        guard !chosen.isEmpty else { return Task {} }
+        // Worked out before the command runs, from the list as the person saw
+        // it when they acted: once it has run, the acted-on rows may be gone.
         let next = SelectionAfter.successor(of: selection, in: visibleItems.map(\.id))
-        attempt(command(chosen.map(\.title)))
-        selection = next.map { [$0] } ?? []
+        let command = command(chosen.map(\.title))
+        return Task.immediate {
+            await run(command)
+            selection = next.map { [$0] } ?? []
+        }
     }
 }

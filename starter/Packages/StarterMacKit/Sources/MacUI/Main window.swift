@@ -33,8 +33,12 @@ public struct MainWindow: View {
     }
 
     private func add() {
-        model.attempt(.add(title: newTitle))
-        if model.lastError == nil { newTitle = "" }
+        let title = newTitle
+        Task.immediate {
+            await model.attempt(.add(title: title)).value
+            // Unless it failed, or the person has typed on while it ran.
+            if model.lastError == nil, newTitle == title { newTitle = "" }
+        }
     }
 }
 
