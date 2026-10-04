@@ -148,4 +148,5 @@ If the starter should carry it too, add it to `starter/peru.yaml`;
 | [`pattern-imports`](pattern-imports/README.md) | How a project takes patterns: `peru.yaml`, `app-tooling.toml`, `make app-tooling-update` and `app-tooling-check`. Every project takes it first |
 | [`git-commit-stamp`](git-commit-stamp/README.md) | Every build records the commit it came from; `make ios-device-which` says which commit is on the phone |
 | [`testflight`](testflight/README.md) | `make testflight-upload` archives a clean commit and uploads it to TestFlight; `make testflight-validate` checks without uploading |
+| [`instruments-profiling`](instruments-profiling/README.md) | An agent records Instruments traces of the Mac app unattended, on a copy of its data, reads them as text, and compares builds before and after a change. With a short skill that points agents at it |
 | [`privileged-helper`](privileged-helper/README.md) | A Mac app runs one command as root without a password each time: a launchd daemon in the bundle, allowed once in System Settings, with Touch ID before the risky direction. Documents only |
