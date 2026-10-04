@@ -27,6 +27,13 @@ The first release.
   launchd daemon in its bundle (`SMAppService.daemon`), allowed once,
   instead of the password dialog every time. Documents only: the shape
   of the code, the traps, and what was found about trust.
+- **`instruments-profiling`**: headless Instruments profiling of a Mac app.
+  `make profile` records any template while a scenario runs, on a re-signed
+  copy of the app and a copy of its data, refusing builds that can sync and
+  checking which process it traced; `trace-query.py` reads traces as text
+  (delays in Instruments' own categories, profiles, SwiftUI updates and
+  their causes, memory); `profile-compare.sh` and `trace-compare.py` compare
+  builds. A guide to the method, and a short skill.
 - **The starter** takes `pattern-imports` and `git-commit-stamp` through
   peru, and stamps its Mac builds with their commit.
 - **The starter's commands are `async`.** `AppModel.perform(_:)` and the
