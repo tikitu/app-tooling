@@ -247,6 +247,26 @@ args=(record --template "$template" --output "$trace" $launch_env
 # is there now, so the files this run adds can go afterwards.
 ktrace_before=(${TMPDIR:-/tmp}/instruments*.ktrace(N))
 
+# Remove the staging files this run added, whether it succeeded or not. The
+# instruments service keeps its file open for ~45 s after the recording
+# ends, so wait (up to 90 s); a file still open after that, another
+# recording's perhaps, is left alone.
+remove_staging() {
+  local added=() f open
+  for f in ${TMPDIR:-/tmp}/instruments*.ktrace(N); do
+    (( ${ktrace_before[(Ie)$f]} )) || added+=($f)
+  done
+  (( ${#added} )) || return 0
+  echo "→ waiting for instruments to release ${#added} staging file(s) to delete" >&2
+  for _ in $(seq 1 45); do
+    open=0
+    for f in $added; do lsof "$f" >/dev/null 2>&1 && open=1; done
+    (( open )) || break
+    sleep 2
+  done
+  for f in $added; do lsof "$f" >/dev/null 2>&1 || rm -f "$f"; done
+}
+
 scenario_started=0
 scenario_done=0
 if (( scenario_notifies )); then
@@ -269,6 +289,7 @@ cleanup() {
   # A target whose recorder was killed while stopping ignores SIGTERM.
   sleep 1
   pkill -9 -f "^$EXE" 2>/dev/null || true
+  remove_staging
 }
 trap cleanup EXIT
 
@@ -336,23 +357,7 @@ pkill -f "^$EXE" 2>/dev/null || true
 # (`profile-mac.sh … | tail`).
 kill $(listeners) 2>/dev/null || true
 
-# Remove the staging files this run added. The instruments service keeps
-# its file open for ~45 s after the trace is saved, so wait (up to 90 s); a
-# file still open after that, another recording's perhaps, is left alone.
-added=()
-for f in ${TMPDIR:-/tmp}/instruments*.ktrace(N); do
-  (( ${ktrace_before[(Ie)$f]} )) || added+=($f)
-done
-if (( ${#added} )); then
-  echo "→ waiting for instruments to release ${#added} staging file(s) to delete"
-  for _ in $(seq 1 45); do
-    open=0
-    for f in $added; do lsof "$f" >/dev/null 2>&1 && open=1; done
-    (( open )) || break
-    sleep 2
-  done
-  for f in $added; do lsof "$f" >/dev/null 2>&1 || rm -f "$f"; done
-fi
+remove_staging
 
 grep -E '\[Error\]|failed' $WORK/xctrace.log >&2 || true
 [[ -d $trace ]] || { cat $WORK/xctrace.log >&2; echo "✗ no trace written" >&2; exit 1; }
