@@ -10,8 +10,11 @@ import os
 import plistlib
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
+
+sys.dont_write_bytecode = True  # importing the script must not leave __pycache__ beside it
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SCRIPT = os.path.join(HERE, "derived-data-orphans.py")
