@@ -106,6 +106,12 @@ snapshot tests) reviewing re-recorded snapshots before committing them.
 - **[`SWIFTUI-RULES.md`](SWIFTUI-RULES.md).** SwiftUI-on-the-Mac rules, each
   with the failure that taught it: transition crashes, layout, stale caches,
   rows, toolbars, Charts. Complements the `swiftui-pro` skill.
+- **[`skills/derived-data-cleanup`](skills/derived-data-cleanup/SKILL.md).**
+  A Claude Code skill that finds Xcode DerivedData directories whose
+  project or worktree is gone, proven from the path each one records, and
+  deletes only those. Not a pattern: install it once, for every project,
+  with `ln -s ~/code/app-tooling/skills/derived-data-cleanup
+  ~/.claude/skills/derived-data-cleanup`.
 
 ## Licence
 
