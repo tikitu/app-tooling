@@ -1,6 +1,6 @@
 # instruments-profiling changelog
 
-## Unreleased
+## v0.1.0 (2026-10-05)
 
 First version, from scripts two projects had copied and adapted by hand:
 `profile-mac.sh`, `profile-compare.sh`, `trace-query.py`, `trace-compare.py`,

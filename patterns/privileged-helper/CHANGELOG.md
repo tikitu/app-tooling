@@ -1,6 +1,6 @@
 # privileged-helper changelog
 
-## Unreleased
+## v0.1.0 (2026-10-05)
 
 First version, documents only: a launchd daemon in the bundle, registered
 with `SMAppService.daemon`, running one command as root for the app over

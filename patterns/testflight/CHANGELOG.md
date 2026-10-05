@@ -1,6 +1,6 @@
 # testflight changelog
 
-## Unreleased
+## v0.1.0 (2026-10-05)
 
 First version: `make testflight-validate` and `make testflight-upload`
 archive a clean commit on the release branch, check its stamp and export
