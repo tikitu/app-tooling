@@ -1,6 +1,6 @@
 # git-commit-stamp changelog
 
-## Unreleased
+## v0.1.0 (2026-10-05)
 
 First version. `stamp-git-commit.sh` writes `AppGitCommit`, and with
 `--bundle-version` a `CFBundleVersion` of `<count>.<dirty>`;
