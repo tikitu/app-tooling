@@ -57,7 +57,11 @@ stamping `unknown`, because `unknown` read back later looks like an answer.
   count. `device-which-commit.sh` looks along `HEAD`'s first-parent history,
   which is right for a build from the current branch or from one it has
   merged, and says so when the count is not there. `AppGitCommit`, shown by
-  the app, is the exact answer.
+  the app, is the exact answer. A branch that was squash-merged or rebased
+  is not "merged" in this sense: its commits, and their counts, are gone
+  from history, so a build made from it maps to whatever commit now has
+  its count. Builds that matter come from the main line (the `testflight`
+  pattern only uploads from there), where this does not arise.
 
 ## What it asks of a project
 
