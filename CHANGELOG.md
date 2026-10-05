@@ -44,3 +44,11 @@ The first release.
   `Task.immediate`, so one that does not wait has finished when it returns.
   Nothing for an existing project to do; one that wants the same follows
   the starter's `AppModel`, `CommandInbox` and `docs/commands.md`.
+- **The starter builds with Xcode 27.** Its packages depended on
+  `xctest-dynamic-overlay`, which every Point-Free package has replaced with
+  `swift-issue-reporting` 2.x, so the pinned `Package.resolved` no longer
+  resolved. A project made from the starter changes the same in both
+  `Package.swift` files (the URL to
+  `https://github.com/pointfreeco/swift-issue-reporting`, `from: "2.1.0"`,
+  and `package: "swift-issue-reporting"` on the `IssueReporting` product),
+  then runs `make update-pins`.
