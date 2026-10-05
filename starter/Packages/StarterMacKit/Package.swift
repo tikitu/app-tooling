@@ -21,7 +21,7 @@ let package = Package(
         .package(url: "https://github.com/pointfreeco/sqlite-data", from: "1.12.0"),
         .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.17.1"),
         .package(url: "https://github.com/pointfreeco/swift-sharing", from: "2.10.1"),
-        .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "1.13.1"),
+        .package(url: "https://github.com/pointfreeco/swift-issue-reporting", from: "2.1.0"),
     ],
     targets: [
         // The Mac's views: the window, the list and its keyboard handling,
@@ -43,6 +43,6 @@ let package = Package(
                 .product(name: "UI", package: "StarterKit"),
                 .product(name: "SQLiteData", package: "sqlite-data"),
                 .product(name: "Dependencies", package: "swift-dependencies"),
-                .product(name: "IssueReporting", package: "xctest-dynamic-overlay"),
+                .product(name: "IssueReporting", package: "swift-issue-reporting"),
             ], swiftSettings: shared),
     ])

@@ -24,7 +24,7 @@ let package = Package(
         .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.17.1"),
         .package(url: "https://github.com/pointfreeco/swift-sharing", from: "2.10.1"),
         .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.7.3"),
-        .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "1.13.1"),
+        .package(url: "https://github.com/pointfreeco/swift-issue-reporting", from: "2.1.0"),
     ],
     targets: [
         .target(
@@ -32,14 +32,14 @@ let package = Package(
             dependencies: [
                 .product(name: "SQLiteData", package: "sqlite-data"),
                 .product(name: "Dependencies", package: "swift-dependencies"),
-                .product(name: "IssueReporting", package: "xctest-dynamic-overlay"),
+                .product(name: "IssueReporting", package: "swift-issue-reporting"),
             ], swiftSettings: shared),
         .target(
             name: "UI",
             dependencies: [
                 "Core", .product(name: "SQLiteData", package: "sqlite-data"),
                 .product(name: "Dependencies", package: "swift-dependencies"),
-                .product(name: "IssueReporting", package: "xctest-dynamic-overlay"),
+                .product(name: "IssueReporting", package: "swift-issue-reporting"),
                 .product(name: "Sharing", package: "swift-sharing"),
             ], swiftSettings: shared),
         .testTarget(
