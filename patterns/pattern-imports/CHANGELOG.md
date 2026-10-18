@@ -1,5 +1,15 @@
 # pattern-imports changelog
 
+## Unreleased
+
+`make app-tooling-update` (and `app-tooling-check`) accept a tree whose
+only change is to `reup:` in `peru.yaml`, so moving to a new release is:
+set `reup:`, run the update, commit everything together. Before, the
+update refused the edited `peru.yaml`, and the `reup:` change had to be
+committed on its own first. Any other change to `peru.yaml` is still
+refused, and so is any edited import. Nothing to do beyond taking the
+update; the README's "Updating" section has the new steps.
+
 ## v0.1.0 (2026-10-05)
 
 Agent instructions live in `AGENTS.md` only. A project that has a

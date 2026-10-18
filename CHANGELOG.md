@@ -4,6 +4,14 @@ What changed in each release of app-tooling. Each pattern has its own
 `CHANGELOG.md` with what a project must do to catch up; this file is the
 summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
+## Unreleased
+
+- **`pattern-imports`**: `make app-tooling-update` accepts an uncommitted
+  change to `reup:` in `peru.yaml`, and nothing else, so a project moves to
+  a new release by setting `reup:` and running the update, with no
+  separate commit for the `reup:` edit. Nothing to do beyond taking the
+  update.
+
 ## v0.1.0 (2026-10-05)
 
 The first release.
