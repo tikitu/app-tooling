@@ -6,6 +6,15 @@ summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
 ## Unreleased
 
+- **Xcode 27, for every project, not only the starter.** A
+  `Package.resolved` that pins `xctest-dynamic-overlay` fails to resolve,
+  because Point-Free packages now depend on `swift-issue-reporting`. A
+  project that gets it only through other packages runs
+  `swift package resolve` in each package, which swaps that one pin and
+  moves no other (not `swift package update`); one whose `Package.swift`
+  names it changes the manifest as the starter did (v0.1.0, below). The
+  steps are in `pattern-imports`' changelog, which every project's next
+  update prints.
 - **`pattern-imports`**: `make app-tooling-update` accepts an uncommitted
   change to `reup:` in `peru.yaml`, and nothing else, so a project moves to
   a new release by setting `reup:` and running the update, with no
