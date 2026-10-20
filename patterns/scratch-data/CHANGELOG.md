@@ -1,6 +1,6 @@
 # scratch-data changelog
 
-## Unreleased
+## v0.3.0 (2026-10-20)
 
 **`quit-running` could quit the real app.** It found the app with
 `pgrep -f "$(APP)/Contents/MacOS/"`, which for a relative `APP` (such as

@@ -1,6 +1,6 @@
 # instruments-profiling changelog
 
-## Unreleased
+## v0.3.0 (2026-10-20)
 
 `profile-mac.sh`:
 
