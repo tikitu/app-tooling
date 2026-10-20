@@ -27,7 +27,7 @@ Read [`README.md`](README.md) first for what this does and why.
 | Parameter | Where to find it |
 |---|---|
 | `APP` | the `Makefile`'s path to the built bundle, usually `build/<App>.app` |
-| `BUNDLE_ID` | the Mac app's bundle id: `Resources/Info.plist`, `build.sh` or the `Makefile` |
+| `BUNDLE_ID` | the Mac app's bundle id: `Resources/Info.plist`, `build.sh` or the `Makefile`. Not a parameter of the fragment; only the paths below use it |
 | `SCRATCH_DIR` | where the app's code puts the scratch database (below). Sandboxed: `$(HOME)/Library/Containers/$(BUNDLE_ID)/Data/tmp/<App>-scratch`. Unsandboxed: `URL.temporaryDirectory` is `$TMPDIR`, so `$(shell getconf DARWIN_USER_TEMP_DIR)<App>-scratch` |
 | `SCRATCH_DEFAULTS` | the scratch defaults suite. Sandboxed: `$(HOME)/Library/Containers/$(BUNDLE_ID)/Data/Library/Preferences/$(BUNDLE_ID).scratch`. Unsandboxed: `$(BUNDLE_ID).scratch`. Empty if the app has no settings |
 | `SCRATCH_BUILD` | the target that builds `$(APP)`, if it is not `build`. For an app that syncs, one that builds a bundle which cannot (`sync-configuration`) |
@@ -122,5 +122,8 @@ targets can use `$(quit-running)` before `open`.
   `scratch.sqlite`. Run this only for an app whose scratch run cannot reach
   real data: never before step 2 is in, and for an app that syncs, only with
   a build that cannot (`sync-configuration`).
+- If the real app is running from another checkout, `pgrep -fl
+  "<App>.app/Contents/MacOS/"` shows the same pid for it before and after
+  `make run-scratch` and `make scratch-reset`.
 - `make scratch-reset`; then `ls "<SCRATCH_DIR>"` fails with "No such file
   or directory".

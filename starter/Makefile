@@ -241,12 +241,19 @@ print-version:
 
 # Every launch quits any running copy first — `open` would otherwise just
 # bring the old one forward, and `open -n` leaves old copies whose windows
-# screenshots then come from (docs/gotchas.md).
+# screenshots then come from (docs/gotchas.md). Only this checkout's build
+# is touched, by absolute path and pid: the bundle id, or a relative path,
+# would also reach the real app built from another checkout.
+_quit_running_pids = ps -axo pid=,args= | awk -v p='$(abspath $(APP))/Contents/MacOS/' \
+  '{ pid = $$1; sub(/^ *[0-9]+ /, ""); if (index($$0, p) == 1) print pid }'
 define quit-running
-	@if pgrep -f "$(APP)/Contents/MacOS/" >/dev/null; then \
-	  osascript -e 'tell application id "$(BUNDLE_ID)" to quit' >/dev/null 2>&1 || true; \
-	  for i in $$(seq 50); do pgrep -f "$(APP)/Contents/MacOS/" >/dev/null || break; sleep 0.2; done; \
-	  pkill -f "$(APP)/Contents/MacOS/" 2>/dev/null || true; \
+	@pids=$$($(_quit_running_pids)); \
+	if [ -n "$$pids" ]; then \
+	  for pid in $$pids; do \
+	    osascript -l JavaScript -e "ObjC.import('AppKit'); \$$.NSRunningApplication.runningApplicationWithProcessIdentifier($$pid).terminate" >/dev/null 2>&1 || true; \
+	  done; \
+	  for i in $$(seq 50); do [ -n "$$($(_quit_running_pids))" ] || break; sleep 0.2; done; \
+	  pids=$$($(_quit_running_pids)); [ -z "$$pids" ] || kill $$pids 2>/dev/null || true; \
 	fi
 endef
 

@@ -27,7 +27,10 @@ what it must do and supplies the make targets around it.
 
 - **`make run-scratch`**: builds, quits the copy of the app at `$(APP)` if
   it is running, and launches it with `--scratch-database`, behind whatever
-  has focus (`open -g`), so it works while someone uses the machine.
+  has focus (`open -g`), so it works while someone uses the machine. It
+  quits only processes started from this checkout's `$(APP)`, by absolute
+  path, each by its pid, never by bundle id: the real app, built from
+  another checkout of the same project, has the same name and bundle id.
 - **`make scratch-reset`**: quits it and deletes the scratch directory and
   the scratch defaults. It refuses a directory whose name does not contain
   `scratch`, so an empty or mistyped variable cannot become `rm -rf` of the

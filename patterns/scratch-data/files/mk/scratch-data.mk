@@ -8,7 +8,6 @@
 # The project's Makefile sets these, then `include mk/scratch-data.mk`:
 #
 #   APP               the built .app                              (required)
-#   BUNDLE_ID         its bundle id                               (required)
 #   SCRATCH_DIR       the directory --scratch-database keeps its
 #                     data in; its name must contain "scratch"    (required)
 #   SCRATCH_DEFAULTS  the scratch user defaults, as
@@ -28,12 +27,20 @@ SCRATCH_BUILD ?= build
 
 # Quit the app built at $(APP), if it is running, and wait for it to go:
 # `open` would otherwise just bring the running copy forward, on whatever
-# data it already has.
+# data it already has. Only processes whose command line starts with this
+# checkout's absolute $(APP) are touched, each quit by its pid: a relative
+# path or the bundle id would also reach the real app, built from another
+# checkout of the same project.
+_quit_running_pids = ps -axo pid=,args= | awk -v p='$(abspath $(APP))/Contents/MacOS/' \
+  '{ pid = $$1; sub(/^ *[0-9]+ /, ""); if (index($$0, p) == 1) print pid }'
 define quit-running
-	@if pgrep -f "$(APP)/Contents/MacOS/" >/dev/null; then \
-	  osascript -e 'tell application id "$(BUNDLE_ID)" to quit' >/dev/null 2>&1 || true; \
-	  for i in $$(seq 50); do pgrep -f "$(APP)/Contents/MacOS/" >/dev/null || break; sleep 0.2; done; \
-	  pkill -f "$(APP)/Contents/MacOS/" 2>/dev/null || true; \
+	@pids=$$($(_quit_running_pids)); \
+	if [ -n "$$pids" ]; then \
+	  for pid in $$pids; do \
+	    osascript -l JavaScript -e "ObjC.import('AppKit'); \$$.NSRunningApplication.runningApplicationWithProcessIdentifier($$pid).terminate" >/dev/null 2>&1 || true; \
+	  done; \
+	  for i in $$(seq 50); do [ -n "$$($(_quit_running_pids))" ] || break; sleep 0.2; done; \
+	  pids=$$($(_quit_running_pids)); [ -z "$$pids" ] || kill $$pids 2>/dev/null || true; \
 	fi
 endef
 

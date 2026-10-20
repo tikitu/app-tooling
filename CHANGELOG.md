@@ -4,6 +4,17 @@ What changed in each release of app-tooling. Each pattern has its own
 `CHANGELOG.md` with what a project must do to catch up; this file is the
 summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
+## Unreleased
+
+- **`scratch-data`: `quit-running` could quit the real app**, matching a
+  relative `$(APP)` that the real app's path also contains, then quitting
+  by bundle id. It now quits only this checkout's build, by absolute path
+  and pid. Update the pattern; delete any workaround (a target-specific
+  absolute `APP` and empty `BUNDLE_ID`) and its recorded deviation
+  (`patterns/scratch-data/CHANGELOG.md`). **The starter's own
+  `quit-running`** had the same hazard and is fixed the same way; a project
+  made from the starter replaces its copy.
+
 ## v0.2.0 (2026-10-20)
 
 - **The starter's `Makefile`** says where a release's `NOTES_FILE` goes:
