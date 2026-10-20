@@ -1,6 +1,6 @@
 # pattern-imports changelog
 
-## Unreleased
+## v0.2.0 (2026-10-20)
 
 **Every project with Swift packages, starter or not: Xcode 27.** On
 Xcode 27 (Swift 6.4) the Point-Free packages depend on

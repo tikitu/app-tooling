@@ -4,7 +4,7 @@ What changed in each release of app-tooling. Each pattern has its own
 `CHANGELOG.md` with what a project must do to catch up; this file is the
 summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
-## Unreleased
+## v0.2.0 (2026-10-20)
 
 - **The starter's `Makefile`** says where a release's `NOTES_FILE` goes:
   outside the worktree, not in `dist/`, which `make dist` deletes first.

@@ -1,6 +1,6 @@
 # sync-configuration changelog
 
-## Unreleased
+## v0.2.0 (2026-10-20)
 
 First version, from the conventions two apps grew by hand: two Mac
 entitlements files (`<Target>-iCloud.entitlements` for builds that sync),

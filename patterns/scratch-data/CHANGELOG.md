@@ -1,6 +1,6 @@
 # scratch-data changelog
 
-## Unreleased
+## v0.2.0 (2026-10-20)
 
 First version: `mk/scratch-data.mk`, with `make run-scratch` and
 `make scratch-reset`, from the starter's targets. `scratch-reset` now
