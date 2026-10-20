@@ -1,6 +1,6 @@
 # testflight changelog
 
-## Unreleased
+## v0.4.0 (2026-10-20)
 
 - **`testflight-device-guard`** refuses a development install on a device
   that gets builds only through TestFlight. To take it: set

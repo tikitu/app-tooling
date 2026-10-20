@@ -4,7 +4,7 @@ What changed in each release of app-tooling. Each pattern has its own
 `CHANGELOG.md` with what a project must do to catch up; this file is the
 summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
-## Unreleased
+## v0.4.0 (2026-10-20)
 
 - **`testflight`: development installs can refuse real-data devices.**
   `mk/testflight.mk` has `testflight-device-guard`, which refuses a device
