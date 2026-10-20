@@ -6,6 +6,9 @@ summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
 ## Unreleased
 
+- **The starter's `Makefile`** says where a release's `NOTES_FILE` goes:
+  outside the worktree, not in `dist/`, which `make dist` deletes first.
+  Nothing to do; a project made from the starter may copy the comment.
 - **`scratch-data`**, a new pattern: `mk/scratch-data.mk` with
   `make run-scratch` (the Mac app in the background on scratch data,
   `--scratch-database`) and `make scratch-reset`, taken from the starter.

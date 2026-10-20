@@ -55,6 +55,9 @@ CERT_NAME      ?= $(if $(TEAM_ID),Developer ID Application: $(DEVELOPER_NAME) ($
 # `make notary-setup` (interactive; never puts the password on the cmdline).
 NOTARY_PROFILE ?= starter-notary
 
+# Hand-written notes for `make github-release` (generated ones otherwise).
+# Keep the file outside the worktree, not in dist/: `make dist` starts with
+# `clean`, which deletes dist/. The GitHub release is where the notes live.
 NOTES_FILE       ?=
 
 # app-tooling-update and app-tooling-check, for the conventions imported from
@@ -104,6 +107,7 @@ help:
 	@echo "  notary-setup      One-time: store notary creds in keychain ($(NOTARY_PROFILE))"
 	@echo "  dist              Build → sign → notarize → staple → zip → checksum"
 	@echo "  github-release    Upload \$$(RELEASE_ZIP) + .sha256 to a GitHub release"
+	@echo "                    NOTES_FILE=<path> for hand-written notes; not in dist/, which dist cleans"
 	@echo "  print-version     Print resolved release VERSION"
 	@echo ""
 	@echo "  help              Show this message"
