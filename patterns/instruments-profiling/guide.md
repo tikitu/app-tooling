@@ -311,7 +311,8 @@ Each of these looked like something else first.
   multi-gigabyte `instruments*.ktrace` in `$TMPDIR` and never removes it; a
   day of profiling left 529 GB and a nearly full disk. The saved `.trace` does
   not need it. `profile-mac.sh` removes its own once the instruments service
-  lets go (~45 s). To clear older ones: move those over an hour old that no
+  lets go (~45 s), or after 90 s even if it has not (after a recording that
+  hung it may never), and lists those earlier runs left. To clear older ones: move those over an hour old that no
   process has open (`lsof`) into a folder, check a saved trace still opens,
   then delete the folder.
 - **xctrace can hang at "Stopping recording…"** for good, occasionally;

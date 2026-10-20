@@ -15,6 +15,14 @@ summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
   `quit-running`** had the same hazard and is fixed the same way; a project
   made from the starter replaces its copy.
 
+- **`instruments-profiling`: `profile-mac.sh`** reports what xctrace
+  launched and stops at once if it is a different copy of the app, kills
+  only the process it launched (by pid), and no longer leaks its
+  multi-gigabyte staging files after a recording that hung. Update the
+  pattern, then delete the `instruments*.ktrace` files in `$TMPDIR` that
+  earlier runs left and nothing holds open
+  (`patterns/instruments-profiling/CHANGELOG.md`).
+
 ## v0.2.0 (2026-10-20)
 
 - **The starter's `Makefile`** says where a release's `NOTES_FILE` goes:

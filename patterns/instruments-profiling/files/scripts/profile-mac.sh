@@ -221,9 +221,29 @@ if (( $+functions[drive] )) && [[ ! -x $DRIVER || $ROOT/scripts/ui-drive.swift -
   swiftc -O $ROOT/scripts/ui-drive.swift -o $DRIVER
 fi
 
-# `|| true`: under `set -e` and `pipefail` a pgrep that finds nothing would
-# end the script before it could say the app did not start.
-app_pid() { pgrep -f "^$EXE" | head -1 || true; }
+# Every running copy of the app, wherever it was built, as "PID PATH". xctrace
+# can launch another copy with the same bundle id than the one named, so what
+# it launched is the copy that appears after the launch, and that is the only
+# pid this kills: never a copy that was already running, such as the real app.
+copies() {
+  ps -axo pid=,comm= | awk -v exe="/Contents/MacOS/$EXE_NAME" \
+    '{ pid = $1; sub(/^ *[0-9]+ /, ""); if (substr($0, length($0) - length(exe) + 1) == exe) print pid, $0 }'
+}
+copies_before=(${(f)"$(copies | cut -d' ' -f1)"})
+launched_copies() {
+  local line
+  copies | while read -r line; do
+    (( ${copies_before[(Ie)${line%% *}]} )) || print -r -- $line
+  done
+}
+PID=""
+# Once the launched pid is known, only it, and only while it is still a copy of
+# the app: a pid that has exited can be reused.
+kill_launched() {
+  local pids=(${(f)"$(launched_copies | cut -d' ' -f1)"})
+  [[ -n $PID ]] && pids=(${(M)pids:#$PID})
+  (( ${#pids} )) && kill "$@" $pids 2>/dev/null || true
+}
 
 # One Darwin notification, waited for in the background; `wait_for PID S`
 # returns once it has come, or fails after S seconds.
@@ -244,13 +264,21 @@ args=(record --template "$template" --output "$trace" $launch_env
 
 # xctrace stages each recording in a multi-gigabyte instruments*.ktrace in
 # $TMPDIR and never removes it; the saved .trace does not need it. Note what
-# is there now, so the files this run adds can go afterwards.
+# is there now, so the files this run adds can go afterwards, and say what
+# earlier runs left: a run whose xctrace hung or was killed can leave them.
 ktrace_before=(${TMPDIR:-/tmp}/instruments*.ktrace(N))
+if (( ${#ktrace_before} )); then
+  echo "→ earlier recordings left these staging files, $(du -ch $ktrace_before | tail -1 | cut -f1) in all;" >&2
+  echo "  nothing needs one that nothing holds open (lsof FILE prints nothing):" >&2
+  print -rl -- "  "$^ktrace_before >&2
+fi
 
 # Remove the staging files this run added, whether it succeeded or not. The
 # instruments service keeps its file open for ~45 s after the recording
-# ends, so wait (up to 90 s); a file still open after that, another
-# recording's perhaps, is left alone.
+# ends, so wait (up to 90 s). After a recording that hung it can hold the
+# file for good; removed anyway, its space comes back when the service lets
+# go. Only if another recording has started since are open files left alone:
+# they may be its.
 remove_staging() {
   local added=() f open
   for f in ${TMPDIR:-/tmp}/instruments*.ktrace(N); do
@@ -264,7 +292,17 @@ remove_staging() {
     (( open )) || break
     sleep 2
   done
-  for f in $added; do lsof "$f" >/dev/null 2>&1 || rm -f "$f"; done
+  if pgrep -f 'xctrace record' >/dev/null; then
+    for f in $added; do lsof "$f" >/dev/null 2>&1 || rm -f "$f"; done
+    for f in ${TMPDIR:-/tmp}/instruments*.ktrace(N); do
+      (( ${added[(Ie)$f]} )) && echo "  left $f: another recording is running and it is still open" >&2
+    done
+  else
+    for f in $added; do
+      lsof "$f" >/dev/null 2>&1 && echo "  removed $f, still held open by $(lsof -Fc "$f" | sed -n 's/^c//p' | sort -u | tr '\n' ' ')" >&2
+      rm -f "$f"
+    done
+  fi
 }
 
 scenario_started=0
@@ -282,13 +320,13 @@ listeners() { print -r -- $waiter $scenario_started $scenario_done | tr ' ' '\n'
 cleanup() {
   kill -INT $recorder 2>/dev/null || true
   kill $(listeners) 2>/dev/null || true
-  pkill -f "^$EXE" 2>/dev/null || true
+  kill_launched
   # A recorder still saving holds kperf, and the next run would fail with
   # "could not lock kperf"; wait for it to let go.
   for _ in $(seq 1 $stop_timeout); do kill -0 $recorder 2>/dev/null || break; sleep 1; done
   # A target whose recorder was killed while stopping ignores SIGTERM.
   sleep 1
-  pkill -9 -f "^$EXE" 2>/dev/null || true
+  kill_launched -9
   remove_staging
 }
 trap cleanup EXIT
@@ -306,6 +344,23 @@ if [[ $started != 1 ]]; then
   exit 1
 fi
 
+# What xctrace launched, and that it is the copy named.
+launched=""
+for _ in $(seq 1 $(( start_timeout * 5 ))); do
+  launched=$(launched_copies)
+  launched=${launched%%$'\n'*}
+  [[ -n $launched ]] && break
+  kill -0 $recorder 2>/dev/null || break
+  sleep 0.2
+done
+[[ -n $launched ]] || { cat $WORK/xctrace.log >&2; echo "✗ app did not start" >&2; exit 1; }
+PID=${launched%% *}
+echo "→ launched $PID ${launched#* }"
+if [[ ${launched#* } != $EXE ]]; then
+  echo "✗ xctrace launched another copy of the app, not $EXE; stopped it" >&2
+  exit 1
+fi
+
 since=""
 if [[ -z $time_limit ]]; then
   if (( scenario_notifies )); then
@@ -313,8 +368,6 @@ if [[ -z $time_limit ]]; then
   else
     sleep $SETTLE_SECONDS
   fi
-  PID=$(app_pid)
-  [[ -n $PID ]] || { cat $WORK/xctrace.log >&2; echo "✗ app did not start" >&2; exit 1; }
   if holds_real_data $PID; then
     echo "✗ the app has the real data open (${REAL_DATA}): the redirect in $CONF did not take" >&2
     exit 1
@@ -352,7 +405,7 @@ if kill -0 $recorder 2>/dev/null; then
 fi
 wait $recorder || true   # 54 is xctrace's normal "target ended" status
 trap - EXIT
-pkill -f "^$EXE" 2>/dev/null || true
+kill_launched
 # The listeners too: one left running holds the caller's pipe open
 # (`profile-mac.sh … | tail`).
 kill $(listeners) 2>/dev/null || true
