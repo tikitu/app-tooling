@@ -31,3 +31,4 @@ line in the commit message saying why.
 
 - [2026-10-01 Refuse development installs on TestFlight devices](2026-10-01-testflight-only-devices.md)
 - [2026-10-17 A sandboxed WKWebView: an entitlement, and a load that never ends](2026-10-17-sandboxed-webkit.md)
+- [2026-10-20 Which patterns an app takes by default](2026-10-20-default-patterns.md)
