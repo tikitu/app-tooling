@@ -23,8 +23,8 @@ summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
   `<App>SyncEnabled` and `<App>CloudKitEnvironment` from them;
   `make testflight-check-environment`; and app-utils'
   `CloudKitSyncConfiguration` library (`SyncConfiguration`,
-  `CloudKitEnvironment.Check`) in place of an app's own. Needs an app-utils
-  release with that library. A project with hand-made versions follows
+  `CloudKitEnvironment.Check`) in place of an app's own. Needs app-utils
+  0.3.0 or later. A project with hand-made versions follows
   `apply.md`, and asks its owner what an unmarked metadatabase belongs to
   (`patterns/sync-configuration/CHANGELOG.md`).
 - **Xcode 27, for every project, not only the starter.** A

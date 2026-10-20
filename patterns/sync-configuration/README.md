@@ -75,7 +75,8 @@ and a debug build on a real database is a real database.
 
 - `scratch-data` (and `pattern-imports`): agents run the app with
   `make run-scratch`, on an ad-hoc build.
-- A dependency on app-utils' `CloudKitSyncConfiguration` product.
+- A dependency on app-utils' `CloudKitSyncConfiguration` product (app-utils
+  0.3.0 or later).
 - A Mac app signed by `build.sh` (the starter's layout), and an iOS app in
   an XcodeGen `project.yml`. An Xcode project without XcodeGen can follow
   the same rules but needs its own wiring; `apply.md` says what to keep.

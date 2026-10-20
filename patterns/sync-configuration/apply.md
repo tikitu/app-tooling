@@ -71,13 +71,13 @@ Then `uvx peru@1.3.5 sync`: `scripts/stamp-sync-configuration.sh` and
 target makes the sync engine:
 
 ```swift
-.package(url: "https://github.com/tikitu/app-utils", exact: "<version>"),
+.package(url: "https://github.com/tikitu/app-utils", exact: "0.3.0"),
 // …in that target's dependencies:
 .product(name: "CloudKitSyncConfiguration", package: "app-utils"),
 ```
 
-`<version>`: the first app-utils release with `CloudKitSyncConfiguration`,
-or the one the package already pins if it is newer. Then
+`0.3.0` is the first app-utils release with `CloudKitSyncConfiguration`;
+keep the version the package already pins if it is newer. Then
 `swift package resolve` and commit `Package.resolved`. A project with
 both a Mac and an iOS package that pin the same packages keeps the two
 `Package.resolved` files in step, as it already does.
