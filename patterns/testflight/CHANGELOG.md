@@ -1,5 +1,17 @@
 # testflight changelog
 
+## Unreleased
+
+- **`testflight-device-guard`** refuses a development install on a device
+  that gets builds only through TestFlight. To take it: set
+  `TESTFLIGHT_ONLY_DEVICES` (comma-separated, the user's answer) before the
+  `include mk/testflight.mk`, and list `$(TESTFLIGHT_DEVICE_GUARD)` first
+  among the install target's prerequisites, after the include; if the
+  device variable is not `IOS_DEVICE`, set `TESTFLIGHT_INSTALL_DEVICE`.
+  Replace any guard of the project's own. `apply.md` step 3 has the text,
+  step 5 what `AGENTS.md` says, and Verify how to test it without a real
+  device.
+
 ## v0.1.0 (2026-10-05)
 
 First version: `make testflight-validate` and `make testflight-upload`

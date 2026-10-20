@@ -41,6 +41,11 @@ later has been through the same signing and checks all along.
 Everything it writes goes in `build/testflight/`: the archive, the export
 options it generated, and a log of each step.
 
+`make testflight-device-guard` refuses a development install on a device
+that gets builds only through TestFlight (`TESTFLIGHT_ONLY_DEVICES`), unless
+`INSTALL_ON_TESTFLIGHT_DEVICE=yes`. The project's install target runs it
+first; see "Development installs" below.
+
 ## Why this shape
 
 - **The build number is the commit count** that `git-commit-stamp` writes,
@@ -106,6 +111,29 @@ of its data:
 
 `apply.md` stops at this for any app with iCloud entitlements, so that the
 move is planned with the app's owner rather than discovered.
+
+## Development installs
+
+Before TestFlight, installing from the Mac (`make ios-device-run`) *was*
+how the phone got builds, so an agent told to "verify by running" still
+reaches for it, from any tree: dirty, a branch, half done. Once a device
+holds real data and gets TestFlight builds, that install is the danger. The
+cost is not the install itself but what a development build does to the
+data: a new migration or enum case runs forward on it, syncs, and can leave
+the TestFlight build and other devices unable to read it. Reinstalling
+TestFlight does not undo that.
+
+So the pattern has a guard. The project names its real-data devices in
+`TESTFLIGHT_ONLY_DEVICES` and lists `$(TESTFLIGHT_DEVICE_GUARD)` first among
+its install target's prerequisites; the install then refuses those devices
+before building. The variable, rather than the target's name, is what the
+project depends on, so that a Makefile that stops including the pattern
+loses the guard instead of failing on a missing target.
+
+**Test the guard only against a device that does not exist**: set the
+device and the list both to a made-up name and run the full install
+target. Testing it against the real device, if the guard is wrong, is the
+install it exists to prevent.
 
 ## What it asks of a project
 

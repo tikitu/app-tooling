@@ -42,6 +42,8 @@ particular "iCloud and CloudKit".
 | Release branch | the branch the project releases from; usually `main` |
 | Export compliance | **the user's answer**, never a guess: does the app use encryption beyond what the OS provides (HTTPS, Keychain, CryptoKit used for its own data)? Apple's [guide](https://developer.apple.com/documentation/security/complying-with-encryption-export-regulations) has the detail |
 | Internal testing only | the user's choice: `YES` if builds should never go to external testers |
+| Devices that get builds only through TestFlight | **the user's answer**: which devices hold real data. Names as `xcrun devicectl list devices` shows them |
+| The install target and its device variable | the Makefile's `ios-device-run` (or whatever installs on a device with `devicectl`) and the variable it installs onto, usually `IOS_DEVICE` |
 
 ## Steps
 
@@ -87,11 +89,25 @@ TESTFLIGHT_SCHEME      = $(IOS_SCHEME)
 TESTFLIGHT_TEAM        = <team id>
 TESTFLIGHT_PREPARE     = ios-project
 TESTFLIGHT_XCODE_FLAGS = $(XCODE_PINNED)
+# Devices with real data, comma-separated: development installs refuse them.
+TESTFLIGHT_ONLY_DEVICES = My iPhone
 include mk/testflight.mk
 ```
 
-`TESTFLIGHT_PREPARE` must come before the `include`. Add the two targets
-to `help`:
+`TESTFLIGHT_PREPARE` must come before the `include`. If the install target's
+device variable is not `IOS_DEVICE`, add
+`TESTFLIGHT_INSTALL_DEVICE = $(<that variable>)`.
+
+Then make the install target run the guard first. The `include` must come
+before this rule, since make reads prerequisites as it reads the rule:
+
+```make
+ios-device-run: $(TESTFLIGHT_DEVICE_GUARD) ios-device-build
+```
+
+If the project already has a guard of its own doing this, replace it with
+the pattern's. In `help`, say that the install target refuses those
+devices. Add the two targets to `help`:
 
 ```make
 	@echo "  testflight-validate  Archive and have App Store Connect check it; uploads nothing"
@@ -114,9 +130,11 @@ these; list them for the user:
 devices get builds through TestFlight (`make testflight-upload`), that
 `make testflight-validate` checks without uploading, and that uploads are
 for the user to ask for: an upload uses a build number and puts a build on
-testers' devices. For an app with CloudKit, add what was decided in the
-Detect step, and that development builds go to the simulator or a spare
-device only.
+testers' devices. Name the devices in `TESTFLIGHT_ONLY_DEVICES`: they get
+builds only through TestFlight, and `INSTALL_ON_TESTFLIGHT_DEVICE=yes` is
+for the owner to ask for, never an agent's workaround. For an app with
+CloudKit, add what was decided in the Detect step, and that development
+builds go to the simulator or a spare device only.
 
 **6. Record it** in `app-tooling.toml`, with the export compliance answer
 and, for CloudKit apps, the decision:
@@ -134,6 +152,12 @@ params = { export_compliance = "no non-exempt encryption (HTTPS only), declared 
   with the bundle id …", which is the expected state until step 4.
 - Refusals, without archiving: with an uncommitted change it says
   "commit or stash first"; on another branch, "on <branch>, not main".
+- The install guard, **against a device that does not exist, never a real
+  one**: `make ios-device-run IOS_DEVICE='No Such Phone'
+  TESTFLIGHT_ONLY_DEVICES='Other Pad, No Such Phone'` stops before building
+  with "✗ 'No Such Phone' holds real data …" and exit status 2. With
+  `TESTFLIGHT_ONLY_DEVICES='Other Pad'` instead it gets past the guard and
+  fails on the missing device, which shows the guard is in the target.
 - **Only when the user asks for it:** `make testflight-upload`, then the
   build appears in App Store Connect's TestFlight tab (processing takes
   minutes), and installs from the TestFlight app. After installing,
