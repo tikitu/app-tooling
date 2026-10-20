@@ -1,0 +1,17 @@
+id: web-process-termination
+language: swift
+severity: error
+message: "A WKNavigationDelegate without webViewWebContentProcessDidTerminate: a page process that dies leaves its load waiting for ever."
+note: |
+  Implement webViewWebContentProcessDidTerminate(_:) and fail the waiting load.
+  Read rules/web-process-termination.md before working around this.
+rule:
+  kind: class_declaration
+  has:
+    kind: inheritance_specifier
+    regex: \bWKNavigationDelegate\b
+  not:
+    has:
+      kind: function_declaration
+      regex: \bfunc webViewWebContentProcessDidTerminate\b
+      stopBy: end

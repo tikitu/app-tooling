@@ -29,6 +29,5 @@ line in the commit message saying why.
 
 ## Items
 
-- [2026-10-17 A sandboxed WKWebView: an entitlement, and a load that never ends](2026-10-17-sandboxed-webkit.md)
 - [2026-10-20 Which patterns an app takes by default](2026-10-20-default-patterns.md)
 - [2026-10-20 After the TestFlight device guard: an empty list, and a development app](2026-10-20-testflight-guard-followups.md)

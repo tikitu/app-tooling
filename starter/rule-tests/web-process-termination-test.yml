@@ -1,0 +1,21 @@
+id: web-process-termination
+valid:
+  - |
+    final class Loader: NSObject, WKNavigationDelegate {
+        func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {}
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {}
+    }
+  - |
+    final class Other: NSObject, WKUIDelegate {
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {}
+    }
+invalid:
+  - |
+    final class Loader: NSObject, WKNavigationDelegate {
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {}
+        func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: any Error) {}
+    }
+  - |
+    extension Coordinator: WKNavigationDelegate {
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {}
+    }

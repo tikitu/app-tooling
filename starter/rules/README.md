@@ -90,4 +90,5 @@ Exploring a pattern: `ast-grep run -l swift -p '<pattern>' <file>`, and
 | [erase-on-schema-change](erase-on-schema-change.md) | The migrator never erases the database on a schema change |
 | [platform-conditionals](platform-conditionals.md) | Platform code is split by package, never by `#if os(…)` |
 | [url-path](url-path.md) | Filesystem paths come from `path(percentEncoded: false)`, never `path()` |
+| [web-process-termination](web-process-termination.md) | A `WKNavigationDelegate` fails the waiting load when the page process dies |
 | [writes-outside-the-model](writes-outside-the-model.md) | In the view targets only `AppModel` writes to the database |

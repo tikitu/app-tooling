@@ -81,6 +81,33 @@ fresh checkout on another Mac. So every `xcodebuild` in the Makefile passes
 the dependencies are pinned, and new macro code only arrives through a
 reviewed `make update-pins`.
 
+## WebKit's page process will not launch in the sandbox without `network.client`
+
+A sandboxed app's `WKWebView` needs `com.apple.security.network.client`,
+even for a local HTML string that never touches the network. Without it the
+page process fails to launch, and the only trace is WebKit's own log
+(`WebProcessProxy::didFinishLaunching: Invalid connection identifier`).
+Tests and scripts run unsandboxed, so only the app shows it. The template
+uses no WebKit, so the entitlement is not in `StarterMac.entitlements`: add
+it with the first web view, with a comment saying what needs it.
+
+## A WebKit page process that dies is not a failed load
+
+When the page process crashes or never starts, WebKit calls
+`webViewWebContentProcessDidTerminate` and neither `didFail` callback. A
+load awaited through the navigation delegate then waits for ever, and a
+command waiting on it never returns. Enforced by
+`rules/web-process-termination.yml`.
+
+## `Bundle.module` finds resources in the build folder
+
+SwiftPM's generated `Bundle.module` looks in the app bundle, then falls back
+to the absolute path of the build folder it was compiled in. On the machine
+that built it, a resource bundle missing from the `.app` still loads.
+`build.sh` copies the `*.bundle`s into `Contents/Resources`; to prove the
+app uses its own copy, rename the bundles in the build folder and run the
+app.
+
 ## `log` is shadowed in zsh
 
 `log show …` prints nothing and exits 0 in zsh, where `log` is a builtin.

@@ -12,6 +12,13 @@ summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
   `$(TESTFLIGHT_DEVICE_GUARD)` to the install target's prerequisites,
   replacing any guard of the project's own
   (`patterns/testflight/CHANGELOG.md`).
+- **The starter: a sandboxed `WKWebView`.** A new rule,
+  `web-process-termination`, requires every `WKNavigationDelegate` to fail
+  its waiting load when the page process dies, and `docs/gotchas.md` has
+  three new traps: the `network.client` entitlement a sandboxed web view
+  needs, that dying page process, and `Bundle.module`'s fallback to the
+  build folder. Nothing to do; a project made from the starter that uses
+  WebKit may copy the rule (`rules/`, `rule-tests/`) and the gotchas.
 
 ## v0.3.0 (2026-10-20)
 
