@@ -96,7 +96,9 @@ of its data:
   silently partial. A device has to enter the new environment with fresh
   sync state, and the app has to do the reset (`devicectl` cannot delete
   files on a device). Check what the app's own sync engine does before
-  planning the move.
+  planning the move. For SQLiteData, the
+  [`sync-configuration`](https://github.com/tikitu/app-tooling/tree/main/patterns/sync-configuration)
+  pattern makes that reset.
 - Xcode refuses to export for App Store Connect with Development
   (`iCloudContainerEnvironment`), but development profiles allow
   Production. The simplest end state is usually **every** build on

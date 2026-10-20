@@ -6,6 +6,24 @@ summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
 ## Unreleased
 
+- **`scratch-data`**, a new pattern: `mk/scratch-data.mk` with
+  `make run-scratch` (the Mac app in the background on scratch data,
+  `--scratch-database`) and `make scratch-reset`, taken from the starter.
+  `scratch-reset` now refuses a directory whose name lacks `scratch`. A
+  project with its own copies of these targets replaces them
+  (`patterns/scratch-data/CHANGELOG.md`). **At this release the starter
+  takes it too**, in place of its own `run-scratch`, `scratch-reset` and
+  `quit-running`; until then it keeps its own.
+- **`sync-configuration`**, a new pattern for apps that sync through
+  CloudKit: iCloud entitlements only in `<Target>-iCloud.entitlements`,
+  used only by signed builds; `scripts/stamp-sync-configuration.sh` writes
+  `<App>SyncEnabled` and `<App>CloudKitEnvironment` from them;
+  `make testflight-check-environment`; and app-utils'
+  `CloudKitSyncConfiguration` library (`SyncConfiguration`,
+  `CloudKitEnvironment.Check`) in place of an app's own. Needs an app-utils
+  release with that library. A project with hand-made versions follows
+  `apply.md`, and asks its owner what an unmarked metadatabase belongs to
+  (`patterns/sync-configuration/CHANGELOG.md`).
 - **Xcode 27, for every project, not only the starter.** A
   `Package.resolved` that pins `xctest-dynamic-overlay` fails to resolve,
   because Point-Free packages now depend on `swift-issue-reporting`. A
