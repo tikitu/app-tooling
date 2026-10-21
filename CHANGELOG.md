@@ -4,7 +4,7 @@ What changed in each release of app-tooling. Each pattern has its own
 `CHANGELOG.md` with what a project must do to catch up; this file is the
 summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
-## Unreleased
+## v0.5.0 (2026-10-21)
 
 - **New pattern `build-warnings`.** `mk/build-warnings.mk` exports
   `OMIT_DYNAMIC_TEST_SUPPORT=1`, removing swift-issue-reporting's

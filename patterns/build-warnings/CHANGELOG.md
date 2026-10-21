@@ -1,6 +1,6 @@
 # build-warnings changelog
 
-## Unreleased
+## v0.5.0 (2026-10-21)
 
 First version. `mk/build-warnings.mk` exports `OMIT_DYNAMIC_TEST_SUPPORT=1`,
 which removes swift-issue-reporting's `IssueReportingTestSupport` `ld`
