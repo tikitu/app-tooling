@@ -4,6 +4,17 @@ What changed in each release of app-tooling. Each pattern has its own
 `CHANGELOG.md` with what a project must do to catch up; this file is the
 summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
+## Unreleased
+
+- **New pattern `build-warnings`.** `mk/build-warnings.mk` exports
+  `OMIT_DYNAMIC_TEST_SUPPORT=1`, removing swift-issue-reporting's
+  `IssueReportingTestSupport` `ld` warnings (needs xctest-dynamic-overlay
+  ≥ 1.11.0 or swift-issue-reporting 2.x), and stops every `make` run while
+  `LM_SKIP_METADATA_EXTRACTION` and App Intents code are both in the
+  project. A project with no App Intents may then set that skip, removing
+  Xcode's "Metadata extraction skipped" warning. To adopt: follow
+  `patterns/build-warnings/apply.md`.
+
 ## v0.4.0 (2026-10-20)
 
 - **`testflight`: development installs can refuse real-data devices.**
