@@ -31,3 +31,4 @@ line in the commit message saying why.
 
 - [2026-10-20 Which patterns an app takes by default](2026-10-20-default-patterns.md)
 - [2026-10-20 After the TestFlight device guard: an empty list, and a development app](2026-10-20-testflight-guard-followups.md)
+- [2026-10-21 Warnings from dependencies and Xcode, not from our code](2026-10-21-dependency-warnings.md)
