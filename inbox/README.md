@@ -32,3 +32,5 @@ line in the commit message saying why.
 - [2026-10-20 Which patterns an app takes by default](2026-10-20-default-patterns.md)
 - [2026-10-20 After the TestFlight device guard: an empty list, and a development app](2026-10-20-testflight-guard-followups.md)
 - [2026-10-21 Warnings from dependencies and Xcode, not from our code](2026-10-21-dependency-warnings.md)
+- [2026-10-21 The command inbox as a pattern, not only starter files](2026-10-21-command-inbox-as-a-pattern.md)
+- [2026-10-21 The command inbox and scratch data trip the "data from other apps" prompt](2026-10-21-command-inbox-outside-container.md)
