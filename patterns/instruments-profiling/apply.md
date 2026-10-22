@@ -163,6 +163,8 @@ params = { data = "MYAPP_DATABASE" }
   template or xctrace version differs: `scripts/trace-query.py tables` lists
   what the trace has.
 - `ls $TMPDIR | grep -c 'instruments.*\.ktrace'` is the same before and after a
-  run, about a minute after it ends: the staging file was removed.
+  run: the staging file was removed. The run's last lines before `✓` say
+  so if it had to stop the run's instruments service to remove it
+  (`→ stopping this run's instruments service PID`), as Xcode 27.1 needs.
 - One scenario of the project's own, with `make profile SCENARIO=<name>`,
   ends with `✓` and a `.window` file beside the trace.
