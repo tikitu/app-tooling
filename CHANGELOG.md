@@ -10,6 +10,11 @@ summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
   that was not there**, in a project that holds another importing the
   pattern, or whose `scripts/` is `Scripts/`, once it had App Intents
   code. Take the update; nothing else (`patterns/build-warnings/CHANGELOG.md`).
+- **The starter takes `build-warnings`**, so its `make test` no longer
+  prints the two `IssueReportingTestSupport` `ld` warnings. Without the App
+  Intents skip: its one xcodebuild, of the shared package's library
+  targets, does not print that warning. A project made from the starter
+  adopts the pattern by its `apply.md`.
 
 ## v0.5.0 (2026-10-21)
 

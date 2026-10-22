@@ -64,6 +64,11 @@ NOTES_FILE       ?=
 # app-tooling (peru.yaml; docs/app-tooling/pattern-imports/README.md).
 include mk/app-tooling.mk
 
+# Two dependency and Xcode warnings removed at their cause; refuses to run
+# while the App Intents skip and App Intents code are both in the project
+# (app-tooling: build-warnings). docs/app-tooling/build-warnings/.
+include mk/build-warnings.mk
+
 .PHONY: all deps outdated update-pins check-pins check-shared-ios build check test release run run-background run-scratch scratch-reset \
         screenshot clean install uninstall register help \
         icon check-version notary-setup sign zip-notary notarize staple zip-release \

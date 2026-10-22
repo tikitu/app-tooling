@@ -6,3 +6,7 @@
 # The Mac half only; an iOS app added later follows the pattern's apply.md
 # (docs/app-tooling/git-commit-stamp/apply.md) for the rest.
 [patterns.git-commit-stamp]
+
+# No LM_SKIP_METADATA_EXTRACTION: the only xcodebuild, check-shared-ios, builds
+# a package's library targets, which do not print the warning.
+[patterns.build-warnings]

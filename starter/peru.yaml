@@ -5,6 +5,8 @@ imports:
     app-tooling|pattern-imports-docs: docs/app-tooling/pattern-imports/
     app-tooling|git-commit-stamp: ./
     app-tooling|git-commit-stamp-docs: docs/app-tooling/git-commit-stamp/
+    app-tooling|build-warnings: ./
+    app-tooling|build-warnings-docs: docs/app-tooling/build-warnings/
 
 git module app-tooling:
     url: https://github.com/tikitu/app-tooling
@@ -22,3 +24,9 @@ rule git-commit-stamp:
 rule git-commit-stamp-docs:
     pick: [patterns/git-commit-stamp/README.md, patterns/git-commit-stamp/apply.md, patterns/git-commit-stamp/CHANGELOG.md]
     export: patterns/git-commit-stamp
+
+rule build-warnings:
+    export: patterns/build-warnings/files
+rule build-warnings-docs:
+    pick: [patterns/build-warnings/README.md, patterns/build-warnings/apply.md, patterns/build-warnings/CHANGELOG.md]
+    export: patterns/build-warnings
