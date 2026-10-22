@@ -7,8 +7,14 @@ without having to fit it into anything.
 
 ## Adding an item
 
-From any project, when something turns out not to be specific to that app,
-write a file here with:
+Other projects do not write here. When something there turns out not to be
+specific to that app, its agent files a ticket on the author's epiq hub,
+tagged `app-tooling` and the project's name: uncommitted files written here
+from other projects piled up unseen. An agent working on app-tooling takes
+the ticket and either acts on it directly or, if it is not ready, commits an
+item here and links it from the ticket.
+
+An item, like the ticket it came from, says:
 
 - **Problem.** What went wrong or was missing, concretely: the symptom, and
   what it cost. Name the project and date; they are provenance, removed when
