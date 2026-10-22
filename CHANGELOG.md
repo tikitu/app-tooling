@@ -4,6 +4,21 @@ What changed in each release of app-tooling. Each pattern has its own
 `CHANGELOG.md` with what a project must do to catch up; this file is the
 summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
+## Unreleased
+
+- **New pattern `command-inbox`**, from the starter's command inbox and the
+  apps that copied it: a script drives the running app through the same
+  `perform` its controls use, and reads back what each command did. The
+  runner and strict decoding are a Swift module imported into a package
+  directory the project chooses; the inbox directory comes from `--commands
+  <dir>`, outside any container (a sandboxed app opens it with one
+  temporary exception), so a terminal never raises the "data from other
+  apps" prompt. A project with a copy of the starter's inbox: follow
+  `patterns/command-inbox/apply.md` and delete the copy.
+- **`scratch-data`: `SCRATCH_ARGS`**, more launch arguments for `make
+  run-scratch` (such as `--commands <dir>`). Nothing to do unless wanted
+  (`patterns/scratch-data/CHANGELOG.md`).
+
 ## v0.5.1 (2026-10-22)
 
 - **`build-warnings`: the App Intents skip can be set per target**, so a

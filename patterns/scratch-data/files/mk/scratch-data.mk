@@ -13,6 +13,8 @@
 #   SCRATCH_DEFAULTS  the scratch user defaults, as
 #                     `defaults delete` takes them                (optional)
 #   SCRATCH_BUILD     the target that builds $(APP)  (default: build)
+#   SCRATCH_ARGS      more launch arguments for the scratch run, each
+#                     with a value (`--commands <dir>`, say)     (optional)
 #
 # SCRATCH_BUILD must be set before the include: make reads prerequisites as
 # it reads the rule. `quit-running` is defined here for the project's own run
@@ -47,9 +49,12 @@ endef
 # The app on scratch data, in the background (`open -g`), so that an agent
 # can run it while someone else uses the machine. This is the target for
 # agents and scripted checks; `make run` is for a person, on real data.
+# SCRATCH_ARGS go before --scratch-database, which takes no value: AppKit
+# reads launch arguments as `-key value` pairs, and would take the next
+# argument as its value.
 run-scratch: $(SCRATCH_BUILD)
 	$(quit-running)
-	open -g -n "$(APP)" --args --scratch-database
+	open -g -n "$(APP)" --args $(SCRATCH_ARGS) --scratch-database
 	@echo "✓ launched on scratch data, in the background"
 
 # Refuses a SCRATCH_DIR that does not say "scratch": an empty or mistyped
