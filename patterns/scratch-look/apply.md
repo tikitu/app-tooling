@@ -11,7 +11,9 @@ Read [`README.md`](README.md) first for what this does and why.
   `files/scripts/make-scratch-icon.py` and `swift/ScratchDataBanner.swift`
   (a difference is either a local change that belongs here or an old
   copy). The steps below replace them; peru refuses to overwrite them, so
-  delete them first, and keep the generated `AppIcon-Scratch.appiconset`.
+  delete them first. Keep the generated `AppIcon-Scratch.appiconset`, and
+  rerun step 2 over it: with the same script, `git status` then shows it
+  unchanged.
 - **Something else doing this job.** Look for:
   - a second app icon set (`AppIcon-Debug`, `AppIcon-Dev`, `-Beta`), and
     `ASSETCATALOG_COMPILER_APPICON_NAME` set per configuration (in
@@ -135,12 +137,17 @@ params = { banner_dir = "Sources/MyAppUI", icon = "MyApp/Assets.xcassets/AppIcon
 - Build the scratch app and look at the icon it carries, not the asset
   catalog. Mac: `/usr/libexec/PlistBuddy -c 'Print :CFBundleIconName'
   <App>.app/Contents/Info.plist` prints `AppIcon-Scratch`, and
-  `sips -s format png <App>.app/Contents/Resources/AppIcon-Scratch.icns
-  --out /tmp/scratch-icon.png` writes a PNG (check its size is not 0) that
-  shows the band. iOS simulator: `CFBundleIcons` in the built
-  `Info.plist` names `AppIcon-Scratch`. The real build still prints
-  `AppIcon`.
+  `iconutil -c iconset -o /tmp/scratch.iconset
+  <App>.app/Contents/Resources/AppIcon-Scratch.icns` exits 0 and writes
+  PNGs (`ls -l`: not empty; Xcode puts only a few sizes in the `.icns`, the
+  rest in `Assets.car`) that show the band. iOS simulator:
+  `plutil -extract CFBundleIcons json -o - <App>.app/Info.plist` names
+  `AppIcon-Scratch`, and the bundle's `AppIcon-Scratch60x60@2x.png` shows
+  the band. The real build still names `AppIcon`.
 - `make run-scratch`, then a screenshot of its window shows the strip
   under the title bar of each column, with the sidebar's first row clear.
+  To take one without bringing the app forward: find its window number
+  for the pid `pgrep -f` gives (`CGWindowListCopyWindowInfo`, layer 0),
+  then `screencapture -x -o -l <window number> scratch.png`.
 - `make app-tooling-check` prints `✓ app-tooling imports match peru.yaml`
   after committing, including after a commit that ran the formatter.
