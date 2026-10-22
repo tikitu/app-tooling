@@ -97,28 +97,41 @@ def read_table(trace, run, schema, index=0):
     proc = subprocess.Popen(["xcrun", "xctrace", "export", "--input", trace, "--xpath", xpath],
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     events = ET.iterparse(proc.stdout, events=("start", "end"))
-    cols, node, nodes_seen = [], None, -1
-    for event, el in events:
-        if event == "start" and el.tag == "node":
-            nodes_seen += 1
-            node = el
-        elif event == "end" and el.tag == "mnemonic" and nodes_seen == index:
-            cols.append(el.text)
-        elif event == "end" and el.tag == "schema" and nodes_seen == index:
-            break
-    if nodes_seen < index or not cols:
+
+    def failed(what):
         proc.kill()
         err = proc.stderr.read().decode().strip()
-        sys.exit(f"no table with schema {schema!r}" + (f" ({err})" if err else ""))
+        sys.exit(what + (f" ({err})" if err else ""))
+
+    cols, node, nodes_seen = [], None, -1
+    try:
+        for event, el in events:
+            if event == "start" and el.tag == "node":
+                nodes_seen += 1
+                node = el
+            elif event == "end" and el.tag == "mnemonic" and nodes_seen == index:
+                cols.append(el.text)
+            elif event == "end" and el.tag == "schema" and nodes_seen == index:
+                break
+    except ET.ParseError:
+        # An export that failed prints nothing, or not XML: the table is not
+        # there to read, as when it is missing (a light instrument set has no
+        # hitches tables). SystemExit, like every other "not in this trace".
+        failed(f"no table with schema {schema!r}: the export was not XML")
+    if nodes_seen < index or not cols:
+        failed(f"no table with schema {schema!r}")
 
     def rows():
         ids = {}
-        for event, el in events:
-            if event == "end" and el.tag == "row" and nodes_seen == index:
-                yield dict(zip(cols, (resolve(c, ids) for c in el)))
-                node.remove(el)
-            elif event == "end" and el.tag == "node":
-                break
+        try:
+            for event, el in events:
+                if event == "end" and el.tag == "row" and nodes_seen == index:
+                    yield dict(zip(cols, (resolve(c, ids) for c in el)))
+                    node.remove(el)
+                elif event == "end" and el.tag == "node":
+                    break
+        except ET.ParseError:
+            failed(f"the export of {schema!r} broke off part way")
         proc.kill()
         proc.wait()
 
@@ -191,12 +204,14 @@ def cmd_profile(a):
             continue
         w = int(r["weight"].text) if "weight" in r else 1
         all_w += w
-        fs = frames(r[stack_col])
+        # A sample can have no stack (an empty backtrace, or none at all):
+        # counted, as "(no stack)", so that the totals still add up.
+        fs = frames(r[stack_col]) if stack_col in r else []
         if a.binary:
             fs = [f for f in fs if f[1] == a.binary]
             if not fs:
                 continue
-        self_w[fs[0][0]] += w
+        self_w[fs[0][0] if fs else "(no stack)"] += w
         for name in {f[0] for f in fs}:
             total_w[name] += w
     unit = 1e6 if "weight" in cols else 1

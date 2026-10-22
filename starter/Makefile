@@ -295,10 +295,14 @@ scratch-reset:
 	-defaults delete "$(CONTAINER)/Library/Preferences/$(BUNDLE_ID).scratch" 2>/dev/null
 	@echo "✓ removed the scratch database and settings (takes effect at the next run-scratch)"
 
+# This checkout's build only, by absolute path and then pid: by name, the
+# window of a copy built in another checkout could be photographed instead.
 screenshot:
 	@mkdir -p build
-	@ID=$$(swift scripts/window-id.swift "$(DISPLAY_NAME)") && \
-	  screencapture -o -x -l $$ID build/window.png && echo "✓ build/window.png (window $$ID)"
+	@pids=$$($(_quit_running_pids)); set -- $$pids; \
+	  [ $$# -eq 1 ] || { echo "✗ $$# copies of $(abspath $(APP)) running; want exactly 1 (make run-background)"; exit 1; }; \
+	  ID=$$(swift scripts/window-id.swift --pid $$1) && \
+	  screencapture -o -x -l $$ID build/window.png && echo "✓ build/window.png (window $$ID, pid $$1)"
 
 install: build
 	@if [ ! -d "$(APP)" ]; then echo "✗ $(APP) missing — build failed?"; exit 1; fi

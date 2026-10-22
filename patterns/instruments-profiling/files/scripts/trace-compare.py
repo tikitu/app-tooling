@@ -76,7 +76,7 @@ def measure(trace, window, functions):
             continue
         w = int(r["weight"].text) / 1e6
         main += w
-        names = {f[0] for f in tq.frames(r["stack"])}
+        names = {f[0] for f in tq.frames(r["stack"])} if "stack" in r else set()
         for label, fn in functions.items():
             if fn in names:
                 totals[label] += w

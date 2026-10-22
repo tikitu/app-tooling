@@ -4,6 +4,26 @@ What changed in each release of app-tooling. Each pattern has its own
 `CHANGELOG.md` with what a project must do to catch up; this file is the
 summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
+## Unreleased
+
+- **`instruments-profiling`: four failures that looked like success, and a
+  disk-filling hang.** `profile-compare.sh` exits non-zero when a build has
+  no traces, and stops at the first refused run; `profile-mac.sh` stops the
+  instruments service of a recording that hung (only one started by its own
+  run), which had gone on writing a 72 GB staging file; `trace-compare.py`
+  measures traces without hitches tables; `trace-query.py profile` counts
+  samples with an empty stack. New: `--instruments` and `make profile
+  INSTRUMENTS=` for the light instrument set. Take the update; nothing else
+  (`patterns/instruments-profiling/CHANGELOG.md`).
+- **The starter's `make screenshot` could photograph another checkout's
+  app.** It found the window by the app's name, which a build in another
+  worktree shares. It now takes the window of this checkout's build, by
+  absolute path and pid (`scripts/window-id.swift --pid`). A project made from
+  the starter replaces its `screenshot` target and `scripts/window-id.swift`
+  with the starter's; one whose own `screenshot` or `quit-running` matches
+  `$(APP)` by a relative path, or signals or quits by bundle id, has the same
+  hazard and should match `$(abspath $(APP))` and act by pid.
+
 ## v0.5.1 (2026-10-22)
 
 - **`build-warnings`: the App Intents skip can be set per target**, so a

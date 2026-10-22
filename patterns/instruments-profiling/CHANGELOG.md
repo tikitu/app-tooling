@@ -1,5 +1,41 @@
 # instruments-profiling changelog
 
+## Unreleased
+
+- **`profile-compare.sh` no longer reports success with nothing recorded.**
+  It printed ✓ after every run had been refused. It now exits non-zero when
+  any build has no trace of a scenario, says how many runs wrote no trace,
+  and stops at the first run `profile-mac.sh` refuses to start (another
+  recording, another copy of the app, a nearly full disk), which now exits
+  with status 3 for that.
+- **A hung recording no longer goes on filling the disk.** The instruments
+  service (`DTServiceHub`) of a recorder that hung kept its staging file open
+  and went on writing it, 72 GB in six minutes, after the recorder was killed.
+  `profile-mac.sh` now stops a service that started during its run and still
+  holds one of the run's staging files, once no other recording is running
+  (one already running before the run is never touched), and gives up waiting
+  for a stop early when the disk falls under `MIN_FREE_GB`.
+- **The light instrument set**: `--instruments "A,B"` on `profile-mac.sh`
+  and `profile-compare.sh`, and `INSTRUMENTS=` on `make profile`, add
+  instruments to the template. `Blank` with `Hangs,Points of Interest,Time
+  Profiler` stages megabytes where Animation Hitches stages gigabytes, and
+  records no hitches (guide, *Which instrument answers which question*).
+- **`trace-compare.py` measured nothing from traces without hitches
+  tables**: an export that failed was read as XML, and the whole trace was
+  skipped. `trace-query.py` now treats an export that is not XML as a table
+  that is not there.
+- **`trace-query.py profile` crashed on a sample with an empty stack.** Such
+  samples now count as `(no stack)`.
+- Regression tests, run from app-tooling only:
+  `patterns/instruments-profiling/tests/run.sh`.
+
+A project that has the pattern: update it; the changes are all in imported
+files. A project that worked around a ✓ from `profile-compare.sh` (counting
+traces itself) can drop that. If an earlier hung run left a `DTServiceHub`
+holding a deleted or large `instruments*.ktrace` (`lsof +L1 | grep ktrace`,
+`lsof $TMPDIR/instruments*.ktrace`), and no recording is running, stop that
+process to get the space back.
+
 ## v0.3.0 (2026-10-20)
 
 `profile-mac.sh`:

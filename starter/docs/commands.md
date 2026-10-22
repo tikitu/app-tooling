@@ -127,9 +127,10 @@ On failure the run stops there and `error` is present:
 ## Seeing what happened
 
 Commands change state; they do not describe the screen. `make screenshot`
-captures the window by id, so nothing is activated and no pointer moves.
-`scripts/window-id.swift` refuses when more than one process has a window —
-an old copy still running is where stale screenshots come from.
+captures the window by id, so nothing is activated and no pointer moves. It
+takes the window of this checkout's build, found by absolute path and pid,
+and refuses when more than one copy of it is running — an old copy still
+running is where stale screenshots come from.
 
 Keys can be pressed without focus too: `scripts/send-keys.swift <pid> down
 right return` posts them to the process. See `docs/keyboard.md`.

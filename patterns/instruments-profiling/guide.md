@@ -80,6 +80,7 @@ included. It is off unless the user opts in for the session
 |---|---|---|---|
 | Animation Hitches | ✓ | ✗ | every late frame with Instruments' reason; the Hangs instrument's main-thread delays; a Time Profiler. **The default**: small, quick to read |
 | Time Profiler | ✓ | ✓ | where CPU time went, symbolicated |
+| The light set: `Blank` with `--instruments "Hangs,Points of Interest,Time Profiler"` | ✓ | not tried | main-thread delays, signpost intervals and a profile, without hitches. Stages megabytes where Animation Hitches stages gigabytes: for a busy Mac and long comparisons |
 | SwiftUI | ✓ | ✗ (records, empty) | each view body update with duration and severity, and the cause graph: what changed to make each view update. Big and slow to read: one short scenario at a time |
 | Allocations, Leaks | ✓ | ✓ | live and transient memory per type, every allocation's backtrace, leaks. Need the password |
 | Swift Concurrency, File Activity, System Trace, App Launch, Logging | ✓ | not tried | tasks and actors; syscalls with paths; thread states; launch; os_log |
@@ -91,7 +92,8 @@ A device is needed for SwiftUI and hitch data on iOS. On a phone the app is
 usually the real one, on real data: observe it, but run nothing that edits.
 
 Cost: an Animation Hitches trace of 15 s is tens of MB and reads back in
-seconds. A SwiftUI trace of 15 s is ~500 MB and took six minutes and ~19 GB
+seconds, but stages gigabytes in `$TMPDIR` while it records (below,
+*Traps*); the light set staged ~19 MB for a run in the same app. A SwiftUI trace of 15 s is ~500 MB and took six minutes and ~19 GB
 of memory to summarise; a 30 s one did not finish in twenty minutes.
 Allocations over 30 s of use was 2 GB.
 
@@ -222,7 +224,8 @@ total late-frame time, and only between runs that move the same distance:
 main-thread time hardly moves when scrolling improves, because the time
 saved goes into drawing more frames.
 
-**Profiles**: `profile --main-thread` gives total and self time per function;
+**Profiles**: `profile --main-thread` gives total and self time per function
+(a sample with no stack counts as `(no stack)`);
 `--binary MyApp` attributes framework time to the app's innermost frame,
 which says which of its calls caused it. Read the whole stack too: in one app
 its own code was a few percent of the time, and the rest was SwiftUI's
@@ -266,6 +269,14 @@ scripts/trace-compare.py build/profile/compare --builds before,after -f 'Body=My
   from ±15% to 1–2%.
 - **Three rounds or more; medians with ranges.** If the ranges overlap,
   there is no result.
+- **A comparison with a missing build is a failure.** `profile-compare.sh`
+  carries on past a failed run, but exits non-zero when any build has no
+  trace of a scenario, and stops at once when a run is refused (another
+  recording, another copy of the app, a full disk). Its last line says how
+  many runs wrote no trace; `trace-compare.py` gives the count it has.
+- **Many rounds on a busy Mac: the light set**, `--template Blank
+  --instruments "Hangs,Points of Interest,Time Profiler"`, unless the
+  question is about frames.
 - **Build worktrees inside the project's `build/`** if the code audit tool
   must reach them; delete them afterwards.
 
@@ -311,10 +322,18 @@ Each of these looked like something else first.
   multi-gigabyte `instruments*.ktrace` in `$TMPDIR` and never removes it; a
   day of profiling left 529 GB and a nearly full disk. The saved `.trace` does
   not need it. `profile-mac.sh` removes its own once the instruments service
-  lets go (~45 s), or after 90 s even if it has not (after a recording that
-  hung it may never), and lists those earlier runs left. To clear older ones: move those over an hour old that no
+  lets go (~45 s), or after 90 s even if it has not, and lists those earlier
+  runs left. To clear older ones: move those over an hour old that no
   process has open (`lsof`) into a folder, check a saved trace still opens,
   then delete the folder.
+- **After a hung recording, the instruments service goes on writing.** Its
+  `DTServiceHub` kept a staging file open after the recorder was killed and
+  wrote 72 GB in six minutes. A removed file's space comes back only when the
+  service lets go, so `profile-mac.sh` stops a service that started during
+  its run and still holds one of its staging files, once no other recording
+  is running; it gives up waiting for a stop sooner when the disk falls
+  under `MIN_FREE_GB`. A service that was already running is never stopped:
+  it may be another session's.
 - **xctrace can hang at "Stopping recording…"** for good, occasionally;
   the target may then ignore SIGTERM. The script gives up after
   `--stop-timeout` (time spent saving does not count), kills both, and waits
