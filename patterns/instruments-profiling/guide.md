@@ -329,11 +329,10 @@ Each of these looked like something else first.
 - **After a hung recording, the instruments service goes on writing.** Its
   `DTServiceHub` kept a staging file open after the recorder was killed and
   wrote 72 GB in six minutes. A removed file's space comes back only when the
-  service lets go, so `profile-mac.sh` stops a service that started during
-  its run and still holds one of its staging files, once no other recording
-  is running; it gives up waiting for a stop sooner when the disk falls
-  under `MIN_FREE_GB`. A service that was already running is never stopped:
-  it may be another session's.
+  service lets go, so `profile-mac.sh` stops the service its own xctrace
+  started (the recorder's child, until xctrace exits), and gives up waiting
+  for a stop sooner when the disk falls under `MIN_FREE_GB`. A service that
+  was already running is never stopped: it may be another session's.
 - **xctrace can hang at "Stopping recording…"** for good, occasionally;
   the target may then ignore SIGTERM. The script gives up after
   `--stop-timeout` (time spent saving does not count), kills both, and waits

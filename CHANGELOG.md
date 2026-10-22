@@ -9,8 +9,8 @@ summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 - **`instruments-profiling`: four failures that looked like success, and a
   disk-filling hang.** `profile-compare.sh` exits non-zero when a build has
   no traces, and stops at the first refused run; `profile-mac.sh` stops the
-  instruments service of a recording that hung (only one started by its own
-  run), which had gone on writing a 72 GB staging file; `trace-compare.py`
+  instruments service its own recording started, which after a hang had
+  gone on writing a 72 GB staging file; `trace-compare.py`
   measures traces without hitches tables; `trace-query.py profile` counts
   samples with an empty stack. New: `--instruments` and `make profile
   INSTRUMENTS=` for the light instrument set. Take the update; nothing else
