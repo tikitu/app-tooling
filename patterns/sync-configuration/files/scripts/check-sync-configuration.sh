@@ -260,8 +260,9 @@ check_app() {
 	case "$EXPECT" in
 		"") ;;
 		production)
-			[ "$shape" = sync ] && [ "$environment" = Production ] ||
+			if [ "$shape" != sync ] || [ "$environment" != Production ]; then
 				fail "$app: expected a production build, but it declares ${PREFIX}SyncEnabled=$sync, ${PREFIX}CloudKitEnvironment=${environment:-missing}"
+			fi
 			;;
 		*)
 			[ "$shape" = "$EXPECT" ] ||
