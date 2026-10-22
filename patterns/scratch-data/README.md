@@ -48,6 +48,27 @@ what it must do and supplies the make targets around it.
   where sync starts.
 - `AGENTS.md` telling agents to use `make run-scratch`, never `make run`.
 
+## A scratch run must not launch anything that defaults to real data
+
+`--scratch-database` fails open: without it, the app is on real data. It
+reaches the app because `make run-scratch` launches it with `open --args`,
+which passes it. **A sandboxed app cannot pass arguments on**: Apple's
+documentation for `NSWorkspace.OpenConfiguration.arguments` (and
+`.environment`) says the system ignores them when the calling process is
+sandboxed, and nothing reports an error. So a scratch run that launches a
+helper, a login item or a second app with `--scratch` (or any mode switch)
+in those arguments starts it on real data.
+
+- A scratch run never launches another app or helper whose default is real
+  data. Start the scratch copy of the helper from the terminal (`open -g -n
+  <Helper.app> --args --scratch`), as `make run-scratch` starts the app, and
+  have the app only signal it once it runs (a Darwin notification, an XPC
+  message).
+- A helper that has to learn its mode from the app should learn it from
+  something that survives the launch (a message after it starts, a file in
+  a shared container), not from its launch arguments. A future helper or
+  login-item pattern should say so.
+
 ## What it does not do
 
 - **No iOS.** A simulator's whole container is disposable already, so the

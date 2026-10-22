@@ -11,6 +11,12 @@ summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
   hand, output committed) and windows on scratch data a caution strip
   (`ScratchDataBanner.swift`, imported into a directory the project
   chooses). To adopt: follow `patterns/scratch-look/apply.md`.
+- **`scratch-data`: a sandboxed app cannot pass `--scratch-database` on.**
+  The README now says that `NSWorkspace.OpenConfiguration` arguments and
+  environment are ignored when the launching app is sandboxed, so a helper
+  or second app launched from a scratch run starts on real data. A project
+  that has the pattern: check that its app never launches another app or
+  helper whose default is real data (`patterns/scratch-data/CHANGELOG.md`).
 
 ## v0.5.1 (2026-10-22)
 

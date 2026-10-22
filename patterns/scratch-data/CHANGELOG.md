@@ -1,5 +1,17 @@
 # scratch-data changelog
 
+## Unreleased
+
+**A sandboxed app cannot pass `--scratch-database`, or any argument, to an
+app it launches.** `NSWorkspace.OpenConfiguration.arguments` and
+`.environment` are ignored when the launching app is sandboxed, silently,
+so a helper or second app launched from a scratch run with a scratch flag
+starts on real data. The README has a new section on it. A project that has
+the pattern: take the update, and check that the app never launches another
+app or helper whose default is real data while on scratch data; if it does,
+start the helper's scratch copy from the terminal instead and have the app
+only signal it (the README says how).
+
 ## v0.3.0 (2026-10-20)
 
 **`quit-running` could quit the real app.** It found the app with
