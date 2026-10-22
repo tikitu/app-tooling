@@ -57,11 +57,43 @@ aside) while any Swift file mentions `AppIntents`, `AppIntent`,
 adopts App Intents, its next `make` of anything stops until the skip is
 removed.
 
-The check is whole-project, deliberately: it does not work out which target
+By default the check is whole-project: it does not work out which target
 a Swift file belongs to, so a project with App Intents anywhere cannot use
 the skip anywhere. Intents often live in a local package and reach the app
-through it, where a check of the app target's own sources would miss them. Mentions in comments count. Both err on the side of
-keeping intents.
+through it, where a check of the app target's own sources would miss them.
+Mentions in comments count. Both err on the side of keeping intents.
+
+### Per target
+
+A project with App Intents in some targets can still skip the step on the
+others (an extension, a test bundle) by naming them. Every mention of the
+setting itself must then be this indirection, which Xcode evaluates per
+target:
+
+```
+LM_SKIP_METADATA_EXTRACTION = $(LM_SKIP_METADATA_EXTRACTION_$(TARGET_NAME:c99extidentifier))
+LM_SKIP_METADATA_EXTRACTION_ShareExtension = YES
+LM_SKIP_METADATA_EXTRACTION_MyFeatureTests = YES
+```
+
+A name is the target's `TARGET_NAME` with anything but letters, digits and
+`_` turned into `_`: an Xcode project's target name, or a local package's
+target or product name (Xcode lists a package's test bundle as
+`MyFeatureTests-product`, but its `TARGET_NAME` is `MyFeatureTests`).
+
+The check, `scripts/check-app-intents-skip-targets.py` (it needs
+`python3`), then fails `make` when any named target compiles a Swift file
+that mentions App Intents: its own sources, those of the targets it depends
+on in the project's `.xcodeproj` files, and those of every target in the
+project's own packages that it links, transitively. It reads the
+`.xcodeproj` with `plutil` and the packages with `swift package
+dump-package`, so what it checks is what Xcode and SwiftPM read. Where it
+cannot be sure, it fails: a name that matches no target, a setting that
+mentions the skip in any other form (which turns the whole-project check
+back on), a project file it cannot read. A synced folder's membership
+exceptions are not read, so it may check more files than a target
+compiles, never fewer. An Xcode project generated from a spec (xcodegen,
+Tuist) has to be generated before the check can find its targets.
 
 ## What it asks of a project
 
@@ -69,8 +101,9 @@ keeping intents.
   something else (mise, a script) sets the variable and runs the check
   there (`apply.md`).
 - For part 1, xctest-dynamic-overlay ≥ 1.11.0 or swift-issue-reporting 2.x.
-- For part 2, only in a project with no App Intents: the setting, in the
-  Xcode project spec and on the command line of package-scheme xcodebuilds.
+- For part 2: the setting, in the Xcode project spec and on the command
+  line of package-scheme xcodebuilds. Project-wide only in a project with no
+  App Intents; otherwise per target, which needs `python3`.
 
 ## What it does not do
 

@@ -19,8 +19,9 @@
 export OMIT_DYNAMIC_TEST_SUPPORT := 1
 
 # Refuse to run at all while LM_SKIP_METADATA_EXTRACTION is set anywhere in
-# the project and any Swift file has App Intents code: the skip would drop
-# their metadata silently. Checked on every make run, so it cannot be missed.
+# the project and any Swift file has App Intents code (or, when it is set per
+# target, while a skipped target compiles any): the skip would drop their
+# metadata silently. Checked on every make run, so it cannot be missed.
 # (make 3.81 has no .SHELLSTATUS: the script prints `ok` when it passes. On
 # failure it runs again onto stderr, for its message with its line breaks.)
 _build_warnings_script := $(dir $(lastword $(MAKEFILE_LIST)))../scripts/check-app-intents-skip.sh

@@ -22,6 +22,12 @@
 # a comment counts, on purpose. Untracked files count; ignored ones (build
 # output, checkouts) do not.
 #
+# Per target: when every mention of the setting itself is the indirection
+#   LM_SKIP_METADATA_EXTRACTION = $(LM_SKIP_METADATA_EXTRACTION_$(TARGET_NAME:c99extidentifier))
+# the skip reaches only the targets named by LM_SKIP_METADATA_EXTRACTION_<Target>,
+# and check-app-intents-skip-targets.py checks only what those targets compile,
+# their packages' sources included.
+#
 # Prints `ok` as its last line when the project passes; anything else is a
 # failure, with a non-zero exit. mk/build-warnings.mk relies on the `ok`.
 
@@ -42,25 +48,66 @@ grep_or_fail() {
   printf '%s' "$out"
 }
 
+# This pattern's own files, wherever they are: a project may hold another
+# that imports them too (in a subdirectory), and a case-insensitive disk may
+# have put them in Scripts/.
 skips=$(grep_or_fail -l -e LM_SKIP_METADATA_EXTRACTION -- . \
-  ':(exclude)*.md' ':(exclude)docs/app-tooling/' \
-  ':(exclude)mk/build-warnings.mk' ':(exclude)scripts/check-app-intents-skip.sh') || exit $?
+  ':(exclude)*.md' ':(exclude,glob)**/docs/app-tooling/**' \
+  ':(exclude,glob,icase)**/mk/build-warnings.mk' \
+  ':(exclude,glob,icase)**/scripts/check-app-intents-skip.sh' \
+  ':(exclude,glob,icase)**/scripts/check-app-intents-skip-targets.py') || exit $?
 
 if [ -z "$skips" ]; then
   echo "ok"
   exit 0
 fi
 
-intents=$(grep_or_fail -n -w -E 'AppIntents|AppIntent|AppShortcutsProvider|AppEntity|AppEnum' -- '*.swift') || exit $?
+pattern='AppIntents|AppIntent|AppShortcutsProvider|AppEntity|AppEnum'
+intents=$(grep_or_fail -n -w -E "$pattern" -- '*.swift') || exit $?
 
-if [ -n "$intents" ]; then
-  echo "✗ LM_SKIP_METADATA_EXTRACTION is set, but this project has App Intents code."
-  echo "  The skip would drop the intents' metadata. Remove it from:"
+if [ -z "$intents" ]; then
+  echo "ok"
+  exit 0
+fi
+
+# Per target, if no mention of the setting is anything but the indirection.
+indirection='$(LM_SKIP_METADATA_EXTRACTION_$(TARGET_NAME:c99extidentifier))'
+mentions=$(printf '%s\n' "$skips" | while IFS= read -r f; do
+  grep -n -E 'LM_SKIP_METADATA_EXTRACTION([^_A-Za-z0-9]|$)' "$f" | sed "s|^|$f:|"
+done)
+if [ -n "$mentions" ] && ! printf '%s\n' "$mentions" | grep -q -v -F "$indirection"; then
+  targets=$(printf '%s\n' "$skips" | while IFS= read -r f; do
+    grep -o -E 'LM_SKIP_METADATA_EXTRACTION_[A-Za-z0-9_]+' "$f"
+  done | sed 's/^LM_SKIP_METADATA_EXTRACTION_//' | sort -u)
+  if [ -z "$targets" ]; then
+    echo "ok"
+    exit 0
+  fi
+  # shellcheck disable=SC2086 # target names are words
+  out=$(python3 scripts/check-app-intents-skip-targets.py "$pattern" $targets)
+  status=$?
+  if [ "$status" -eq 0 ]; then
+    echo "ok"
+    exit 0
+  fi
+  if [ "$status" -gt 1 ]; then
+    printf '%s\n' "$out"
+    exit 2
+  fi
+  echo "✗ LM_SKIP_METADATA_EXTRACTION is set on targets that compile App Intents code."
+  echo "  The skip would drop the intents' metadata. Remove those targets'"
+  echo "  LM_SKIP_METADATA_EXTRACTION_<Target> from:"
   printf '%s\n' "$skips" | sed 's/^/    /'
-  echo "  App Intents code:"
-  printf '%s\n' "$intents" | head -10 | sed 's/^/    /'
+  echo "  App Intents code, by skipped target:"
+  printf '%s\n' "$out" | head -10 | sed 's/^/    /'
   echo "  docs/app-tooling/build-warnings/README.md has why."
   exit 1
 fi
 
-echo "ok"
+echo "✗ LM_SKIP_METADATA_EXTRACTION is set, but this project has App Intents code."
+echo "  The skip would drop the intents' metadata. Remove it from:"
+printf '%s\n' "$skips" | sed 's/^/    /'
+echo "  App Intents code:"
+printf '%s\n' "$intents" | head -10 | sed 's/^/    /'
+echo "  docs/app-tooling/build-warnings/README.md has why."
+exit 1

@@ -27,7 +27,7 @@ Read [`README.md`](README.md) first for what this does and why.
 |---|---|
 | Does it use swift-issue-reporting? | `swift-issue-reporting` or `xctest-dynamic-overlay` in any `Package.resolved` |
 | Its version | the same pin. Below xctest-dynamic-overlay 1.11.0 needs a bump (step 2) |
-| Does it have App Intents? | `git grep -n -w -E 'AppIntents\|AppIntent\|AppShortcutsProvider\|AppEntity\|AppEnum' -- '*.swift'`. Any output: skip step 4 |
+| Does it have App Intents? | `git grep -n -w -E 'AppIntents\|AppIntent\|AppShortcutsProvider\|AppEntity\|AppEnum' -- '*.swift'`. Any output: step 4 per target only |
 | Where xcodebuild runs | the `Makefile`'s recipes that call `xcodebuild`, and which `-scheme` each builds: an app scheme from `project.yml`, or a package's `<Name>-Package` scheme |
 
 ## Steps
@@ -86,7 +86,7 @@ bump.
 **3. Nothing more for part 1.** Every recipe now runs with
 `OMIT_DYNAMIC_TEST_SUPPORT=1`.
 
-**4. Part 2, only in a project with no App Intents.** Add the setting
+**4. Part 2.** In a project with no App Intents, add the setting
 where each xcodebuild that prints the warning gets its settings:
 
 - **An app from `project.yml`:** in the project-wide `settings: base:`, so
@@ -103,6 +103,23 @@ where each xcodebuild that prints the warning gets its settings:
 - **A package scheme** (`-scheme <Name>-Package`, which has no settings of
   its own): append `LM_SKIP_METADATA_EXTRACTION=YES` to that `xcodebuild`
   command line, written out literally, so that the check can find it.
+
+In a project with App Intents, skip only the targets that print the
+warning, by name (the README's "Per target"). Find them in a build log: the
+`ExtractAppIntentsMetadata (in target '…')` line just above each
+`Metadata extraction skipped`. Wherever the targets get their settings
+(the spec's project-wide settings, or each package-scheme `xcodebuild`
+command line, quoted so the shell leaves `$(…)` alone):
+
+```sh
+'LM_SKIP_METADATA_EXTRACTION=$(LM_SKIP_METADATA_EXTRACTION_$(TARGET_NAME:c99extidentifier))' \
+LM_SKIP_METADATA_EXTRACTION_ShareExtension=YES \
+LM_SKIP_METADATA_EXTRACTION_MyFeatureTests=YES
+```
+
+A package test bundle shows as `MyFeatureTests-product`; its name here is
+`MyFeatureTests`. Then compare the `ExtractAppIntentsMetadata` lines of a
+clean build with and without: only the named targets' lines may be gone.
 
 **5. A project not driven by make** (mise, say) cannot include the
 fragment. Set `OMIT_DYNAMIC_TEST_SUPPORT = "1"` in `mise.toml`'s `[env]`,
@@ -159,4 +176,7 @@ nothing is reused from before:
 
   anywhere among the project's Swift files, untracked. `make help` (or any
   target) must now exit non-zero, naming the file with the setting and the
-  probe's lines. Delete the probe; `make help` works again.
+  probe's lines. Delete the probe; `make help` works again. Per target: put
+  the probe in each skipped target's sources, and in a package target it
+  links, and `make help` must fail each time; in a target that keeps the
+  step, it must not.
