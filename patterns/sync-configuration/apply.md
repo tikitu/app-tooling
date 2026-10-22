@@ -266,6 +266,14 @@ ios-build: …
 A build target the project uses for agents, and that does not go through
 `build.sh`, adds `--expect scratch`.
 
+Only a signed build can be checked. A simulator build made with
+`CODE_SIGNING_ALLOWED=NO` has no entitlements linked into it, and the
+check refuses it ("a simulator build with no __entitlements section"),
+rightly: there is nothing to read. Check it only if the build is signed
+(Xcode's default for the simulator, "Sign to Run Locally", needs no
+profile); otherwise leave that build unchecked, and say so in
+`app-tooling.toml`.
+
 **10. No `eraseDatabaseOnSchemaChange`.** Delete it wherever it is set,
 `#if DEBUG` included, with a comment where it was if the database
 configuration is otherwise silent on it.
