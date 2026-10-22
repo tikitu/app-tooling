@@ -1,6 +1,6 @@
 # build-warnings changelog
 
-## Unreleased
+## v0.5.1 (2026-10-22)
 
 **The App Intents skip can be set per target.** A project with App Intents
 in some targets can skip Xcode's metadata step on the others (an
