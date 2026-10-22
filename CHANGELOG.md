@@ -4,6 +4,21 @@ What changed in each release of app-tooling. Each pattern has its own
 `CHANGELOG.md` with what a project must do to catch up; this file is the
 summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
+## Unreleased
+
+- **`sync-configuration`: every built app is checked from its signature.**
+  `scripts/check-sync-configuration.sh` passes only a scratch build with no
+  iCloud entitlement anywhere, or a sync build signed for the environment
+  it declares; `--expect production` refuses anything else on a TestFlight
+  archive. Simulator builds are read from their linked entitlements. Its
+  tests run with `make sync-check-test`. `apply.md` now also covers an
+  Xcode project without XcodeGen or `build.sh`. To take it: steps 6, 8 and
+  9 of `patterns/sync-configuration/apply.md`
+  (`patterns/sync-configuration/CHANGELOG.md`).
+- **`testflight`: `TESTFLIGHT_ARCHIVE_CHECK`** runs a project's own check
+  on the archived app before anything is sent. Nothing to do unless the
+  project checks its archives (`patterns/testflight/CHANGELOG.md`).
+
 ## v0.5.1 (2026-10-22)
 
 - **`build-warnings`: the App Intents skip can be set per target**, so a
