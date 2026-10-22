@@ -41,6 +41,7 @@ let package = Package(
             dependencies: [
                 "MacUI", .product(name: "Core", package: "StarterKit"),
                 .product(name: "UI", package: "StarterKit"),
+                .product(name: "CommandInbox", package: "StarterKit"),
                 .product(name: "SQLiteData", package: "sqlite-data"),
                 .product(name: "Dependencies", package: "swift-dependencies"),
                 .product(name: "IssueReporting", package: "swift-issue-reporting"),

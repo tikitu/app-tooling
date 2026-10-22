@@ -10,3 +10,10 @@
 # No LM_SKIP_METADATA_EXTRACTION: the only xcodebuild, check-shared-ios, builds
 # a package's library targets, which do not print the warning.
 [patterns.build-warnings]
+
+# Sandboxed: the inbox is ~/Library/Caches/Starter-scratch/Commands, passed by
+# run-scratch as --commands and opened to the app by a temporary exception in
+# StarterMac.entitlements (kept in the one entitlements file: the starter is
+# distributed with Developer ID, not through the App Store). No snapshot.
+[patterns.command-inbox]
+params = { module = "Packages/StarterKit/Sources/CommandInbox", notification = "org.example.starter.commands", dir = "~/Library/Caches/Starter-scratch/Commands" }

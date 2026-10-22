@@ -18,7 +18,10 @@ let shared: [SwiftSetting] = [.swiftLanguageMode(.v6), .defaultIsolation(nil)]
 // lives in StarterMacKit, whose manifest says macOS and nothing else.
 let package = Package(
     name: "StarterKit", platforms: [.macOS(.v26), .iOS(.v26)],
-    products: [.library(name: "Core", targets: ["Core"]), .library(name: "UI", targets: ["UI"])],
+    products: [
+        .library(name: "Core", targets: ["Core"]), .library(name: "UI", targets: ["UI"]),
+        .library(name: "CommandInbox", targets: ["CommandInbox"]),
+    ],
     dependencies: [
         .package(url: "https://github.com/pointfreeco/sqlite-data", from: "1.12.0"),
         .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.17.1"),
@@ -34,10 +37,13 @@ let package = Package(
                 .product(name: "Dependencies", package: "swift-dependencies"),
                 .product(name: "IssueReporting", package: "swift-issue-reporting"),
             ], swiftSettings: shared),
+        // The command inbox, imported from app-tooling (command-inbox). Never
+        // edit it here: docs/app-tooling/command-inbox/.
+        .target(name: "CommandInbox", swiftSettings: shared),
         .target(
             name: "UI",
             dependencies: [
-                "Core", .product(name: "SQLiteData", package: "sqlite-data"),
+                "Core", "CommandInbox", .product(name: "SQLiteData", package: "sqlite-data"),
                 .product(name: "Dependencies", package: "swift-dependencies"),
                 .product(name: "IssueReporting", package: "swift-issue-reporting"),
                 .product(name: "Sharing", package: "swift-sharing"),
@@ -51,7 +57,7 @@ let package = Package(
         .testTarget(
             name: "UITests",
             dependencies: [
-                "UI", .product(name: "CustomDump", package: "swift-custom-dump"),
+                "UI", "CommandInbox", .product(name: "CustomDump", package: "swift-custom-dump"),
                 .product(name: "DependenciesTestSupport", package: "swift-dependencies"),
             ], swiftSettings: shared),
     ])

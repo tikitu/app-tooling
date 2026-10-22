@@ -9,5 +9,17 @@
 	-->
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
+	<!--
+	  The command inbox of a scratch run (docs/commands.md), outside the
+	  container: a script that touches the container raises a privacy prompt
+	  on the screen of whoever is using the machine. Only used when the app
+	  is launched with a commands directory on scratch data. A temporary
+	  exception: fine for Developer ID, but an App Store build would sign with
+	  entitlements that leave it out.
+	-->
+	<key>com.apple.security.temporary-exception.files.home-relative-path.read-write</key>
+	<array>
+		<string>/Library/Caches/Starter-scratch/Commands/</string>
+	</array>
 </dict>
 </plist>

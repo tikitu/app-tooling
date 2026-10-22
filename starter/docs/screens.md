@@ -19,7 +19,7 @@ icon.
 | a `ScreenView` | the navigation title, and which view to build |
 | the Mac's `ScreenCommands` | the Window-menu item and its shortcut |
 | `WindowGroup(for: Screen.self)` (Mac) | the window's identity and restoration; one `WindowGroup` serves every screen |
-| `CommandFile` | the `screen` field of a `show` command |
+| `AppCommandDecoding` | the `screen` field of a `show` command |
 
 Adding a screen is then: a case, its rows in the property switches, and a
 case in `ScreenView`. The compiler finds every switch, and the screen is in

@@ -19,8 +19,8 @@ covering the thing people use. `docs/commands.md` has the invariant.
 
 ## What to do instead
 
-Add a case to `AppCommand`, its decoding in `CommandFile.swift`, its row in
-`docs/commands.md`, and perform it with `model.attempt(…)`.
+Add a case to `AppCommand`, its decoding in `AppCommandDecoding.swift`, its
+row in `docs/commands.md`, and perform it with `model.attempt(…)`.
 
 ## When a finding is not a bug
 

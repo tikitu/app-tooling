@@ -15,6 +15,12 @@ summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
   temporary exception), so a terminal never raises the "data from other
   apps" prompt. A project with a copy of the starter's inbox: follow
   `patterns/command-inbox/apply.md` and delete the copy.
+- **The starter takes `command-inbox`** in place of its own copy, and its
+  inbox moves out of the container to
+  `~/Library/Caches/Starter-scratch/Commands` (`--commands`, with a sandbox
+  temporary exception), so `send-commands.sh` no longer touches the
+  container. A project made from the
+  starter has the old copy: follow `patterns/command-inbox/apply.md`.
 - **`scratch-data`: `SCRATCH_ARGS`**, more launch arguments for `make
   run-scratch` (such as `--commands <dir>`). Nothing to do unless wanted
   (`patterns/scratch-data/CHANGELOG.md`).

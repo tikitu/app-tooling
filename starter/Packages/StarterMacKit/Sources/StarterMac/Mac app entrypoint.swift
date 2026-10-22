@@ -1,3 +1,4 @@
+import CommandInbox
 import Core
 import Dependencies
 import Foundation
@@ -19,8 +20,8 @@ import UI
 @main
 enum Entry {
     /// `--scratch-database` runs on a disposable database and its own user
-    /// defaults, and accepts commands. The real app does neither — see
-    /// `docs/commands.md`.
+    /// defaults, and accepts commands (given `--commands <dir>`). The real
+    /// app does neither — see `docs/commands.md`.
     static let isScratch = CommandLine.arguments.contains("--scratch-database")
 
     /// Made here rather than in the `App`, for the same ordering reason: a
@@ -29,6 +30,18 @@ enum Entry {
     /// `make run-scratch` starts it.
     @MainActor
     static let model = AppModel()
+
+    /// Commands from scripts (`docs/commands.md`), in the directory given as
+    /// `--commands <dir>`: only on scratch data, so a command can never touch
+    /// real data or settings.
+    @MainActor
+    static let inbox: CommandInbox<AppCommand>? = {
+        guard isScratch, let directory = InboxDirectory.argument(in: CommandLine.arguments) else {
+            return nil
+        }
+        return CommandInbox(directory: directory, notificationName: "org.example.starter.commands")
+        { CommandReply(try await model.perform($0)) }
+    }()
 
     static func main() {
         withErrorReporting {
@@ -42,7 +55,7 @@ enum Entry {
         }
         MainActor.assumeIsolated {
             // Started from here, not a view's `.task`, for the reason above.
-            if isScratch { CommandInbox.shared.start(model: model) }
+            inbox?.start()
         }
         StarterApp.main()
     }
