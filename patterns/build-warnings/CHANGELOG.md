@@ -1,5 +1,17 @@
 # build-warnings changelog
 
+## Unreleased
+
+**The check no longer counts this pattern's own files as the skip.** It
+left out `mk/build-warnings.mk` and `scripts/check-app-intents-skip.sh`
+only at those exact paths, so a project holding a second project that
+imports the pattern (a subdirectory with its own Makefile), or whose
+`scripts/` directory is spelled `Scripts/`, read the pattern's own files
+as `LM_SKIP_METADATA_EXTRACTION` being set: once such a project had any
+App Intents code, `make` would stop for a skip that was not there. The
+check now leaves the pattern's files out wherever they are, in any case.
+Nothing to do beyond taking the update.
+
 ## v0.5.0 (2026-10-21)
 
 First version. `mk/build-warnings.mk` exports `OMIT_DYNAMIC_TEST_SUPPORT=1`,

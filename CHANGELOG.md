@@ -4,6 +4,13 @@ What changed in each release of app-tooling. Each pattern has its own
 `CHANGELOG.md` with what a project must do to catch up; this file is the
 summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
+## Unreleased
+
+- **`build-warnings`: its App Intents check could stop `make` for a skip
+  that was not there**, in a project that holds another importing the
+  pattern, or whose `scripts/` is `Scripts/`, once it had App Intents
+  code. Take the update; nothing else (`patterns/build-warnings/CHANGELOG.md`).
+
 ## v0.5.0 (2026-10-21)
 
 - **New pattern `build-warnings`.** `mk/build-warnings.mk` exports

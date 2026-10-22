@@ -42,9 +42,13 @@ grep_or_fail() {
   printf '%s' "$out"
 }
 
+# This pattern's own files, wherever they are: a project may hold another
+# that imports them too (in a subdirectory), and a case-insensitive disk may
+# have put them in Scripts/.
 skips=$(grep_or_fail -l -e LM_SKIP_METADATA_EXTRACTION -- . \
-  ':(exclude)*.md' ':(exclude)docs/app-tooling/' \
-  ':(exclude)mk/build-warnings.mk' ':(exclude)scripts/check-app-intents-skip.sh') || exit $?
+  ':(exclude)*.md' ':(exclude,glob)**/docs/app-tooling/**' \
+  ':(exclude,glob,icase)**/mk/build-warnings.mk' \
+  ':(exclude,glob,icase)**/scripts/check-app-intents-skip.sh') || exit $?
 
 if [ -z "$skips" ]; then
   echo "ok"
