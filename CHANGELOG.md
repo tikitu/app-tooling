@@ -4,6 +4,14 @@ What changed in each release of app-tooling. Each pattern has its own
 `CHANGELOG.md` with what a project must do to catch up; this file is the
 summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
+## Unreleased
+
+- **New pattern `scratch-look`** (requires `scratch-data`): a scratch
+  build's icon gets a caution band (`scripts/make-scratch-icon.py`, run by
+  hand, output committed) and windows on scratch data a caution strip
+  (`ScratchDataBanner.swift`, imported into a directory the project
+  chooses). To adopt: follow `patterns/scratch-look/apply.md`.
+
 ## v0.5.1 (2026-10-22)
 
 - **`build-warnings`: the App Intents skip can be set per target**, so a

@@ -79,6 +79,12 @@ alone arrive with the update and need no step; say so if it matters.
 **`files/`** is laid out as it goes into the project: `files/scripts/x.sh`
 becomes `scripts/x.sh`. Two patterns must not import the same path.
 
+A file whose place differs between projects (a Swift source, which belongs
+in whichever target or module holds the project's own code of that kind)
+goes in a directory of its own beside `files/`, with a third rule exporting
+it, and `apply.md` gives its import with the destination as a parameter:
+`scratch-look`'s `swift/` is the example.
+
 ## Seams: shared files are never edited in a project
 
 The difference between an update that is easy and one that is a merge is
@@ -150,6 +156,7 @@ If the starter should carry it too, add it to `starter/peru.yaml`;
 | [`testflight`](testflight/README.md) | `make testflight-upload` archives a clean commit and uploads it to TestFlight; `make testflight-validate` checks without uploading |
 | [`instruments-profiling`](instruments-profiling/README.md) | An agent records Instruments traces of the Mac app unattended, on a copy of its data, reads them as text, and compares builds before and after a change. With a short skill that points agents at it |
 | [`scratch-data`](scratch-data/README.md) | `make run-scratch` launches the Mac app in the background on scratch data (`--scratch-database`), which never syncs; `make scratch-reset` throws it away |
+| [`scratch-look`](scratch-look/README.md) | A scratch build's icon gets a caution band, and windows on scratch data a caution strip (`ScratchDataBanner`), so a scratch run is never mistaken for the real app. Requires `scratch-data` |
 | [`sync-configuration`](sync-configuration/README.md) | For a CloudKit app: only signed builds get the iCloud entitlements, `Info.plist` says whether a build may sync and against which environment, and the app refuses sync state from another environment. Builds agents make cannot sync |
 | [`build-warnings`](build-warnings/README.md) | Removes two warnings nearly every build prints, at their cause: swift-issue-reporting's `IssueReportingTestSupport` `ld` warning and Xcode's App Intents "Metadata extraction skipped". `make` refuses to run while the App Intents skip and App Intents code are both in the project |
 | [`privileged-helper`](privileged-helper/README.md) | A Mac app runs one command as root without a password each time: a launchd daemon in the bundle, allowed once in System Settings, with Touch ID before the risky direction. Documents only |
