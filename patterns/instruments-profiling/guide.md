@@ -80,7 +80,7 @@ included. It is off unless the user opts in for the session
 |---|---|---|---|
 | Animation Hitches | ✓ | ✗ | every late frame with Instruments' reason; the Hangs instrument's main-thread delays; a Time Profiler. **The default**: small, quick to read |
 | Time Profiler | ✓ | ✓ | where CPU time went, symbolicated |
-| The light set: `Blank` with `--instruments "Hangs,Points of Interest,Time Profiler"` | ✓ | not tried | main-thread delays, signpost intervals and a profile, without hitches. Stages megabytes where Animation Hitches stages gigabytes: for a busy Mac and long comparisons |
+| The light set: `Blank` with `--instruments "Hangs,Points of Interest,Time Profiler"` | ✓ | not tried | main-thread delays, signpost intervals and a profile, without hitches. Stages hundreds of MB where Animation Hitches stages GB: for a busy Mac and long comparisons |
 | SwiftUI | ✓ | ✗ (records, empty) | each view body update with duration and severity, and the cause graph: what changed to make each view update. Big and slow to read: one short scenario at a time |
 | Allocations, Leaks | ✓ | ✓ | live and transient memory per type, every allocation's backtrace, leaks. Need the password |
 | Swift Concurrency, File Activity, System Trace, App Launch, Logging | ✓ | not tried | tasks and actors; syscalls with paths; thread states; launch; os_log |
@@ -93,7 +93,7 @@ usually the real one, on real data: observe it, but run nothing that edits.
 
 Cost: an Animation Hitches trace of 15 s is tens of MB and reads back in
 seconds, but stages gigabytes in `$TMPDIR` while it records (below,
-*Traps*); the light set staged ~19 MB for a run in the same app. A SwiftUI trace of 15 s is ~500 MB and took six minutes and ~19 GB
+*Traps*); the light set staged 19–240 MB for a 15 s run in the same app. A SwiftUI trace of 15 s is ~500 MB and took six minutes and ~19 GB
 of memory to summarise; a 30 s one did not finish in twenty minutes.
 Allocations over 30 s of use was 2 GB.
 
@@ -321,9 +321,9 @@ Each of these looked like something else first.
 - **xctrace leaves its staging files.** Every recording stages a
   multi-gigabyte `instruments*.ktrace` in `$TMPDIR` and never removes it; a
   day of profiling left 529 GB and a nearly full disk. The saved `.trace` does
-  not need it. `profile-mac.sh` removes its own once the instruments service
-  lets go (~45 s), or after 90 s even if it has not, and lists those earlier
-  runs left. To clear older ones: move those over an hour old that no
+  not need it. `profile-mac.sh` removes its own, stopping the instruments
+  service its run started if that still holds the file (with Xcode 27.1 it
+  never let go), and lists those earlier runs left. To clear older ones: move those over an hour old that no
   process has open (`lsof`) into a folder, check a saved trace still opens,
   then delete the folder.
 - **After a hung recording, the instruments service goes on writing.** Its

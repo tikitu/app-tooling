@@ -15,8 +15,8 @@
 PROFILE_BUILD ?=
 TEMPLATE ?= Animation Hitches
 SCENARIO ?= idle
-# Instruments to add, comma-separated. The light set, which stages megabytes
-# where Animation Hitches stages gigabytes but records no hitches:
+# Instruments to add, comma-separated. The light set, which stages a fraction
+# of what Animation Hitches stages but records no hitches:
 #   make profile TEMPLATE=Blank INSTRUMENTS="Hangs,Points of Interest,Time Profiler"
 INSTRUMENTS ?=
 

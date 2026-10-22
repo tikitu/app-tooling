@@ -31,8 +31,8 @@
 #
 # --template and --instruments go to profile-mac.sh. On a busy Mac, or for
 # many rounds, --template Blank --instruments "Hangs,Points of Interest,Time
-# Profiler" stages megabytes a run where Animation Hitches stages gigabytes;
-# it records no hitches.
+# Profiler" stages a fraction of what Animation Hitches stages; it records
+# no hitches.
 #
 # A run that fails is reported and the comparison goes on. It fails as a
 # whole when a build has no trace for a scenario, since there is then nothing

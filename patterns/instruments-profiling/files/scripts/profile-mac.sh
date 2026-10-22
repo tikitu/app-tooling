@@ -27,8 +27,8 @@
 #           that every run of a comparison reads the same rows.
 # --instruments  instruments to add to the template, comma-separated. The
 #           light set, Blank --instruments "Hangs,Points of Interest,Time
-#           Profiler", stages megabytes where Animation Hitches stages
-#           gigabytes, but records no hitches.
+#           Profiler", stages a fraction of what Animation Hitches stages,
+#           but records no hitches.
 #
 # Exit status: 0 with a trace; 3 when it refused to start because something
 # else would distort the run or the disk is nearly full (nothing was
@@ -294,30 +294,43 @@ if (( ${#ktrace_before} )); then
   print -rl -- "  "$^ktrace_before >&2
 fi
 
-# Remove the staging files this run added, whether it succeeded or not. The
-# instruments service keeps its file open for ~45 s after the recording
-# ends, so wait (up to 90 s), unless the recorder hung and was killed. After
-# a recording that hung, the service can hold the file for good and go on
-# writing to it (72 GB in six minutes, once): a service that started during
-# this run and holds one of its files is stopped, and the files removed. Only
-# if another recording has started since are open files, and services, left
-# alone: they may be its.
+# Remove the staging files this run added, whether it succeeded or not.
+# The instruments service (DTServiceHub) that wrote one can hold it open for
+# good (Xcode 27.1 did after every run), and after a recording that hung, go
+# on writing it: 72 GB in six minutes, once. A removed file's space comes back
+# only when it lets go. So a service that started during this run and still
+# holds one of its files is stopped. One that was already running is never
+# touched, and nothing is while another recording runs: either may be another
+# session's. Whatever else holds a file is given up to 90 s to let go (~45 s
+# was usual on older Xcodes), unless the recorder hung.
 recorder_killed=0
+stop_own_services() {
+  local f pid
+  for f in "$@"; do
+    for pid in ${(f)"$(lsof -t "$f" 2>/dev/null)"}; do
+      [[ $(ps -o comm= -p $pid 2>/dev/null) == */DTServiceHub ]] || continue
+      (( ${hubs_before[(Ie)$pid]} )) && continue
+      echo "→ stopping instruments service $pid, which still holds ${f:t} ($(du -h "$f" | cut -f1))" >&2
+      kill $pid 2>/dev/null || true
+      for _ in $(seq 1 25); do kill -0 $pid 2>/dev/null || break; sleep 0.2; done
+      kill -9 $pid 2>/dev/null || true
+    done
+  done
+}
 remove_staging() {
-  local added=() f open pid
+  local added=() f open
   for f in ${TMPDIR:-/tmp}/instruments*.ktrace(N); do
     (( ${ktrace_before[(Ie)$f]} )) || added+=($f)
   done
   (( ${#added} )) || return 0
-  if (( ! recorder_killed )); then
-    echo "→ waiting for instruments to release ${#added} staging file(s) to delete" >&2
-    for _ in $(seq 1 45); do
-      open=0
-      for f in $added; do lsof "$f" >/dev/null 2>&1 && open=1; done
-      (( open )) || break
-      sleep 2
-    done
-  fi
+  pgrep -f 'xctrace record' >/dev/null || stop_own_services $added
+  for _ in $(seq 1 45); do
+    open=0
+    for f in $added; do lsof "$f" >/dev/null 2>&1 && open=1; done
+    (( open && ! recorder_killed )) || break
+    (( _ == 1 )) && echo "→ waiting for instruments to release ${#added} staging file(s) to delete" >&2
+    sleep 2
+  done
   if pgrep -f 'xctrace record' >/dev/null; then
     for f in $added; do lsof "$f" >/dev/null 2>&1 || rm -f "$f"; done
     for f in ${TMPDIR:-/tmp}/instruments*.ktrace(N); do
@@ -326,14 +339,6 @@ remove_staging() {
     return 0
   fi
   for f in $added; do
-    for pid in ${(f)"$(lsof -t "$f" 2>/dev/null)"}; do
-      if [[ $(ps -o comm= -p $pid 2>/dev/null) == */DTServiceHub ]] && (( ! ${hubs_before[(Ie)$pid]} )); then
-        echo "  stopping instruments service $pid, still writing $f ($(du -h "$f" | cut -f1))" >&2
-        kill $pid 2>/dev/null || true
-        for _ in $(seq 1 25); do kill -0 $pid 2>/dev/null || break; sleep 0.2; done
-        kill -9 $pid 2>/dev/null || true
-      fi
-    done
     lsof "$f" >/dev/null 2>&1 && echo "  removed $f, still held open by $(lsof -Fc "$f" | sed -n 's/^c//p' | sort -u | tr '\n' ' ')" >&2
     rm -f "$f"
   done
