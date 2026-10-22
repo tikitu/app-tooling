@@ -21,6 +21,12 @@
 #                             none)
 #   TESTFLIGHT_INSTALL_DEVICE the device a development install goes to
 #                             (default: $(IOS_DEVICE))
+#   TESTFLIGHT_ARCHIVE_CHECK  a shell command that checks the archived app
+#                             before anything leaves the machine, given its
+#                             path as the last argument, such as
+#                             sync-configuration's
+#                             `$(SYNC_CHECK) --expect production` (default:
+#                             none)
 #
 # TESTFLIGHT_PREPARE must be set before the include: make reads
 # prerequisites as it reads the rule. For the same reason, the include comes
@@ -34,8 +40,9 @@ TESTFLIGHT_BRANCH ?= main
 TESTFLIGHT_INTERNAL_ONLY ?= NO
 TESTFLIGHT_ONLY_DEVICES ?=
 TESTFLIGHT_INSTALL_DEVICE ?= $(IOS_DEVICE)
+TESTFLIGHT_ARCHIVE_CHECK ?=
 export TESTFLIGHT_PROJECT TESTFLIGHT_SCHEME TESTFLIGHT_TEAM TESTFLIGHT_XCODE_FLAGS \
-	TESTFLIGHT_BRANCH TESTFLIGHT_INTERNAL_ONLY
+	TESTFLIGHT_BRANCH TESTFLIGHT_INTERNAL_ONLY TESTFLIGHT_ARCHIVE_CHECK
 
 .PHONY: testflight-validate testflight-upload testflight-device-guard
 

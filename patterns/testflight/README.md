@@ -32,7 +32,10 @@ later has been through the same signing and checks all along.
 2. **Archives** the app, Release configuration, with automatic signing.
 3. **Checks the archive** before anything leaves the machine:
    `CFBundleVersion` is `<count>.0` and `AppGitCommit` is `HEAD` (from
-   `git-commit-stamp`), and `ITSAppUsesNonExemptEncryption` is set.
+   `git-commit-stamp`), and `ITSAppUsesNonExemptEncryption` is set. A
+   project can add its own check of the archived app
+   (`TESTFLIGHT_ARCHIVE_CHECK`), such as `sync-configuration`'s, which
+   refuses one not signed for CloudKit Production.
 4. **Exports** with `destination: upload`: to App Store Connect's
    validation only, or to TestFlight. Xcode re-signs for distribution on
    the way, with a cloud-managed Apple Distribution certificate: no
