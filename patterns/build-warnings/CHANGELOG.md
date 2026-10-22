@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+**The App Intents skip can be set per target.** A project with App Intents
+in some targets can skip Xcode's metadata step on the others (an
+extension, a test bundle) through
+`$(LM_SKIP_METADATA_EXTRACTION_$(TARGET_NAME:c99extidentifier))` and one
+`LM_SKIP_METADATA_EXTRACTION_<Target> = YES` per target (README, "Per
+target"). The check then fails `make` when a named target compiles App
+Intents code, its local packages' sources included, using the new
+`scripts/check-app-intents-skip-targets.py` (needs `python3`). A project
+that sets the skip in any other form keeps the whole-project check. Nothing
+to do beyond taking the update; a project with App Intents that still
+prints `Metadata extraction skipped` may now follow `apply.md` step 4.
+
 **The check no longer counts this pattern's own files as the skip.** It
 left out `mk/build-warnings.mk` and `scripts/check-app-intents-skip.sh`
 only at those exact paths, so a project holding a second project that

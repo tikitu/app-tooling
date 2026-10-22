@@ -6,6 +6,11 @@ summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
 ## Unreleased
 
+- **`build-warnings`: the App Intents skip can be set per target**, so a
+  project with App Intents can still drop the `Metadata extraction
+  skipped` warning from its extensions and test bundles; the check then
+  fails `make` when a skipped target compiles App Intents code. Take the
+  update; to use it, `apply.md` step 4 (`patterns/build-warnings/CHANGELOG.md`).
 - **`build-warnings`: its App Intents check could stop `make` for a skip
   that was not there**, in a project that holds another importing the
   pattern, or whose `scripts/` is `Scripts/`, once it had App Intents
