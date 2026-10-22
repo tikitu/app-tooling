@@ -58,9 +58,9 @@
 #   the Mac, unencrypted, into the trace and the system log, and --no-prompt
 #   (passed below) would otherwise accept that warning silently.
 # * xctrace's multi-gigabyte staging file in $TMPDIR, which it never removes,
-#   is removed once the trace is saved. After a recording that hung, the
-#   instruments service (DTServiceHub) that went on writing it is stopped too,
-#   but only one that started during this run and holds this run's file.
+#   is removed once the trace is saved, and the instruments service
+#   (DTServiceHub) this run's xctrace started, which holds it open and after a
+#   hung recording goes on writing it, is stopped. Never another one.
 #
 # The app is a copy re-signed ad hoc with get-task-allow added to its own
 # entitlements, which Allocations and Leaks need to attach. They also need
@@ -286,44 +286,55 @@ for i in $instruments; do args+=(--instrument "$i"); done
 ktrace_before=(${TMPDIR:-/tmp}/instruments*.ktrace(N))
 # The instruments services running now: none of them is this run's, so none
 # of them is ever stopped. Another session's recording has one of these.
-hubs() { pgrep -x DTServiceHub || true; }
-hubs_before=(${(f)"$(hubs)"})
+hubs_before=(${(f)"$(pgrep -x DTServiceHub || true)"})
 if (( ${#ktrace_before} )); then
   echo "→ earlier recordings left these staging files, $(du -ch $ktrace_before | tail -1 | cut -f1) in all;" >&2
   echo "  nothing needs one that nothing holds open (lsof FILE prints nothing):" >&2
   print -rl -- "  "$^ktrace_before >&2
 fi
 
-# Remove the staging files this run added, whether it succeeded or not.
-# The instruments service (DTServiceHub) that wrote one can hold it open for
-# good (Xcode 27.1 did after every run), and after a recording that hung, go
-# on writing it: 72 GB in six minutes, once. A removed file's space comes back
-# only when it lets go. So a service that started during this run and still
-# holds one of its files is stopped. One that was already running is never
-# touched, and nothing is while another recording runs: either may be another
-# session's. Whatever else holds a file is given up to 90 s to let go (~45 s
-# was usual on older Xcodes), unless the recorder hung.
-recorder_killed=0
-stop_own_services() {
-  local f pid
-  for f in "$@"; do
-    for pid in ${(f)"$(lsof -t "$f" 2>/dev/null)"}; do
-      [[ $(ps -o comm= -p $pid 2>/dev/null) == */DTServiceHub ]] || continue
-      (( ${hubs_before[(Ie)$pid]} )) && continue
-      echo "→ stopping instruments service $pid, which still holds ${f:t} ($(du -h "$f" | cut -f1))" >&2
-      kill $pid 2>/dev/null || true
-      for _ in $(seq 1 25); do kill -0 $pid 2>/dev/null || break; sleep 0.2; done
-      kill -9 $pid 2>/dev/null || true
-    done
+# The instruments service (DTServiceHub) xctrace starts for a recording is
+# its child until xctrace exits, and is then left running, reparented. Noted
+# while the recorder runs, so that it, and only it, can be stopped afterwards.
+own_hubs=()
+note_own_hubs() {
+  local pid
+  for pid in ${(f)"$(ps -axo pid=,ppid=,comm= | awk -v r=$recorder '$2 == r && /\/DTServiceHub$/ { print $1 }')"}; do
+    (( ${own_hubs[(Ie)$pid]} )) || own_hubs+=($pid)
   done
 }
+
+# Remove the staging files this run added, whether it succeeded or not.
+# This run's instruments service can hold its file open for good (Xcode 27.1
+# did after every run), and after a recording that hung, go on writing it:
+# 72 GB in six minutes, once. A removed file's space comes back only when it
+# lets go. So this run's service is stopped: the one noted as the recorder's
+# child, or failing that, one that started during this run and holds one of
+# its files, unless another recording is running (it may be its). One that
+# was already running is never touched. Whatever else holds a file is given
+# up to 90 s to let go (~45 s was usual on older Xcodes), unless the recorder
+# hung.
+recorder_killed=0
+stop_service() {
+  [[ $(ps -o comm= -p $1 2>/dev/null) == */DTServiceHub ]] || return 0
+  (( ${hubs_before[(Ie)$1]} )) && return 0
+  echo "→ stopping this run's instruments service $1${2:+, which still holds ${2:t} ($(du -h "$2" | cut -f1))}" >&2
+  kill $1 2>/dev/null || true
+  for _ in $(seq 1 25); do kill -0 $1 2>/dev/null || return 0; sleep 0.2; done
+  kill -9 $1 2>/dev/null || true
+}
 remove_staging() {
-  local added=() f open
+  local added=() f open pid
   for f in ${TMPDIR:-/tmp}/instruments*.ktrace(N); do
     (( ${ktrace_before[(Ie)$f]} )) || added+=($f)
   done
+  for pid in $own_hubs; do stop_service $pid; done
   (( ${#added} )) || return 0
-  pgrep -f 'xctrace record' >/dev/null || stop_own_services $added
+  if ! pgrep -f 'xctrace record' >/dev/null; then
+    for f in $added; do
+      for pid in ${(f)"$(lsof -t "$f" 2>/dev/null)"}; do stop_service $pid "$f"; done
+    done
+  fi
   for _ in $(seq 1 45); do
     open=0
     for f in $added; do lsof "$f" >/dev/null 2>&1 && open=1; done
@@ -357,6 +368,7 @@ recorder=$!
 
 listeners() { print -r -- $waiter $scenario_started $scenario_done | tr ' ' '\n' | grep -v '^0$' || true; }
 cleanup() {
+  note_own_hubs
   kill -INT $recorder 2>/dev/null || true
   kill $(listeners) 2>/dev/null || true
   kill_launched
@@ -376,7 +388,7 @@ trap cleanup EXIT
 
 started=0
 for _ in $(seq 1 $start_timeout); do
-  if ! kill -0 $waiter 2>/dev/null; then started=1; t0=$EPOCHREALTIME; break; fi
+  if ! kill -0 $waiter 2>/dev/null; then started=1; t0=$EPOCHREALTIME; note_own_hubs; break; fi
   kill -0 $recorder 2>/dev/null || break
   sleep 1
 done
@@ -429,6 +441,7 @@ if [[ -z $time_limit ]]; then
     exit 1
   fi
   sleep 1
+  note_own_hubs
   kill -INT $recorder
 fi
 
@@ -440,6 +453,7 @@ fi
 waited=0
 low_disk=0
 while kill -0 $recorder 2>/dev/null && (( waited < stop_timeout )); do
+  note_own_hubs
   grep -q 'Saving output file' $WORK/xctrace.log || waited=$((waited + 1))
   if (( $(df -g "$out_dir" | awk 'NR==2 {print $4}') < MIN_FREE_GB )); then low_disk=1; break; fi
   sleep 1
