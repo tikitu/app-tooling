@@ -74,8 +74,12 @@ Then `uvx peru@1.3.5 sync`: `scripts/stamp-sync-configuration.sh`,
 `scripts/check-sync-configuration.sh`, its tests in
 `scripts/tests/check-sync-configuration-test.sh`, and
 `mk/sync-configuration.mk`. A project with its own
-`scripts/check-sync-configuration.sh` (Detect) deletes it, and its tests,
-first: `git rm` them, then sync.
+`scripts/check-sync-configuration.sh` or its tests (Detect) is stopped
+with "would overwrite preexisting files" naming them. Once their checks
+are parameters (Parameters), that is the one refusal to override: run the
+sync again with `--force`, which replaces them, and the diff shows the
+project's version going. (Reading a local checkout, give it the same git
+config `mk/app-tooling.mk` sets for `APP_TOOLING_LOCAL`.)
 
 **2. Depend on the library.** In the `Package.swift` of the package whose
 target makes the sync engine:
@@ -353,8 +357,10 @@ and the `build.sh` parts of 8 and 9 become:
   `Debug` products, Mac and simulator, and `--expect production` on the
   real app's archive, in the upload (`TESTFLIGHT_ARCHIVE_CHECK`, or the
   project's own upload script). There is no spec, so no
-  `testflight-check-environment`. A verify script outside make runs the
-  check through it: `make sync-check SYNC_CHECK_APPS=… SYNC_EXPECT=scratch`.
+  `testflight-check-environment`. A script outside make (a verify script, an upload script of
+  the project's own) runs the check through it, so that the parameters
+  live in one place: `make -s sync-check SYNC_CHECK_APPS="$(printf '%q'
+  "$app")" SYNC_EXPECT=scratch`.
 - **Record** the separate scratch app in `app-tooling.toml`, under
   `deviations`, with the reason (no `build.sh`).
 

@@ -15,10 +15,11 @@
   `sync-check-test` to the project's tests, add the check after `build.sh`'s
   last `codesign` (step 6) and after the iOS build (step 9), and with
   `testflight` set `TESTFLIGHT_ARCHIVE_CHECK = $(SYNC_CHECK) --expect
-  production`. A project with its own check script: `git rm` it and its
-  tests before the update, and give what it checked as parameters
-  (`SYNC_BUNDLE_ID`, `SYNC_APP_GROUPS`, `SYNC_SCRATCH_*`,
-  `SYNC_APP_GROUP_KEY`).
+  production`. A project with its own `scripts/check-sync-configuration.sh`: the
+  update stops with "would overwrite preexisting files"; give what its
+  check checked as parameters (`SYNC_BUNDLE_ID`, `SYNC_APP_GROUPS`,
+  `SYNC_SCRATCH_*`, `SYNC_APP_GROUP_KEY`), then `uvx peru@1.3.5 sync
+  --force` replaces it (`apply.md` step 1).
 - **`apply.md` says how to apply the pattern to an Xcode project without
   XcodeGen or `build.sh`**: a separate scratch app, two xcconfigs, and a
   Run Script phase that stamps the processed `Info.plist`. A project that

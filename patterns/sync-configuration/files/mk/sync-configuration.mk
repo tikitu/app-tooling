@@ -22,6 +22,8 @@
 # built app (`$(SYNC_CHECK) --expect scratch build/MyApp.app`), and
 #
 #   make sync-check SYNC_CHECK_APPS='<App.app>...' [SYNC_EXPECT=scratch|sync|production]
+#                            SYNC_CHECK_APPS is shell words: from a script,
+#                            SYNC_CHECK_APPS="$(printf '%q ' "$app"...)"
 #   make sync-check-test     the check's own tests, on fake bundles
 #
 # With the testflight pattern, the upload depends on the spec's check, and
