@@ -1,6 +1,6 @@
 # scratch-data changelog
 
-## Unreleased
+## v0.6.0 (2026-10-24)
 
 **A sandboxed app cannot pass `--scratch-database`, or any argument, to an
 app it launches.** `NSWorkspace.OpenConfiguration.arguments` and

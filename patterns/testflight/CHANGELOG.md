@@ -1,6 +1,6 @@
 # testflight changelog
 
-## Unreleased
+## v0.6.0 (2026-10-24)
 
 - **`TESTFLIGHT_ARCHIVE_CHECK`**: a shell command `scripts/testflight.sh`
   runs on the archived app, with its path as the last argument, after its

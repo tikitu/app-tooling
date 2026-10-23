@@ -1,6 +1,6 @@
 # scratch-look changelog
 
-## Unreleased
+## v0.6.0 (2026-10-24)
 
 First version: `scripts/make-scratch-icon.py` (with its lock), which
 derives a scratch icon set with a caution band from the real one, and

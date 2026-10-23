@@ -1,6 +1,6 @@
 # instruments-profiling changelog
 
-## Unreleased
+## v0.6.0 (2026-10-24)
 
 - **`profile-compare.sh` no longer reports success with nothing recorded.**
   It printed ✓ after every run had been refused. It now exits non-zero when

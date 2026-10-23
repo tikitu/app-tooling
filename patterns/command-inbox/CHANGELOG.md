@@ -1,6 +1,6 @@
 # command-inbox changelog
 
-## Unreleased
+## v0.6.0 (2026-10-24)
 
 First version, from the starter's command inbox and three apps' copies of
 it: the runner and strict decoding as app-utils' `CommandInbox` library

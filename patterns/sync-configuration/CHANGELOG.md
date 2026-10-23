@@ -1,6 +1,6 @@
 # sync-configuration changelog
 
-## Unreleased
+## v0.6.0 (2026-10-24)
 
 - **`scripts/check-sync-configuration.sh` reads a built app's signature
   back** and fails unless it and the `Info.plist` agree: a scratch build
