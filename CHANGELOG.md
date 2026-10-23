@@ -47,6 +47,23 @@ summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 - **`scratch-data`: `SCRATCH_ARGS`**, more launch arguments for `make
   run-scratch` (such as `--commands <dir>`). Nothing to do unless wanted
   (`patterns/scratch-data/CHANGELOG.md`).
+- **`instruments-profiling`: four failures that looked like success, and a
+  disk-filling hang.** `profile-compare.sh` exits non-zero when a build has
+  no traces, and stops at the first refused run; `profile-mac.sh` stops the
+  instruments service its own recording started, which after a hang had
+  gone on writing a 72 GB staging file; `trace-compare.py`
+  measures traces without hitches tables; `trace-query.py profile` counts
+  samples with an empty stack. New: `--instruments` and `make profile
+  INSTRUMENTS=` for the light instrument set. Take the update; nothing else
+  (`patterns/instruments-profiling/CHANGELOG.md`).
+- **The starter's `make screenshot` could photograph another checkout's
+  app.** It found the window by the app's name, which a build in another
+  worktree shares. It now takes the window of this checkout's build, by
+  absolute path and pid (`scripts/window-id.swift --pid`). A project made from
+  the starter replaces its `screenshot` target and `scripts/window-id.swift`
+  with the starter's; one whose own `screenshot` or `quit-running` matches
+  `$(APP)` by a relative path, or signals or quits by bundle id, has the same
+  hazard and should match `$(abspath $(APP))` and act by pid.
 
 ## v0.5.1 (2026-10-22)
 

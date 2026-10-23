@@ -27,8 +27,13 @@ Profiling unattended goes wrong in ways that look like success:
   run beside other copies and recordings, scenarios run inside the app
   where possible, and the trace's process is checked by pid.
 - **The disk fills.** xctrace never removes its multi-gigabyte staging files;
-  a day left 529 GB. The script removes its own and refuses to start with
-  little room.
+  a day left 529 GB, and after a hung recording the instruments service went
+  on writing one, 72 GB in six minutes. The script removes its own, stops
+  the service its run started if it is still writing, and refuses to start
+  with little room.
+- **A comparison that recorded nothing reports success.** It fails instead
+  when any build has no trace, and the readers fail loudly rather than
+  skipping a trace they cannot read.
 - **A comparison is noise.** Builds are recorded in turn on frozen data,
   with a warm-up round, and compared by medians with their ranges.
 

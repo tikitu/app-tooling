@@ -46,9 +46,11 @@ does run in a background window.
 ## `open -n` leaves old copies running, and screenshots come from them
 
 Every `make run*` target quits the running copy first (and `pkill`s it if it
-will not go). `scripts/window-id.swift` refuses when more than one process
-owns a window. If a screenshot looks like a change did not take, check
-`pgrep -f build/Starter.app | wc -l` before believing it.
+will not go). `make screenshot` photographs only this checkout's build, by
+pid, and refuses when more than one copy of it is running. If a screenshot
+looks like a change did not take, check
+`pgrep -f "$PWD/build/Starter.app" | wc -l` before believing it: a relative
+path also matches copies built in other checkouts.
 
 ## Only titled windows photograph
 

@@ -13,16 +13,26 @@
 # Usage:
 #   scripts/profile-mac.sh TEMPLATE [SCENARIO] [--app PATH] [--data FILE]
 #       [--out DIR] [--time-limit 30s] [--option-file JSON] [--allow-network]
-#       [--start-timeout S] [--stop-timeout S] [--scenario-timeout S]
+#       [--instruments "A,B"] [--start-timeout S] [--stop-timeout S]
+#       [--scenario-timeout S]
 #
 # TEMPLATE  any `xcrun xctrace list templates` name: "Animation Hitches",
-#           "Time Profiler", "SwiftUI", "Allocations", "Leaks", ...
+#           "Time Profiler", "SwiftUI", "Allocations", "Leaks", ...; or
+#           "Blank", for only the instruments --instruments names.
 # SCENARIO  one the project defines in profiling.conf.zsh (`scenario_NAME`);
 #           default `idle`: launch and wait.
 # --app     profile this build instead of the configured one, e.g. a build
 #           from another worktree, to compare before and after.
 # --data    copy this file instead of the real data, e.g. a frozen copy so
 #           that every run of a comparison reads the same rows.
+# --instruments  instruments to add to the template, comma-separated. The
+#           light set, Blank --instruments "Hangs,Points of Interest,Time
+#           Profiler", stages a fraction of what Animation Hitches stages,
+#           but records no hitches.
+#
+# Exit status: 0 with a trace; 3 when it refused to start because something
+# else would distort the run or the disk is nearly full (nothing was
+# recorded, and running again now would be refused too); 1 or 2 otherwise.
 #
 # Everything about the app comes from the project's own profiling.conf.zsh
 # ($PROFILING_CONF to use another): which build, where its real data is and
@@ -48,7 +58,9 @@
 #   the Mac, unencrypted, into the trace and the system log, and --no-prompt
 #   (passed below) would otherwise accept that warning silently.
 # * xctrace's multi-gigabyte staging file in $TMPDIR, which it never removes,
-#   is removed once the trace is saved.
+#   is removed once the trace is saved, and the instruments service
+#   (DTServiceHub) this run's xctrace started, which holds it open and after a
+#   hung recording goes on writing it, is stopped. Never another one.
 #
 # The app is a copy re-signed ad hoc with get-task-allow added to its own
 # entitlements, which Allocations and Leaks need to attach. They also need
@@ -90,6 +102,7 @@ time_limit=""
 out_dir=$WORK/traces
 data=""
 option_file=""
+instruments=()
 start_timeout=45
 stop_timeout=180
 scenario_timeout=300
@@ -101,6 +114,7 @@ while [[ $# -gt 0 ]]; do
     --out) out_dir=$2; shift 2 ;;
     --time-limit) time_limit=$2; shift 2 ;;
     --option-file) option_file=$2; shift 2 ;;
+    --instruments) instruments+=(${(s:,:)2}); shift 2 ;;
     --start-timeout) start_timeout=$2; shift 2 ;;
     --stop-timeout) stop_timeout=$2; shift 2 ;;
     --scenario-timeout) scenario_timeout=$2; shift 2 ;;
@@ -157,7 +171,7 @@ if (( ${#others} )); then
   ps -o pid=,command= -p ${(j:,:)others} | cut -c1-120 >&2
   echo "✗ these are running and would distort the measurement (or, for a recording," >&2
   echo "  hold the kperf lock); stop them first" >&2
-  exit 1
+  exit 3
 fi
 
 # --- room for the trace -----------------------------------------------------------
@@ -165,7 +179,7 @@ mkdir -p $WORK "$out_dir"
 free_gb=$(df -g "$out_dir" | awk 'NR==2 {print $4}')
 if (( free_gb < MIN_FREE_GB )); then
   echo "✗ only ${free_gb} GB free on the disk holding $out_dir; delete old traces first" >&2
-  exit 1
+  exit 3
 fi
 
 # --- a copy of the app, able to be attached to -------------------------------------
@@ -256,9 +270,12 @@ wait_for() {
 # --- record -----------------------------------------------------------------------
 NOTIFICATION=app-tooling.profile-mac.started.$$
 stamp=$(date +%Y%m%d-%H%M%S)
-trace=$out_dir/${template// /_}-$scenario-$stamp.trace
+label=$template
+(( ${#instruments} )) && label=${${template:#Blank}:+$template+}${(j:+:)instruments}
+trace=$out_dir/${label// /_}-$scenario-$stamp.trace
 args=(record --template "$template" --output "$trace" $launch_env
       --notify-tracing-started $NOTIFICATION --no-prompt)
+for i in $instruments; do args+=(--instrument "$i"); done
 [[ -n $time_limit ]] && args+=(--time-limit $time_limit)
 [[ -n $option_file ]] && args+=(--recording-options $option_file)
 
@@ -267,29 +284,62 @@ args=(record --template "$template" --output "$trace" $launch_env
 # is there now, so the files this run adds can go afterwards, and say what
 # earlier runs left: a run whose xctrace hung or was killed can leave them.
 ktrace_before=(${TMPDIR:-/tmp}/instruments*.ktrace(N))
+# The instruments services running now: none of them is this run's, so none
+# of them is ever stopped. Another session's recording has one of these.
+hubs_before=(${(f)"$(pgrep -x DTServiceHub || true)"})
 if (( ${#ktrace_before} )); then
   echo "→ earlier recordings left these staging files, $(du -ch $ktrace_before | tail -1 | cut -f1) in all;" >&2
   echo "  nothing needs one that nothing holds open (lsof FILE prints nothing):" >&2
   print -rl -- "  "$^ktrace_before >&2
 fi
 
-# Remove the staging files this run added, whether it succeeded or not. The
-# instruments service keeps its file open for ~45 s after the recording
-# ends, so wait (up to 90 s). After a recording that hung it can hold the
-# file for good; removed anyway, its space comes back when the service lets
-# go. Only if another recording has started since are open files left alone:
-# they may be its.
+# The instruments service (DTServiceHub) xctrace starts for a recording is
+# its child until xctrace exits, and is then left running, reparented. Noted
+# while the recorder runs, so that it, and only it, can be stopped afterwards.
+own_hubs=()
+note_own_hubs() {
+  local pid
+  for pid in ${(f)"$(ps -axo pid=,ppid=,comm= | awk -v r=$recorder '$2 == r && /\/DTServiceHub$/ { print $1 }')"}; do
+    (( ${own_hubs[(Ie)$pid]} )) || own_hubs+=($pid)
+  done
+}
+
+# Remove the staging files this run added, whether it succeeded or not.
+# This run's instruments service can hold its file open for good (Xcode 27.1
+# did after every run), and after a recording that hung, go on writing it:
+# 72 GB in six minutes, once. A removed file's space comes back only when it
+# lets go. So this run's service is stopped: the one noted as the recorder's
+# child, or failing that, one that started during this run and holds one of
+# its files, unless another recording is running (it may be its). One that
+# was already running is never touched. Whatever else holds a file is given
+# up to 90 s to let go (~45 s was usual on older Xcodes), unless the recorder
+# hung.
+recorder_killed=0
+stop_service() {
+  [[ $(ps -o comm= -p $1 2>/dev/null) == */DTServiceHub ]] || return 0
+  (( ${hubs_before[(Ie)$1]} )) && return 0
+  echo "→ stopping this run's instruments service $1${2:+, which still holds ${2:t} ($(du -h "$2" | cut -f1))}" >&2
+  kill $1 2>/dev/null || true
+  for _ in $(seq 1 25); do kill -0 $1 2>/dev/null || return 0; sleep 0.2; done
+  kill -9 $1 2>/dev/null || true
+}
 remove_staging() {
-  local added=() f open
+  local added=() f open pid
   for f in ${TMPDIR:-/tmp}/instruments*.ktrace(N); do
     (( ${ktrace_before[(Ie)$f]} )) || added+=($f)
   done
+  for pid in $own_hubs; do stop_service $pid; done
   (( ${#added} )) || return 0
-  echo "→ waiting for instruments to release ${#added} staging file(s) to delete" >&2
+  if ! pgrep -f 'xctrace record' >/dev/null; then
+    for f in $added; do
+      for pid in ${(f)"$(lsof -t "$f" 2>/dev/null)"}; do stop_service $pid "$f"; done
+    done
+  fi
   for _ in $(seq 1 45); do
     open=0
     for f in $added; do lsof "$f" >/dev/null 2>&1 && open=1; done
-    (( open )) || break
+    (( open && ! recorder_killed )) || break
+    (( _ == 1 )) && echo "→ waiting for instruments to release ${#added} staging file(s) to delete" >&2
     sleep 2
   done
   if pgrep -f 'xctrace record' >/dev/null; then
@@ -297,12 +347,12 @@ remove_staging() {
     for f in ${TMPDIR:-/tmp}/instruments*.ktrace(N); do
       (( ${added[(Ie)$f]} )) && echo "  left $f: another recording is running and it is still open" >&2
     done
-  else
-    for f in $added; do
-      lsof "$f" >/dev/null 2>&1 && echo "  removed $f, still held open by $(lsof -Fc "$f" | sed -n 's/^c//p' | sort -u | tr '\n' ' ')" >&2
-      rm -f "$f"
-    done
+    return 0
   fi
+  for f in $added; do
+    lsof "$f" >/dev/null 2>&1 && echo "  removed $f, still held open by $(lsof -Fc "$f" | sed -n 's/^c//p' | sort -u | tr '\n' ' ')" >&2
+    rm -f "$f"
+  done
 }
 
 scenario_started=0
@@ -318,12 +368,17 @@ recorder=$!
 
 listeners() { print -r -- $waiter $scenario_started $scenario_done | tr ' ' '\n' | grep -v '^0$' || true; }
 cleanup() {
+  note_own_hubs
   kill -INT $recorder 2>/dev/null || true
   kill $(listeners) 2>/dev/null || true
   kill_launched
   # A recorder still saving holds kperf, and the next run would fail with
   # "could not lock kperf"; wait for it to let go.
   for _ in $(seq 1 $stop_timeout); do kill -0 $recorder 2>/dev/null || break; sleep 1; done
+  if kill -0 $recorder 2>/dev/null; then
+    kill -9 $recorder 2>/dev/null || true
+    recorder_killed=1
+  fi
   # A target whose recorder was killed while stopping ignores SIGTERM.
   sleep 1
   kill_launched -9
@@ -333,7 +388,7 @@ trap cleanup EXIT
 
 started=0
 for _ in $(seq 1 $start_timeout); do
-  if ! kill -0 $waiter 2>/dev/null; then started=1; t0=$EPOCHREALTIME; break; fi
+  if ! kill -0 $waiter 2>/dev/null; then started=1; t0=$EPOCHREALTIME; note_own_hubs; break; fi
   kill -0 $recorder 2>/dev/null || break
   sleep 1
 done
@@ -386,21 +441,32 @@ if [[ -z $time_limit ]]; then
     exit 1
   fi
   sleep 1
+  note_own_hubs
   kill -INT $recorder
 fi
 
 # Saving is not hanging: a big trace can take minutes to save, so the clock
 # only runs until saving starts. xctrace has been seen to hang for good at
-# "Stopping recording..."; give up rather than wait forever.
+# "Stopping recording..."; give up rather than wait forever, and sooner if
+# the disk is filling meanwhile (a hung recording's staging file can grow by
+# gigabytes a minute).
 waited=0
+low_disk=0
 while kill -0 $recorder 2>/dev/null && (( waited < stop_timeout )); do
+  note_own_hubs
   grep -q 'Saving output file' $WORK/xctrace.log || waited=$((waited + 1))
+  if (( $(df -g "$out_dir" | awk 'NR==2 {print $4}') < MIN_FREE_GB )); then low_disk=1; break; fi
   sleep 1
 done
 if kill -0 $recorder 2>/dev/null; then
   kill -9 $recorder 2>/dev/null || true
+  recorder_killed=1
   cat $WORK/xctrace.log >&2
-  echo "✗ xctrace did not finish stopping within ${stop_timeout}s; the trace is lost. Run it again." >&2
+  if (( low_disk )); then
+    echo "✗ under ${MIN_FREE_GB} GB free while xctrace was stopping; stopped it. The trace is lost." >&2
+  else
+    echo "✗ xctrace did not finish stopping within ${stop_timeout}s; the trace is lost. Run it again." >&2
+  fi
   exit 1
 fi
 wait $recorder || true   # 54 is xctrace's normal "target ended" status

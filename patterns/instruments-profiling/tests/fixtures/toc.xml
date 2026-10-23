@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!-- Cut down from the TOC of a 3 s recording of /bin/sleep with the
+     instruments Hangs, Points of Interest and Time Profiler: no hitches
+     tables, as with the light instrument set. -->
+<trace-toc>
+    <run number="1">
+        <info>
+            <target>
+                <process arguments="5" type="launched" return-exit-status="0" name="sleep" pid="58030" termination-reason="exit(0)"/>
+            </target>
+        </info>
+        <processes>
+            <process name="sleep" pid="58030" path="/bin/sleep"/>
+        </processes>
+        <data>
+            <table target-pid="SINGLE" schema="potential-hangs" hangs-threshold="100"/>
+            <table schema="time-profile"/>
+        </data>
+    </run>
+</trace-toc>

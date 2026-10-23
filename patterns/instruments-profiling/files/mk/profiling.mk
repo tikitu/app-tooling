@@ -15,6 +15,10 @@
 PROFILE_BUILD ?=
 TEMPLATE ?= Animation Hitches
 SCENARIO ?= idle
+# Instruments to add, comma-separated. The light set, which stages a fraction
+# of what Animation Hitches stages but records no hitches:
+#   make profile TEMPLATE=Blank INSTRUMENTS="Hangs,Points of Interest,Time Profiler"
+INSTRUMENTS ?=
 
 .PHONY: profile profile-tools
 
@@ -27,4 +31,4 @@ profile-tools:
 # Record TEMPLATE while the app runs SCENARIO, on a copy of the app and of its
 # data; read the result with scripts/trace-query.py.
 profile: profile-tools $(PROFILE_BUILD)
-	scripts/profile-mac.sh "$(TEMPLATE)" $(SCENARIO)
+	scripts/profile-mac.sh "$(TEMPLATE)" $(SCENARIO) $(if $(INSTRUMENTS),--instruments "$(INSTRUMENTS)")
