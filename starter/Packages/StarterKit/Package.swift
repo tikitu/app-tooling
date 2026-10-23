@@ -25,11 +25,8 @@ let package = Package(
         .package(url: "https://github.com/pointfreeco/swift-sharing", from: "2.10.1"),
         .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.7.3"),
         .package(url: "https://github.com/pointfreeco/swift-issue-reporting", from: "2.1.0"),
-        // The command inbox (app-tooling's command-inbox pattern). At a
-        // commit until app-utils releases it.
-        .package(
-            url: "https://github.com/tikitu/app-utils",
-            revision: "9a6920c29e30930ff211c5726f1649740ac2fc4d"),
+        // The command inbox (app-tooling's command-inbox pattern).
+        .package(url: "https://github.com/tikitu/app-utils", exact: "0.4.0"),
     ],
     targets: [
         .target(

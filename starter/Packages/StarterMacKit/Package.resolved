@@ -1,12 +1,13 @@
 {
-  "originHash" : "0743e44e939db4c3be1764327fb0677e8ce8346aebbde65637dd187eabba156d",
+  "originHash" : "6faf9b8681a6f2764b517351685fa8fc02ddf52c7ee35b53a924a24f1bfece8b",
   "pins" : [
     {
       "identity" : "app-utils",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/tikitu/app-utils",
       "state" : {
-        "revision" : "9a6920c29e30930ff211c5726f1649740ac2fc4d"
+        "revision" : "9a6920c29e30930ff211c5726f1649740ac2fc4d",
+        "version" : "0.4.0"
       }
     },
     {
