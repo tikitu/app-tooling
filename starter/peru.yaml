@@ -12,8 +12,8 @@ imports:
 
 git module app-tooling:
     url: https://github.com/tikitu/app-tooling
-    reup: tikitu/pattern-command-inbox
-    rev: 08d7c3e6abef8c4e2f0dc364fc33def847e3180c
+    reup: main
+    rev: fb4f108614f690f2f3005693ed7316c54eec6793
 
 rule pattern-imports:
     export: patterns/pattern-imports/files
