@@ -7,11 +7,13 @@ imports:
     app-tooling|git-commit-stamp-docs: docs/app-tooling/git-commit-stamp/
     app-tooling|build-warnings: ./
     app-tooling|build-warnings-docs: docs/app-tooling/build-warnings/
+    app-tooling|command-inbox: ./
+    app-tooling|command-inbox-docs: docs/app-tooling/command-inbox/
 
 git module app-tooling:
     url: https://github.com/tikitu/app-tooling
-    reup: v0.5.1
-    rev: 5d0ad4bb96304d713316daba0183839a3ce64d86
+    reup: tikitu/pattern-command-inbox
+    rev: 08d7c3e6abef8c4e2f0dc364fc33def847e3180c
 
 rule pattern-imports:
     export: patterns/pattern-imports/files
@@ -30,3 +32,9 @@ rule build-warnings:
 rule build-warnings-docs:
     pick: [patterns/build-warnings/README.md, patterns/build-warnings/apply.md, patterns/build-warnings/CHANGELOG.md]
     export: patterns/build-warnings
+
+rule command-inbox:
+    export: patterns/command-inbox/files
+rule command-inbox-docs:
+    pick: [patterns/command-inbox/README.md, patterns/command-inbox/apply.md, patterns/command-inbox/CHANGELOG.md, patterns/command-inbox/guide.md]
+    export: patterns/command-inbox

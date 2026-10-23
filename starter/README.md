@@ -53,7 +53,7 @@ never pulls the window in front of someone working.
 ```
 Packages/StarterKit/          shared: macOS and iOS
   Core            the data: schema, migrations, bootstrap
-  UI              AppModel, AppCommand, the command inbox, shared views
+  UI              AppModel, AppCommand and its decoding, shared views
 Packages/StarterMacKit/       macOS only
   MacUI           the window, the list, the menu bar
   StarterMac      the app — a SwiftPM executable; its `Entry` prepares

@@ -281,10 +281,17 @@ run-background: build
 # background: this is the target for scripted checks.
 CONTAINER   := $(HOME)/Library/Containers/$(BUNDLE_ID)/Data
 SCRATCH_DIR := $(CONTAINER)/tmp/Starter-scratch
+# The command inbox (app-tooling: command-inbox), outside the container: a
+# terminal that touches the container raises a privacy prompt on screen. The
+# entitlements open it to the app, which cannot create it, so it is made here.
+# --commands goes before --scratch-database, which takes no value: AppKit
+# reads launch arguments as `-key value` pairs.
+COMMANDS_DIR := $(HOME)/Library/Caches/Starter-scratch/Commands
 
 run-scratch: build
 	$(quit-running)
-	open -g -n "$(APP)" --args --scratch-database
+	mkdir -p "$(COMMANDS_DIR)"
+	open -g -n "$(APP)" --args --commands "$(COMMANDS_DIR)" --scratch-database
 	@echo "✓ launched on scratch data, in the background"
 
 scratch-reset:

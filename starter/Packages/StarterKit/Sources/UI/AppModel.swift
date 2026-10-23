@@ -135,7 +135,7 @@ extension AppModel {
     /// Performs a command from a control, reporting a failure in the status
     /// bar rather than throwing into SwiftUI.
     ///
-    /// Controls call this; ``CommandInbox`` calls `perform` directly, because
+    /// Controls call this; the command inbox calls `perform` directly, because
     /// a command file wants the error in its result.
     ///
     /// Returns at once, so a control's action can call it, with the task

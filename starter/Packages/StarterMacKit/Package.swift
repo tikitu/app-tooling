@@ -22,6 +22,8 @@ let package = Package(
         .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.17.1"),
         .package(url: "https://github.com/pointfreeco/swift-sharing", from: "2.10.1"),
         .package(url: "https://github.com/pointfreeco/swift-issue-reporting", from: "2.1.0"),
+        // The command inbox (app-tooling's command-inbox pattern).
+        .package(url: "https://github.com/tikitu/app-utils", exact: "0.4.0"),
     ],
     targets: [
         // The Mac's views: the window, the list and its keyboard handling,
@@ -41,6 +43,7 @@ let package = Package(
             dependencies: [
                 "MacUI", .product(name: "Core", package: "StarterKit"),
                 .product(name: "UI", package: "StarterKit"),
+                .product(name: "CommandInbox", package: "app-utils"),
                 .product(name: "SQLiteData", package: "sqlite-data"),
                 .product(name: "Dependencies", package: "swift-dependencies"),
                 .product(name: "IssueReporting", package: "swift-issue-reporting"),

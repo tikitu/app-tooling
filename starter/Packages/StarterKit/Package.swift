@@ -25,6 +25,8 @@ let package = Package(
         .package(url: "https://github.com/pointfreeco/swift-sharing", from: "2.10.1"),
         .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.7.3"),
         .package(url: "https://github.com/pointfreeco/swift-issue-reporting", from: "2.1.0"),
+        // The command inbox (app-tooling's command-inbox pattern).
+        .package(url: "https://github.com/tikitu/app-utils", exact: "0.4.0"),
     ],
     targets: [
         .target(
@@ -37,7 +39,8 @@ let package = Package(
         .target(
             name: "UI",
             dependencies: [
-                "Core", .product(name: "SQLiteData", package: "sqlite-data"),
+                "Core", .product(name: "CommandInbox", package: "app-utils"),
+                .product(name: "SQLiteData", package: "sqlite-data"),
                 .product(name: "Dependencies", package: "swift-dependencies"),
                 .product(name: "IssueReporting", package: "swift-issue-reporting"),
                 .product(name: "Sharing", package: "swift-sharing"),
@@ -51,7 +54,8 @@ let package = Package(
         .testTarget(
             name: "UITests",
             dependencies: [
-                "UI", .product(name: "CustomDump", package: "swift-custom-dump"),
+                "UI", .product(name: "CommandInbox", package: "app-utils"),
+                .product(name: "CustomDump", package: "swift-custom-dump"),
                 .product(name: "DependenciesTestSupport", package: "swift-dependencies"),
             ], swiftSettings: shared),
     ])

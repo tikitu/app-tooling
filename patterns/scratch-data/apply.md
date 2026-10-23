@@ -31,6 +31,7 @@ Read [`README.md`](README.md) first for what this does and why.
 | `SCRATCH_DIR` | where the app's code puts the scratch database (below). Sandboxed: `$(HOME)/Library/Containers/$(BUNDLE_ID)/Data/tmp/<App>-scratch`. Unsandboxed: `URL.temporaryDirectory` is `$TMPDIR`, so `$(shell getconf DARWIN_USER_TEMP_DIR)<App>-scratch` |
 | `SCRATCH_DEFAULTS` | the scratch defaults suite. Sandboxed: `$(HOME)/Library/Containers/$(BUNDLE_ID)/Data/Library/Preferences/$(BUNDLE_ID).scratch`. Unsandboxed: `$(BUNDLE_ID).scratch`. Empty if the app has no settings |
 | `SCRATCH_BUILD` | the target that builds `$(APP)`, if it is not `build`. For an app that syncs, one that builds a bundle which cannot (`sync-configuration`) |
+| `SCRATCH_ARGS` | more launch arguments for the scratch run, each with a value, such as `--commands <dir>` for [`command-inbox`](https://github.com/tikitu/app-tooling/tree/main/patterns/command-inbox). Usually empty |
 
 Whether the app is sandboxed: `com.apple.security.app-sandbox` in its
 entitlements.
@@ -114,7 +115,7 @@ targets can use `$(quit-running)` before `open`.
 ## Verify
 
 - `make -n run-scratch` prints the build, then
-  `open -g -n "<APP>" --args --scratch-database`.
+  `open -g -n "<APP>" --args <SCRATCH_ARGS> --scratch-database`.
 - `make scratch-reset SCRATCH_DIR=` exits non-zero with
   `✗ SCRATCH_DIR ('') must name a directory containing "scratch"`.
 - `make run-scratch`, then `pgrep -fl "<App>.app/Contents/MacOS/"` shows

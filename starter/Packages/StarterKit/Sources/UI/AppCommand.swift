@@ -28,7 +28,7 @@ public enum AppCommand: Equatable, Sendable {
     case delete([String])
 
     /// The command's name in a command file.
-    var name: String {
+    public var name: String {
         switch self {
         case .configure: "configure"
         case .add: "add"

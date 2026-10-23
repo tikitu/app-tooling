@@ -12,6 +12,13 @@ app or helper whose default is real data while on scratch data; if it does,
 start the helper's scratch copy from the terminal instead and have the app
 only signal it (the README says how).
 
+**`SCRATCH_ARGS`: more launch arguments for `run-scratch`**, given before
+`--scratch-database` (AppKit would take the argument after a lone switch as
+its value). For a project that passes the app more on a scratch run, such as
+`command-inbox`'s `--commands <dir>`. Nothing to do unless the project wants
+it; one that worked around its absence (its own `run-scratch` beside the
+fragment's) can set `SCRATCH_ARGS` before the include instead.
+
 ## v0.3.0 (2026-10-20)
 
 **`quit-running` could quit the real app.** It found the app with

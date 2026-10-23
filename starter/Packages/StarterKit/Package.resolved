@@ -1,6 +1,15 @@
 {
-  "originHash" : "bbb34fb1b6622c1fb4899bced44f8d2ce3357d35597ec9b917cb472f16ee1992",
+  "originHash" : "06e59b243b16e8f3bb861579f73f469eac83eaddb84dc4e02ab0bb49a63521d5",
   "pins" : [
+    {
+      "identity" : "app-utils",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/tikitu/app-utils",
+      "state" : {
+        "revision" : "9a6920c29e30930ff211c5726f1649740ac2fc4d",
+        "version" : "0.4.0"
+      }
+    },
     {
       "identity" : "combine-schedulers",
       "kind" : "remoteSourceControl",

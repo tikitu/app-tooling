@@ -29,6 +29,24 @@ summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
   or second app launched from a scratch run starts on real data. A project
   that has the pattern: check that its app never launches another app or
   helper whose default is real data (`patterns/scratch-data/CHANGELOG.md`).
+- **New pattern `command-inbox`**, from the starter's command inbox and the
+  apps that copied it: a script drives the running app through the same
+  `perform` its controls use, and reads back what each command did. The
+  runner and strict decoding are app-utils' `CommandInbox` library
+  (app-utils 0.4.0); the inbox directory comes from `--commands
+  <dir>`, outside any container (a sandboxed app opens it with one
+  temporary exception), so a terminal never raises the "data from other
+  apps" prompt. A project with a copy of the starter's inbox: follow
+  `patterns/command-inbox/apply.md` and delete the copy.
+- **The starter takes `command-inbox`** in place of its own copy, and its
+  inbox moves out of the container to
+  `~/Library/Caches/Starter-scratch/Commands` (`--commands`, with a sandbox
+  temporary exception), so `send-commands.sh` no longer touches the
+  container. A project made from the
+  starter has the old copy: follow `patterns/command-inbox/apply.md`.
+- **`scratch-data`: `SCRATCH_ARGS`**, more launch arguments for `make
+  run-scratch` (such as `--commands <dir>`). Nothing to do unless wanted
+  (`patterns/scratch-data/CHANGELOG.md`).
 
 ## v0.5.1 (2026-10-22)
 

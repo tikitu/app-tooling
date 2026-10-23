@@ -35,7 +35,7 @@ remembered options.
 
 | | accepts commands | database | settings |
 |---|---|---|---|
-| `make run-scratch` (`--scratch-database`) | yes | scratch file under the app's `tmp` | the `org.example.starter.scratch` defaults suite |
+| `make run-scratch` (`--commands <dir> --scratch-database`) | yes | scratch file under the app's `tmp` | the `org.example.starter.scratch` defaults suite |
 | `make run`, `make run-background`, or the installed app | **no** | the real one | the real defaults |
 
 `send-commands.sh` refuses rather than timing out when the app is running on
@@ -43,19 +43,20 @@ its real data. `make scratch-reset` throws the scratch data away.
 
 ## The transport
 
-A Darwin notification carries no arguments, so the commands go in a file:
+The command inbox is app-tooling's `command-inbox` pattern:
+`docs/app-tooling/command-inbox/guide.md` has how a command file reaches
+the app and its result comes back, and the inbox's own commands (`pause`,
+`snapshot`; this app gives the inbox no way to draw its windows, so
+`snapshot` fails here). This app's values:
 
-1. The sender writes `inbox.json` into `Commands/` inside the app's
-   Application Support (in its container), writing it aside and moving it into
-   place so the app never reads half a file.
-2. The sender posts the Darwin notification `org.example.starter.commands`.
-3. The app deletes the inbox, runs the commands **in order, stopping at the
-   first failure**, and writes `result.json` beside it. A command can wait
-   (`perform` is `async`); the result is written once the last one has
-   finished, so it says what happened, not what was started.
-4. The sender reads `result.json` and exits non-zero if it holds an `error`.
-
-An inbox already waiting when the app launches runs at startup.
+- The inbox is `~/Library/Caches/Starter-scratch/Commands/`, which
+  `make run-scratch` passes as `--commands` and creates. It is outside the
+  app's container on purpose: a terminal without Full Disk Access that
+  touches another app's container raises a privacy prompt on the screen of
+  whoever is using the machine. A sandbox temporary exception in
+  `StarterMac.entitlements` opens it to the app.
+- The notification is `org.example.starter.commands`.
+- `scripts/send-commands.sh` waits up to 60 s for the result.
 
 ## The file format
 
