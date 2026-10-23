@@ -105,6 +105,19 @@ before this rule, since make reads prerequisites as it reads the rule:
 ios-device-run: $(TESTFLIGHT_DEVICE_GUARD) ios-device-build
 ```
 
+**A check of the archive, if the project has one.** `TESTFLIGHT_ARCHIVE_CHECK`
+is a shell command run on the archived app (its path added as the last
+argument) after the pattern's own checks and before anything is sent; a
+failure stops the upload. For a CloudKit app with `sync-configuration`:
+
+```make
+# The archive must be the real app, signed for Production (app-tooling: sync-configuration).
+TESTFLIGHT_ARCHIVE_CHECK = $(SYNC_CHECK) --expect production
+```
+
+Replace a check of the project's own that runs on the archive, by hand or
+in its own upload script.
+
 If the project already has a guard of its own doing this, replace it with
 the pattern's. In `help`, say that the install target refuses those
 devices. Add the two targets to `help`:
@@ -150,6 +163,10 @@ params = { export_compliance = "no non-exempt encryption (HTTPS only), declared 
   `✓ App Store Connect accepts <bundle id> <version> (<count>.0, <commit>)`.
   Before the app record exists it fails with "App Store Connect has no app
   with the bundle id …", which is the expected state until step 4.
+- With `TESTFLIGHT_ARCHIVE_CHECK`: `make -n testflight-validate` is no
+  evidence (the check runs inside the script). Run the check itself on a
+  built app (`sync-configuration`'s Verify), and read
+  `→ checking the archive:` in the output of the next real run.
 - Refusals, without archiving: with an uncommitted change it says
   "commit or stash first"; on another branch, "on <branch>, not main".
 - The install guard, **against a device that does not exist, never a real

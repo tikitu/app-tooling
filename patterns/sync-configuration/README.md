@@ -7,7 +7,8 @@ Builds that agents make cannot sync at all.
 
 This is the safety net for the app's real data, so it is deliberately
 small: two `Info.plist` keys set from the entitlements, two checks in the
-app, one rule about which builds get the iCloud entitlement.
+app, one rule about which builds get the iCloud entitlement, and a check
+that each built app is signed as its `Info.plist` says.
 
 ## The problems
 
@@ -59,13 +60,38 @@ library (<https://github.com/tikitu/app-utils/blob/main/docs/CloudKitSyncConfigu
   metadatabase without a marker belongs to is the app's history, and the
   app says (`unmarkedMetadatabase`).
 
+**A check of every built app, from its signature.**
+`scripts/check-sync-configuration.sh` reads what a bundle is actually
+signed with, not the file the build was given, and compares it with its
+`Info.plist`. Exactly two shapes pass, for the app and every extension in
+it: **scratch** (`<App>SyncEnabled` false, no `<App>CloudKitEnvironment`,
+no `com.apple.developer.icloud-*` entitlement anywhere) and **sync**
+(`<App>SyncEnabled` true, and `<App>CloudKitEnvironment` the same as the
+signed `icloud-container-environment`). `--expect scratch`, `sync` or
+`production` (sync, on Production) fails the others: `build.sh` passes
+the shape it just chose, and a TestFlight upload passes `production` on the
+archive. A project whose scratch build is a separate app (its own bundle
+id and App Group, as an Xcode project without `build.sh` needs) gives both
+apps' ids and groups, and they are checked too.
+
+It cannot be fooled by an empty answer. A bundle with no signature, or one
+`codesign` cannot read, fails; it never reads as "no iCloud keys". A
+simulator build's signature is ad hoc and has no entitlements, whatever the
+build was given: the simulator's are linked into the executable's
+`__TEXT,__entitlements` section, so for a simulator build that section is
+read, from every architecture, and the copies must agree. Its tests
+(`make sync-check-test`) sign fake bundles ad hoc, one per case.
+
 **A check before TestFlight.** `make testflight-check-environment` refuses
 unless the iOS spec says Production in both the entitlement and
 `<App>CloudKitEnvironment`; `testflight-upload` depends on it. A
 distribution-signed build is always Production
 ([`testflight`](https://github.com/tikitu/app-tooling/tree/main/patterns/testflight#icloud-and-cloudkit)
 explains), so a declaration that says otherwise would check the sync state
-against the wrong environment.
+against the wrong environment. With `testflight`'s `TESTFLIGHT_ARCHIVE_CHECK`,
+the archive itself is checked as well, before anything is sent: the spec
+check needs an XcodeGen spec, the archive check needs nothing but the
+archive.
 
 **No `eraseDatabaseOnSchemaChange`**, in any configuration. GRDB's
 development convenience deletes the database when a migration changes,
@@ -78,8 +104,11 @@ and a debug build on a real database is a real database.
 - A dependency on app-utils' `CloudKitSyncConfiguration` product (app-utils
   0.3.0 or later).
 - A Mac app signed by `build.sh` (the starter's layout), and an iOS app in
-  an XcodeGen `project.yml`. An Xcode project without XcodeGen can follow
-  the same rules but needs its own wiring; `apply.md` says what to keep.
+  an XcodeGen `project.yml`. An Xcode project without either follows the
+  same rules with its own wiring: two xcconfigs, a Run Script phase, and a
+  scratch build that is a separate app; `apply.md` has the steps.
+- Xcode's command-line tools (`codesign`, `lipo`, `segedit`; `clang` for
+  the check's tests).
 - Sync through SQLiteData's `SyncEngine`, for `CloudKitEnvironment.Check`;
   `SyncConfiguration` works with any CloudKit code.
 
@@ -92,6 +121,6 @@ and a debug build on a real database is a real database.
   is its own plan.
 - **It does not stop a person running a signed build on real data.** That
   is `make run`, and what it is for.
-- **It does not check a signed bundle's actual entitlements.** The stamp
-  is written from the file `build.sh` passes to `codesign`; reading the
-  signature back afterwards is a later improvement.
+- **It does not check what is installed.** The check reads a built bundle
+  or an archive; what a device or `/Applications` holds, and what a
+  distribution export re-signs, it does not see.

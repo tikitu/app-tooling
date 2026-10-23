@@ -6,6 +6,18 @@ summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
 ## Unreleased
 
+- **`sync-configuration`: every built app is checked from its signature.**
+  `scripts/check-sync-configuration.sh` passes only a scratch build with no
+  iCloud entitlement anywhere, or a sync build signed for the environment
+  it declares; `--expect production` refuses anything else on a TestFlight
+  archive. Simulator builds are read from their linked entitlements. Its
+  tests run with `make sync-check-test`. `apply.md` now also covers an
+  Xcode project without XcodeGen or `build.sh`. To take it: steps 6, 8 and
+  9 of `patterns/sync-configuration/apply.md`
+  (`patterns/sync-configuration/CHANGELOG.md`).
+- **`testflight`: `TESTFLIGHT_ARCHIVE_CHECK`** runs a project's own check
+  on the archived app before anything is sent. Nothing to do unless the
+  project checks its archives (`patterns/testflight/CHANGELOG.md`).
 - **New pattern `scratch-look`** (requires `scratch-data`): a scratch
   build's icon gets a caution band (`scripts/make-scratch-icon.py`, run by
   hand, output committed) and windows on scratch data a caution strip

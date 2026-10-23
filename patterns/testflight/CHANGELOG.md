@@ -1,5 +1,14 @@
 # testflight changelog
 
+## Unreleased
+
+- **`TESTFLIGHT_ARCHIVE_CHECK`**: a shell command `scripts/testflight.sh`
+  runs on the archived app, with its path as the last argument, after its
+  own checks and before the export; a failure stops the upload. Nothing to
+  do unless the project checks archives: then set it (with
+  `sync-configuration`, `$(SYNC_CHECK) --expect production`) and remove
+  the project's own archive check (`apply.md` step 3).
+
 ## v0.4.0 (2026-10-20)
 
 - **`testflight-device-guard`** refuses a development install on a device

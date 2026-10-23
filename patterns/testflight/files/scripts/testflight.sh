@@ -21,6 +21,9 @@
 #   TESTFLIGHT_XCODE_FLAGS    extra xcodebuild flags, e.g. the project's pins
 #   TESTFLIGHT_INTERNAL_ONLY  YES marks uploads for internal testers only
 #                             (default: NO)
+#   TESTFLIGHT_ARCHIVE_CHECK  a shell command run on the archived app, with
+#                             its path as the last argument; a failure stops
+#                             before the export (default: none)
 #   ASC_KEY_PATH, ASC_KEY_ID, ASC_ISSUER_ID
 #                             an App Store Connect API key, all three or
 #                             none; without them, the Apple account signed
@@ -86,6 +89,13 @@ BUNDLE_ID="$(plutil -extract CFBundleIdentifier raw "$PLIST")"
 
 plutil -extract ITSAppUsesNonExemptEncryption raw "$PLIST" >/dev/null 2>&1 ||
 	die "ITSAppUsesNonExemptEncryption is not set. Whether the app uses non-exempt encryption is a legal declaration for the app's owner to make; docs/app-tooling/testflight/apply.md says how to record it"
+
+if [ -n "${TESTFLIGHT_ARCHIVE_CHECK:-}" ]; then
+	echo "→ checking the archive: $TESTFLIGHT_ARCHIVE_CHECK"
+	# A shell command, so that its own quoting survives; the app is "$1".
+	bash -c "$TESTFLIGHT_ARCHIVE_CHECK \"\$1\"" testflight-archive-check "$APP" ||
+		die "the archive check (TESTFLIGHT_ARCHIVE_CHECK) refused $APP; nothing was sent"
+fi
 
 if codesign -d --entitlements - --xml "$APP" 2>/dev/null | grep -q 'icloud-container-identifiers'; then
 	echo "  note: this app uses iCloud, and a TestFlight build uses the Production environment"
