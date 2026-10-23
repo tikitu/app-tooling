@@ -29,10 +29,11 @@ in to the same `perform`:
    report), and the error that stopped it.
 3. The script prints the result and fails if a command did.
 
-The pattern supplies:
+The pattern supplies, with app-utils:
 
-- **A Swift module** (`CommandInbox`), imported into a directory of the
-  project's choosing, which the project makes a target of its package:
+- **The `CommandInbox` library**, a product of app-utils
+  (<https://github.com/tikitu/app-utils/blob/main/docs/CommandInbox.md>),
+  which the app's package depends on like any other:
   - `CommandInbox<Command>`, the runner. The app gives it a `perform`, and
     optionally an `isReady` check, which app commands wait for (with a
     timeout) so a script can send commands straight after launch, and a
@@ -90,17 +91,13 @@ where the condition goes.
 
 ## What it asks of a project
 
-- A Swift package the app is built from, to hold the module as a target.
+- A Swift package the app is built from, to depend on app-utils'
+  `CommandInbox` product (app-utils 0.4.0 or later).
 - Its commands as an enum performed through the model, or the will to make
   them so. Without that invariant the inbox drives a different path from the
   one people use, and checks the wrong thing.
 - A scratch run (the [`scratch-data`](https://github.com/tikitu/app-tooling/tree/main/patterns/scratch-data)
   pattern, or the project's own).
-
-It takes `swift format` and lint out of the imported Swift files' way:
-each starts with `// swift-format-ignore-file`, so `make fmt` leaves them
-alone. A project whose lint scans its sources may need to exclude the
-directory.
 
 ## What it does not do
 

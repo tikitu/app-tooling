@@ -32,7 +32,7 @@ Read [`README.md`](README.md) first for what this does and why, and
 
 | Parameter | Where to find it |
 |---|---|
-| The package directory for the module | the Swift package the app's code is in (`Package.swift`'s directory, or `Packages/<Name>Kit`); the module goes in its `Sources/CommandInbox/` |
+| The package | the Swift package the app's code is in (`Package.swift`'s directory, or `Packages/<Name>Kit`) |
 | The command enum and `perform` | the model's: `AppCommand` and `AppModel.perform(_:)` in apps made from the starter. If there is none, it is made in step 3 |
 | The notification name | `<bundle id>.commands` |
 | The inbox directory | Unsandboxed Mac app: beside the scratch data, in the checkout (`$(CURDIR)/build/scratch/Commands`). Sandboxed (`com.apple.security.app-sandbox` in the entitlements): `$(HOME)/Library/Caches/<App>-scratch/Commands`. iOS: none to choose |
@@ -44,12 +44,10 @@ Read [`README.md`](README.md) first for what this does and why, and
 
 The project must already have `pattern-imports`.
 
-**1. Import the pattern.** In `peru.yaml`, under `imports:`, with the
-package directory filled in:
+**1. Import the pattern.** In `peru.yaml`, under `imports:`:
 
 ```yaml
     app-tooling|command-inbox: ./
-    app-tooling|command-inbox-swift: Packages/MyAppKit/Sources/CommandInbox/
     app-tooling|command-inbox-docs: docs/app-tooling/command-inbox/
 ```
 
@@ -58,30 +56,28 @@ and beside the other rules:
 ```yaml
 rule command-inbox:
     export: patterns/command-inbox/files
-rule command-inbox-swift:
-    export: patterns/command-inbox/swift
 rule command-inbox-docs:
     pick: [patterns/command-inbox/README.md, patterns/command-inbox/apply.md, patterns/command-inbox/CHANGELOG.md, patterns/command-inbox/guide.md]
     export: patterns/command-inbox
 ```
 
 Then `uvx peru@1.3.5 sync`. It refuses to overwrite files the project
-already has: a hand-made copy at `scripts/command-inbox-send.sh` or in
-`Sources/CommandInbox/` is a Detect finding.
+already has: a hand-made copy at `scripts/command-inbox-send.sh` is a
+Detect finding.
 
-**2. The target.** In that package's `Package.swift`:
+**2. Depend on the library.** In the package's `Package.swift`:
 
 ```swift
-// The command inbox, imported from app-tooling (command-inbox). Never edit
-// it here: docs/app-tooling/command-inbox/.
-.target(name: "CommandInbox", swiftSettings: shared),
+.package(url: "https://github.com/tikitu/app-utils", exact: "0.4.0"),
+// …in the dependencies of the target that holds the commands, of the app
+// target that starts the inbox, and of the commands' test target:
+.product(name: "CommandInbox", package: "app-utils"),
 ```
 
-(with the package's usual settings; it needs no dependencies), and add
-`"CommandInbox"` to the dependencies of the target that holds the commands,
-and of the app target that starts the inbox. If the app target is in
-another package, add `.library(name: "CommandInbox", targets:
-["CommandInbox"])` to this one's products and depend on that.
+`0.4.0` is the first app-utils release with `CommandInbox`; keep the
+version the package already pins if it is newer. Then `swift package
+resolve` and commit `Package.resolved`. If the app target is in another
+package (an Xcode project's), add the product to it there.
 
 **3. The commands.** The command enum conforms to `InboxCommand`, with a
 public `name`, and decodes itself on `StrictCommand`:
@@ -265,17 +261,17 @@ hand-made copy):
 
 ```toml
 [patterns.command-inbox]
-params = { module = "Packages/MyAppKit/Sources/CommandInbox", notification = "org.example.myapp.commands", dir = "build/scratch/Commands" }
+params = { package = "Packages/MyAppKit", notification = "org.example.myapp.commands", dir = "build/scratch/Commands" }
 ```
 
 ## Verify
 
-- `git status --short` shows `scripts/command-inbox-send.sh`, the module's
-  three files and `docs/app-tooling/command-inbox/` as new.
+- `git status --short` shows `scripts/command-inbox-send.sh` and
+  `docs/app-tooling/command-inbox/` as new, and `Package.resolved` with
+  app-utils.
 - The project's build and tests pass, the documented-examples test among
   them (`swift test --filter CommandFileTests` lists it, with as many cases
-  as the document has examples). `make fmt` leaves the module's files
-  unchanged (`git status`).
+  as the document has examples).
 - `scripts/send-commands.sh '{"commands":[]}'` with no app running exits 1
   with `✗ no process matches …`.
 - On a scratch run (`make run-scratch`), a round trip: a command the app
