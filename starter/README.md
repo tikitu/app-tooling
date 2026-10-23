@@ -54,7 +54,6 @@ never pulls the window in front of someone working.
 Packages/StarterKit/          shared: macOS and iOS
   Core            the data: schema, migrations, bootstrap
   UI              AppModel, AppCommand and its decoding, shared views
-  CommandInbox    the command inbox (imported from app-tooling)
 Packages/StarterMacKit/       macOS only
   MacUI           the window, the list, the menu bar
   StarterMac      the app — a SwiftPM executable; its `Entry` prepares

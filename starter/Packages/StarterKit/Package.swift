@@ -18,16 +18,18 @@ let shared: [SwiftSetting] = [.swiftLanguageMode(.v6), .defaultIsolation(nil)]
 // lives in StarterMacKit, whose manifest says macOS and nothing else.
 let package = Package(
     name: "StarterKit", platforms: [.macOS(.v26), .iOS(.v26)],
-    products: [
-        .library(name: "Core", targets: ["Core"]), .library(name: "UI", targets: ["UI"]),
-        .library(name: "CommandInbox", targets: ["CommandInbox"]),
-    ],
+    products: [.library(name: "Core", targets: ["Core"]), .library(name: "UI", targets: ["UI"])],
     dependencies: [
         .package(url: "https://github.com/pointfreeco/sqlite-data", from: "1.12.0"),
         .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.17.1"),
         .package(url: "https://github.com/pointfreeco/swift-sharing", from: "2.10.1"),
         .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "1.7.3"),
         .package(url: "https://github.com/pointfreeco/swift-issue-reporting", from: "2.1.0"),
+        // The command inbox (app-tooling's command-inbox pattern). At a
+        // commit until app-utils releases it.
+        .package(
+            url: "https://github.com/tikitu/app-utils",
+            revision: "9a6920c29e30930ff211c5726f1649740ac2fc4d"),
     ],
     targets: [
         .target(
@@ -37,13 +39,11 @@ let package = Package(
                 .product(name: "Dependencies", package: "swift-dependencies"),
                 .product(name: "IssueReporting", package: "swift-issue-reporting"),
             ], swiftSettings: shared),
-        // The command inbox, imported from app-tooling (command-inbox). Never
-        // edit it here: docs/app-tooling/command-inbox/.
-        .target(name: "CommandInbox", swiftSettings: shared),
         .target(
             name: "UI",
             dependencies: [
-                "Core", "CommandInbox", .product(name: "SQLiteData", package: "sqlite-data"),
+                "Core", .product(name: "CommandInbox", package: "app-utils"),
+                .product(name: "SQLiteData", package: "sqlite-data"),
                 .product(name: "Dependencies", package: "swift-dependencies"),
                 .product(name: "IssueReporting", package: "swift-issue-reporting"),
                 .product(name: "Sharing", package: "swift-sharing"),
@@ -57,7 +57,8 @@ let package = Package(
         .testTarget(
             name: "UITests",
             dependencies: [
-                "UI", "CommandInbox", .product(name: "CustomDump", package: "swift-custom-dump"),
+                "UI", .product(name: "CommandInbox", package: "app-utils"),
+                .product(name: "CustomDump", package: "swift-custom-dump"),
                 .product(name: "DependenciesTestSupport", package: "swift-dependencies"),
             ], swiftSettings: shared),
     ])
