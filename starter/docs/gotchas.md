@@ -133,7 +133,7 @@ terminal. Grant it Full Disk Access, or batch the queries.
 
 The status bar sits in the main window's `VStack`, after a `Divider`, not in
 `.safeAreaInset(edge: .bottom)`. An inset lets the content run under the bar
-and relies on scroll views to inset themselves; panes inside `HSplitView` or
-`VSplitView` never do, so once the window gains a split view the last row,
+and relies on scroll views to inset themselves; panes inside `HSplitView`,
+`VSplitView` or `NavigationSplitView` never do, so once the window gains a split view the last row,
 scrolled to the end, is under the bar. Do not "tidy" it into an inset
 (SwiftUI rules §2.6).

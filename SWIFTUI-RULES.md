@@ -134,9 +134,11 @@ with priorities and parent proposals.
 `.safeAreaInset(edge: .bottom)` does not shrink the content: it lets it run
 under the bar and relies on the scroll views inside to add the bar's height
 to their content insets. A `List` or `Table` directly under the inset does.
-Inside `HSplitView` or `VSplitView` none do: the split view is sized to the
-window's edge, under the bar, and its panes get no inset, so the last row
-scrolled to the end sits under the bar. It works until someone adds a split
+Inside `HSplitView`, `VSplitView` or `NavigationSplitView` none do: the
+split view is sized to the window's edge, under the bar, and its panes or
+columns get no inset, so the last row scrolled to the end sits under the
+bar. (An inset attached to one column's `List` directly, inside the split
+view, is fine.) It works until someone adds a split
 view, often inside a child view where the inset can't be seen. A status bar
 or footer goes below the content in the `VStack`, after a `Divider()`. Keep
 `safeAreaInset` for things content is meant to scroll under, and check the

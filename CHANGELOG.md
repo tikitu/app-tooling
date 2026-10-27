@@ -8,8 +8,8 @@ summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
 - **Bottom bars go in the stack, not `safeAreaInset`** (`SWIFTUI-RULES.md`
   §2.6). `.safeAreaInset(edge: .bottom)` lets content run under the bar and
-  relies on scroll views to inset themselves; the panes of `HSplitView` and
-  `VSplitView` never do, so the last row scrolled to the end sits under the
+  relies on scroll views to inset themselves; the panes of `HSplitView`,
+  `VSplitView` and `NavigationSplitView` never do, so the last row scrolled to the end sits under the
   bar. The starter's main window now stacks its status bar below the
   content, after a `Divider()`, and `starter/docs/gotchas.md` says why. A
   project made from the starter: find bottom bars attached with
