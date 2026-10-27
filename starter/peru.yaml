@@ -14,8 +14,8 @@ imports:
 
 git module app-tooling:
     url: https://github.com/tikitu/app-tooling
-    reup: pvetdeb-pattern-improvement
-    rev: 1f5e0172a9a85531aa428fbc6d0433c9e5a593e4
+    reup: main
+    rev: 31de4a01f2e8c06e9ad5d95507954af88cce6108
 
 rule pattern-imports:
     export: patterns/pattern-imports/files
