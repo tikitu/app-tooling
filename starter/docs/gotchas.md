@@ -128,3 +128,12 @@ formatted (`SWIFT_FORMAT_PATHS := Packages`).
 Every `sqlite3 ~/Library/Containers/org.example.starter/…` can raise the
 "would like to access data from other apps" dialog, attributed to the
 terminal. Grant it Full Disk Access, or batch the queries.
+
+## A bottom bar attached with `safeAreaInset` hides the last row of a split view
+
+The status bar sits in the main window's `VStack`, after a `Divider`, not in
+`.safeAreaInset(edge: .bottom)`. An inset lets the content run under the bar
+and relies on scroll views to inset themselves; panes inside `HSplitView` or
+`VSplitView` never do, so once the window gains a split view the last row,
+scrolled to the end, is under the bar. Do not "tidy" it into an inset
+(SwiftUI rules §2.6).

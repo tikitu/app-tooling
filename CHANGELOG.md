@@ -4,6 +4,19 @@ What changed in each release of app-tooling. Each pattern has its own
 `CHANGELOG.md` with what a project must do to catch up; this file is the
 summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
+## Unreleased
+
+- **Bottom bars go in the stack, not `safeAreaInset`** (`SWIFTUI-RULES.md`
+  §2.6). `.safeAreaInset(edge: .bottom)` lets content run under the bar and
+  relies on scroll views to inset themselves; the panes of `HSplitView` and
+  `VSplitView` never do, so the last row scrolled to the end sits under the
+  bar. The starter's main window now stacks its status bar below the
+  content, after a `Divider()`, and `starter/docs/gotchas.md` says why. A
+  project made from the starter: find bottom bars attached with
+  `safeAreaInset` or `safeAreaBar` over anything that scrolls, especially a
+  split view, and move them into the stack; then scroll a list to its end
+  on screen and check its last row clears the bar.
+
 ## v0.6.0 (2026-10-24)
 
 - **`sync-configuration`: every built app is checked from its signature.**

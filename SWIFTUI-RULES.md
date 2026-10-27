@@ -129,6 +129,19 @@ between panes by 2pt, a scattered literal is why.
 Pushing is local and predictable. Growing with an alignment composes oddly
 with priorities and parent proposals.
 
+### 2.6 A bar nothing should scroll under goes in the stack, not `safeAreaInset`; split views never pass an inset to their panes.
+
+`.safeAreaInset(edge: .bottom)` does not shrink the content: it lets it run
+under the bar and relies on the scroll views inside to add the bar's height
+to their content insets. A `List` or `Table` directly under the inset does.
+Inside `HSplitView` or `VSplitView` none do: the split view is sized to the
+window's edge, under the bar, and its panes get no inset, so the last row
+scrolled to the end sits under the bar. It works until someone adds a split
+view, often inside a child view where the inset can't be seen. A status bar
+or footer goes below the content in the `VStack`, after a `Divider()`. Keep
+`safeAreaInset` for things content is meant to scroll under, and check the
+last row on screen when you use it.
+
 ---
 
 ## 3. State and observation

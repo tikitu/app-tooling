@@ -23,7 +23,11 @@ public struct MainWindow: View {
             Divider()
             TextField("New item", text: $newTitle).textFieldStyle(.plain).focused($isAdding)
                 .onSubmit(add).padding(.horizontal, 12).padding(.vertical, 8)
-        }.safeAreaInset(edge: .bottom, spacing: 0) { StatusBar(model: model) }.toolbar {
+            // In the stack, not a `safeAreaInset`: nothing scrolls under it,
+            // and a split view would not pass an inset on to its panes.
+            Divider()
+            StatusBar(model: model)
+        }.toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Toggle(isOn: Binding(model.$showsDone)) {
                     Label("Show Done", systemImage: "checkmark.circle")
