@@ -7,7 +7,9 @@ the last rows hide behind it. The findings and the recommendation are on the
 hub ticket "app-tooling: lint for safe-area insets over split views
 (research)". Nothing here is imported by projects.
 
-- `inset-lint/`: static. A whole-repo checker on swift-syntax that follows
+- `inset-lint/`: static. It has since grown into its own project,
+  [muography](https://github.com/tikitu/muography), private for now, where
+  it is maintained; this copy is the prototype as it was. A whole-repo checker on swift-syntax that follows
   view composition by type name (`body`, view members, wrappers, custom
   modifiers) and reports each inset whose receiver reaches a split view, with
   the chain. `make test` runs the fixtures; `inset-lint <root>...` exits 1
