@@ -4,6 +4,17 @@ What changed in each release of app-tooling. Each pattern has its own
 `CHANGELOG.md` with what a project must do to catch up; this file is the
 summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
+## Unreleased
+
+- **New pattern `mac-install`**: `make install` builds the Mac app with a
+  date-and-time build number, quits a running copy by path, replaces the
+  one in `/Applications`, registers it with LaunchServices and restarts it
+  if it was running; it warns when the build number has not risen. `make
+  mac-stale-registrations` lists other registrations of the bundle id. The
+  README gives the order in which to clear icon caches when the Dock keeps
+  an old icon. A project with its own `install` target: follow
+  `patterns/mac-install/apply.md`, which replaces it.
+
 ## v0.6.0 (2026-10-24)
 
 - **`sync-configuration`: every built app is checked from its signature.**
