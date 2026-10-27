@@ -17,3 +17,7 @@
 # distributed with Developer ID, not through the App Store). No snapshot.
 [patterns.command-inbox]
 params = { package = "Packages/StarterKit", notification = "org.example.starter.commands", dir = "~/Library/Caches/Starter-scratch/Commands" }
+
+# Installs the everyday build, which passes MAC_INSTALL_BUILD_NUMBER to
+# build.sh as BUILD_NUMBER.
+[patterns.mac-install]

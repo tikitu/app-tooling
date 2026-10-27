@@ -38,7 +38,7 @@ make run-scratch     # in the background, on scratch data, accepting commands
 make screenshot      # build/window.png, by window id, without focus
 make fmt             # reformat every Swift file in place
 make lint            # format check + ast-grep rules
-make install         # copy to /Applications
+make install         # build, copy to /Applications, restart a running copy
 make help            # everything else
 
 scripts/send-commands.sh '<json>'   # drive a run-scratch app

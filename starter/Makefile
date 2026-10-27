@@ -69,8 +69,16 @@ include mk/app-tooling.mk
 # (app-tooling: build-warnings). docs/app-tooling/build-warnings/.
 include mk/build-warnings.mk
 
+# `make install`: the app into /Applications with a rising build number,
+# quitting and restarting a running copy; `make mac-stale-registrations`
+# (app-tooling: mac-install). docs/app-tooling/mac-install/.
+MAC_INSTALL_APP       := $(APP)
+MAC_INSTALL_BUNDLE_ID := $(BUNDLE_ID)
+MAC_INSTALL_BUILD     := build
+include mk/mac-install.mk
+
 .PHONY: all deps outdated update-pins check-pins check-shared-ios build check test release run run-background run-scratch scratch-reset \
-        screenshot clean install uninstall register help \
+        screenshot clean uninstall register help \
         icon check-version notary-setup sign zip-notary notarize staple zip-release \
         checksum verify-release dist github-release print-version \
         fmt fmt-check lint rules
@@ -104,7 +112,9 @@ help:
 	@echo "  lint              fmt-check + rules — the whole non-compiling gate"
 	@echo ""
 	@echo "Local install:"
-	@echo "  install           Copy $(APP_NAME).app to /Applications/ and register it"
+	@echo "  install           Build, copy $(APP_NAME).app to /Applications/ and register it,"
+	@echo "                    restarting a running copy (docs/app-tooling/mac-install/)"
+	@echo "  mac-stale-registrations  List other registrations of the bundle id (UNREGISTER=1 removes them)"
 	@echo "  uninstall         Remove /Applications/$(APP_NAME).app"
 	@echo "  register          Refresh LaunchServices for ./$(APP)"
 	@echo ""
@@ -197,8 +207,10 @@ $(APP_ICON): $(ICON_SCRIPT)
 
 icon: $(APP_ICON)
 
+# Every build gets the time it was made as its build number, so each
+# `make install` rises above the last (mac-install).
 build: deps $(APP_ICON)
-	SIGN_IDENTITY="$(DEV_IDENTITY)" VERSION="$(VERSION)" ./build.sh $(CONFIG)
+	SIGN_IDENTITY="$(DEV_IDENTITY)" VERSION="$(VERSION)" BUILD_NUMBER="$(MAC_INSTALL_BUILD_NUMBER)" ./build.sh $(CONFIG)
 
 release: deps $(APP_ICON)
 	SIGN_IDENTITY="$(DEV_IDENTITY)" VERSION="$(VERSION)" ./build.sh release
@@ -310,14 +322,6 @@ screenshot:
 	  [ $$# -eq 1 ] || { echo "✗ $$# copies of $(abspath $(APP)) running; want exactly 1 (make run-background)"; exit 1; }; \
 	  ID=$$(swift scripts/window-id.swift --pid $$1) && \
 	  screencapture -o -x -l $$ID build/window.png && echo "✓ build/window.png (window $$ID, pid $$1)"
-
-install: build
-	@if [ ! -d "$(APP)" ]; then echo "✗ $(APP) missing — build failed?"; exit 1; fi
-	rm -rf /Applications/$(APP_NAME).app
-	cp -R "$(APP)" /Applications/
-	@echo "✓ copied to /Applications/$(APP_NAME).app"
-	$(LSREGISTER) -f /Applications/$(APP_NAME).app
-	@echo "✓ registered /Applications/$(APP_NAME).app with LaunchServices"
 
 uninstall:
 	@if [ -d /Applications/$(APP_NAME).app ]; then \
