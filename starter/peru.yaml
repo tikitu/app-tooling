@@ -9,6 +9,8 @@ imports:
     app-tooling|build-warnings-docs: docs/app-tooling/build-warnings/
     app-tooling|command-inbox: ./
     app-tooling|command-inbox-docs: docs/app-tooling/command-inbox/
+    app-tooling|mac-install: ./
+    app-tooling|mac-install-docs: docs/app-tooling/mac-install/
 
 git module app-tooling:
     url: https://github.com/tikitu/app-tooling
@@ -38,3 +40,9 @@ rule command-inbox:
 rule command-inbox-docs:
     pick: [patterns/command-inbox/README.md, patterns/command-inbox/apply.md, patterns/command-inbox/CHANGELOG.md, patterns/command-inbox/guide.md]
     export: patterns/command-inbox
+
+rule mac-install:
+    export: patterns/mac-install/files
+rule mac-install-docs:
+    pick: [patterns/mac-install/README.md, patterns/mac-install/apply.md, patterns/mac-install/CHANGELOG.md]
+    export: patterns/mac-install

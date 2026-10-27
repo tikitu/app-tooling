@@ -14,6 +14,7 @@
 #                  or other entitlement a provisioning profile would have to
 #                  grant.
 #   VERSION        CFBundleShortVersionString to stamp (default 0.0.0).
+#   BUILD_NUMBER   CFBundleVersion (default: the date and time, to the minute).
 #
 set -euo pipefail
 
@@ -31,8 +32,9 @@ VERSION="${VERSION:-0.0.0}"
 ENTITLEMENTS="StarterMac/StarterMac.entitlements"
 INFO_PLIST_SRC="Resources/Info.plist"
 
-# Build number: monotonic-ish from the date so re-signs differ. Falls back to 1.
-BUILD_NUMBER="$(date +%Y%m%d%H%M 2>/dev/null || echo 1)"
+# Build number: BUILD_NUMBER if given (`make install` passes one that rises
+# with every install), else monotonic-ish from the date so re-signs differ.
+BUILD_NUMBER="${BUILD_NUMBER:-$(date +%Y%m%d%H%M 2>/dev/null || echo 1)}"
 
 # Pinned: build exactly what Package.resolved says, and fail rather than
 # quietly re-resolving to something newer.
