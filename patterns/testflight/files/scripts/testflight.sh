@@ -63,12 +63,23 @@ ARCHIVE="$OUT/$TESTFLIGHT_SCHEME-$COMMIT.xcarchive"
 mkdir -p "$OUT"
 rm -rf "$ARCHIVE"
 
+# The API key, if given, signs the archive too: then no Apple account in Xcode
+# is needed at any step.
+AUTH=()
+if [ -n "${ASC_KEY_PATH:-}${ASC_KEY_ID:-}${ASC_ISSUER_ID:-}" ]; then
+	: "${ASC_KEY_PATH:?set all three of ASC_KEY_PATH, ASC_KEY_ID and ASC_ISSUER_ID, or none}"
+	: "${ASC_KEY_ID:?set all three of ASC_KEY_PATH, ASC_KEY_ID and ASC_ISSUER_ID, or none}"
+	: "${ASC_ISSUER_ID:?set all three of ASC_KEY_PATH, ASC_KEY_ID and ASC_ISSUER_ID, or none}"
+	AUTH=(-authenticationKeyPath "$ASC_KEY_PATH" -authenticationKeyID "$ASC_KEY_ID"
+		-authenticationKeyIssuerID "$ASC_ISSUER_ID")
+fi
+
 echo "→ archiving $TESTFLIGHT_SCHEME at $COMMIT (Release)"
 # TESTFLIGHT_XCODE_FLAGS is split into words on purpose.
 # shellcheck disable=SC2086
 xcodebuild archive -project "$TESTFLIGHT_PROJECT" -scheme "$TESTFLIGHT_SCHEME" \
 	-configuration Release -destination 'generic/platform=iOS' \
-	-archivePath "$ARCHIVE" -allowProvisioningUpdates \
+	-archivePath "$ARCHIVE" -allowProvisioningUpdates ${AUTH[@]+"${AUTH[@]}"} \
 	${TESTFLIGHT_XCODE_FLAGS:-} >"$OUT/archive-$COMMIT.log" 2>&1 ||
 	{ tail -20 "$OUT/archive-$COMMIT.log" >&2; die "archive failed; the whole log is $OUT/archive-$COMMIT.log"; }
 
@@ -115,15 +126,6 @@ plutil -insert signingStyle -string automatic "$OPTIONS"
 plutil -insert manageAppVersionAndBuildNumber -bool NO "$OPTIONS"
 if [ "$ACTION" = upload ]; then
 	plutil -insert testFlightInternalTestingOnly -bool "$INTERNAL_ONLY" "$OPTIONS"
-fi
-
-AUTH=()
-if [ -n "${ASC_KEY_PATH:-}${ASC_KEY_ID:-}${ASC_ISSUER_ID:-}" ]; then
-	: "${ASC_KEY_PATH:?set all three of ASC_KEY_PATH, ASC_KEY_ID and ASC_ISSUER_ID, or none}"
-	: "${ASC_KEY_ID:?set all three of ASC_KEY_PATH, ASC_KEY_ID and ASC_ISSUER_ID, or none}"
-	: "${ASC_ISSUER_ID:?set all three of ASC_KEY_PATH, ASC_KEY_ID and ASC_ISSUER_ID, or none}"
-	AUTH=(-authenticationKeyPath "$ASC_KEY_PATH" -authenticationKeyID "$ASC_KEY_ID"
-		-authenticationKeyIssuerID "$ASC_ISSUER_ID")
 fi
 
 echo "→ ${ACTION} $BUNDLE_ID $SHORT ($VERSION, $COMMIT)"

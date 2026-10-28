@@ -1,0 +1,21 @@
+# What App Store Connect should say about the app. asc-bootstrap.py sync
+# makes it so; creating the app record itself is by hand (register says how).
+
+team = "27M4U3J9M6"
+bundle_id = "org.logophile.myapp"
+name = "MyApp"
+locale = "en-GB"
+
+# TestFlight's test information, shown to testers.
+[beta]
+description = "MyApp, built from main. Every commit on main can become a build."
+feedback_email = "tikitu@logophile.org"
+
+# Internal groups take the team's App Store Connect users only. all_builds and
+# internal are set when the group is made and cannot be changed through the API.
+[[groups]]
+name = "Me"
+internal = true
+all_builds = true
+feedback = true
+testers = ["tikitu@logophile.org"]
