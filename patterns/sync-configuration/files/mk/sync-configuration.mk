@@ -18,6 +18,11 @@
 #   SYNC_SCRATCH_BUNDLE_ID, SYNC_SCRATCH_APP_GROUPS  the scratch build's
 #   SYNC_APP_GROUP_KEY                               the Info.plist key naming the group
 #
+# and the opt-outs, set to yes only for an app that needs them (record why):
+#
+#   SYNC_ALLOW_DEVELOPMENT       a sync build may be on CloudKit Development
+#   SYNC_ALLOW_EXTENSION_ICLOUD  an extension may have iCloud keys
+#
 # It provides SYNC_CHECK, the check with those parameters, to run on a
 # built app (`$(SYNC_CHECK) --expect scratch build/MyApp.app`), and
 #
@@ -46,7 +51,9 @@ SYNC_CHECK = scripts/check-sync-configuration.sh --prefix '$(SYNC_PREFIX)' \
 	$(if $(SYNC_APP_GROUPS),--app-groups '$(SYNC_APP_GROUPS)') \
 	$(if $(SYNC_SCRATCH_BUNDLE_ID),--scratch-bundle-id '$(SYNC_SCRATCH_BUNDLE_ID)') \
 	$(if $(SYNC_SCRATCH_APP_GROUPS),--scratch-app-groups '$(SYNC_SCRATCH_APP_GROUPS)') \
-	$(if $(SYNC_APP_GROUP_KEY),--app-group-key '$(SYNC_APP_GROUP_KEY)')
+	$(if $(SYNC_APP_GROUP_KEY),--app-group-key '$(SYNC_APP_GROUP_KEY)') \
+	$(if $(filter yes,$(SYNC_ALLOW_DEVELOPMENT)),--allow-development) \
+	$(if $(filter yes,$(SYNC_ALLOW_EXTENSION_ICLOUD)),--allow-extension-icloud)
 
 # What each built app is actually signed with, against its Info.plist.
 sync-check:

@@ -126,8 +126,13 @@ expect "a missing app group key fails" 1 "${SCRATCH_APP[@]}" \
 development=$(make_app development "$REAL_ID" true Development - Development -)
 adhoc=$(make_app adhoc "$REAL_ID" false - - none -)
 expect "an ad-hoc build with no entitlements at all passes" 0 --prefix MyApp --expect scratch "$adhoc"
-expect "a sync build on Development passes --expect sync" 0 --prefix MyApp --expect sync "$development"
-expect "a sync build on Development fails --expect production" 1 --prefix MyApp --expect production "$development"
+expect "a sync build on Development fails" 1 --prefix MyApp "$development"
+expect "a sync build on Development fails --expect sync" 1 --prefix MyApp --expect sync "$development"
+expect "a sync build on Development passes --allow-development" 0 --prefix MyApp --allow-development "$development"
+expect "a sync build on Development passes --expect sync --allow-development" 0 \
+	--prefix MyApp --expect sync --allow-development "$development"
+expect "a sync build on Development fails --expect production, even with --allow-development" 1 \
+	--prefix MyApp --expect production --allow-development "$development"
 expect "a sync build with no SyncEnabled under this prefix fails" 1 --prefix OtherApp "$development"
 
 # --- Signatures that cannot be read ----------------------------------------
@@ -168,6 +173,28 @@ expect "a scratch app with an extension in the real group fails" 1 "${SCRATCH_AP
 expect "a scratch app with an iCloud extension under Extensions/ fails" 1 "${SCRATCH_APP[@]}" \
 	"$(with_extension extension-icloud \
 		"$(make_app appex-icloud "$SCRATCH_ID.ShareExtension" false - "$SCRATCH_GROUP" Production "$SCRATCH_GROUP")" Extensions)"
+
+# A sync app holding an extension with iCloud keys: refused unless the
+# project opts out, and then only if it pins the app's environment.
+with_sync_extension() { # <name> <extension environment|none>
+	local app="$TMP/$1/MyApp.app"
+	mkdir -p "$(dirname "$app")"
+	cp -R "$production" "$app"
+	mkdir -p "$app/Contents/PlugIns"
+	cp -R "$(make_app "$1-appex" "$REAL_ID.ShareExtension" true Production "$REAL_GROUP" "$2" "$REAL_GROUP")" \
+		"$app/Contents/PlugIns/ShareExtension.appex"
+	codesign -s - -f --entitlements "$TMP/production/entitlements.plist" "$app" 2>/dev/null
+	echo "$app"
+}
+sync_extension_plain=$(with_sync_extension sync-extension-plain none)
+sync_extension_icloud=$(with_sync_extension sync-extension-icloud Production)
+sync_extension_development=$(with_sync_extension sync-extension-development Development)
+expect "a real app with an extension without iCloud keys passes" 0 "${SCRATCH_APP[@]}" "$sync_extension_plain"
+expect "a real app with an iCloud extension fails" 1 "${SCRATCH_APP[@]}" "$sync_extension_icloud"
+expect "a real app with an iCloud extension passes --allow-extension-icloud" 0 \
+	"${SCRATCH_APP[@]}" --allow-extension-icloud "$sync_extension_icloud"
+expect "an iCloud extension on another environment fails, even with --allow-extension-icloud" 1 \
+	"${SCRATCH_APP[@]}" --allow-extension-icloud "$sync_extension_development"
 
 # --- Simulator builds -------------------------------------------------------
 # Signed ad hoc with no entitlements, which they carry in the executable's

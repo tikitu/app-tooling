@@ -43,7 +43,8 @@ build that can sync, on any device, as part of applying it.
 | Key prefix (`<App>`) | what the app calls itself in `Info.plist` keys. A project that already has `<X>SyncEnabled` keeps `<X>`: renaming a key is a change with nothing to gain |
 | Mac target name (`<Target>`) | the entitlements file's name in `build.sh` (`<Target>/<Target>.entitlements`) |
 | Container identifier | `com.apple.developer.icloud-container-identifiers` in the entitlements; the `containerIdentifier:` the sync engine is made with |
-| Environment | `com.apple.developer.icloud-container-environment` today, in the Mac entitlements and in `project.yml`. Not pinned: ask which the app's devices sync against |
+| Environment | `com.apple.developer.icloud-container-environment` today, in the Mac entitlements and in `project.yml`. Not pinned: ask which the app's devices sync against. Development needs `SYNC_ALLOW_DEVELOPMENT = yes` (step 8) |
+| Extensions with iCloud | an extension's entitlements with a `com.apple.developer.icloud-*` key. The check refuses them unless `SYNC_ALLOW_EXTENSION_ICLOUD = yes` (step 8); most extensions only need the App Group |
 | `unmarkedMetadatabase` | **ask the user.** Which environment every device's existing sync state was made against: `.development` if no build of the app has synced against Production yet, `.production` if all have. If devices differ, stop: that is a plan of its own |
 | Logger subsystem | the app's existing `Logger(subsystem:)`, usually its bundle id |
 | iOS spec | `project.yml`, usually `apps/ios/project.yml` |
@@ -237,8 +238,18 @@ with the environment the app's devices actually use (Parameters). Then
   ```
 
   With `SYNC_IOS_SPEC := …` before the include if the spec is not
-  `apps/ios/project.yml`, and the separate scratch app's parameters, if
-  any. Add `sync-check-test` to the target that runs the project's tests
+  `apps/ios/project.yml`, the separate scratch app's parameters, if
+  any, and the opt-outs the app needs (Parameters), each with its reason
+  and recorded in `app-tooling.toml`:
+
+  ```make
+  # Pinned to Development: <why> (app-tooling: sync-configuration).
+  SYNC_ALLOW_DEVELOPMENT := yes
+  ```
+
+  `build.sh` calls the check directly, so there the opt-out is the
+  option, `--allow-development` or `--allow-extension-icloud`, on step
+  6's line. Add `sync-check-test` to the target that runs the project's tests
   (`test: sync-check-test`, or the project's verify script runs
   `scripts/tests/check-sync-configuration-test.sh`).
 - With `testflight`, after both includes:

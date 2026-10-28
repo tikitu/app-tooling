@@ -19,10 +19,10 @@
 #
 #   scratch  <prefix>SyncEnabled false, no <prefix>CloudKitEnvironment,
 #            no com.apple.developer.icloud-* entitlement anywhere.
-#   sync     <prefix>SyncEnabled true, <prefix>CloudKitEnvironment the same
-#            as the app's icloud-container-environment entitlement
-#            (Development or Production), with a container named; an
-#            extension with iCloud keys pins the same environment.
+#   sync     <prefix>SyncEnabled true, <prefix>CloudKitEnvironment
+#            Production and the same as the app's
+#            icloud-container-environment entitlement, with a container
+#            named; no extension has an iCloud key.
 #
 # Options (each optional; a check is made only for what is given):
 #   --expect scratch|sync|production
@@ -38,6 +38,13 @@
 #                          extension name their App Group: it must be one
 #                          of the shape's groups, and the same in all
 #
+# Opt-outs, for an app whose shape needs them (record why in the project):
+#   --allow-development    a sync build may be on Development, for an app
+#                          pinned to it; --expect production still refuses it
+#   --allow-extension-icloud
+#                          an extension may have iCloud keys, if they pin
+#                          the app's environment
+#
 # Exit 0 when every bundle passes, 1 when any fails, 2 for a usage error.
 # A signature that cannot be read fails: it never reads as "no iCloud keys".
 set -euo pipefail
@@ -45,7 +52,7 @@ set -euo pipefail
 usage() {
 	echo "usage: $0 --prefix <prefix> [--expect scratch|sync|production] [--bundle-id <id>]" >&2
 	echo "         [--app-groups <g,...>] [--scratch-bundle-id <id>] [--scratch-app-groups <g,...>]" >&2
-	echo "         [--app-group-key <key>] <App.app>..." >&2
+	echo "         [--app-group-key <key>] [--allow-development] [--allow-extension-icloud] <App.app>..." >&2
 	exit 2
 }
 
@@ -56,6 +63,8 @@ APP_GROUPS=""
 SCRATCH_BUNDLE_ID=""
 SCRATCH_APP_GROUPS=""
 APP_GROUP_KEY=""
+ALLOW_DEVELOPMENT=no
+ALLOW_EXTENSION_ICLOUD=no
 while [ $# -gt 0 ]; do
 	case "$1" in
 		--prefix | --expect | --bundle-id | --app-groups | --scratch-bundle-id | --scratch-app-groups | --app-group-key)
@@ -71,6 +80,8 @@ while [ $# -gt 0 ]; do
 			esac
 			shift 2
 			;;
+		--allow-development) ALLOW_DEVELOPMENT=yes; shift ;;
+		--allow-extension-icloud) ALLOW_EXTENSION_ICLOUD=yes; shift ;;
 		--) shift; break ;;
 		-*) usage ;;
 		*) break ;;
@@ -212,7 +223,11 @@ check_signature() { # <bundle> <shape> <environment> <is extension>
 				fail "$bundle: signed with icloud-container-environment '${signed_environment:-missing}', but declares ${PREFIX}CloudKitEnvironment=$environment"
 			[ -n "$(plist_value "$ent" com.apple.developer.icloud-container-identifiers:0)" ] ||
 				fail "$bundle: a sync build is signed without an iCloud container"
-		elif has_icloud_key "$ent" && [ "$signed_environment" != "$environment" ]; then
+		elif ! has_icloud_key "$ent"; then
+			:
+		elif [ "$ALLOW_EXTENSION_ICLOUD" = no ]; then
+			fail "$bundle: an extension signed with an iCloud entitlement (--allow-extension-icloud permits one that pins the app's environment)"
+		elif [ "$signed_environment" != "$environment" ]; then
 			fail "$bundle: an extension signed with icloud-container-environment '${signed_environment:-missing}', but the app's is $environment"
 		fi
 		expected_groups="$APP_GROUPS"
@@ -257,6 +272,13 @@ check_app() {
 		expected_id="$BUNDLE_ID"
 		expected_groups="$APP_GROUPS"
 	fi
+	case "$EXPECT" in
+		"" | sync)
+			if [ "$shape" = sync ] && [ "$environment" = Development ] && [ "$ALLOW_DEVELOPMENT" = no ]; then
+				fail "$app: a sync build on Development (--allow-development permits it, for an app pinned to Development)"
+			fi
+			;;
+	esac
 	case "$EXPECT" in
 		"") ;;
 		production)

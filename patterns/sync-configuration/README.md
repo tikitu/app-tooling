@@ -66,8 +66,13 @@ signed with, not the file the build was given, and compares it with its
 `Info.plist`. Exactly two shapes pass, for the app and every extension in
 it: **scratch** (`<App>SyncEnabled` false, no `<App>CloudKitEnvironment`,
 no `com.apple.developer.icloud-*` entitlement anywhere) and **sync**
-(`<App>SyncEnabled` true, and `<App>CloudKitEnvironment` the same as the
-signed `icloud-container-environment`). `--expect scratch`, `sync` or
+(`<App>SyncEnabled` true, `<App>CloudKitEnvironment` Production and the
+same as the signed `icloud-container-environment`, and no iCloud
+entitlement on any extension). Two opt-outs loosen the sync shape for an
+app that needs it: `--allow-development` (`SYNC_ALLOW_DEVELOPMENT = yes`)
+for an app pinned to Development, and `--allow-extension-icloud`
+(`SYNC_ALLOW_EXTENSION_ICLOUD = yes`) for an extension that uses iCloud
+itself, which must then pin the app's environment. `--expect scratch`, `sync` or
 `production` (sync, on Production) fails the others: `build.sh` passes
 the shape it just chose, and a TestFlight upload passes `production` on the
 archive. A project whose scratch build is a separate app (its own bundle

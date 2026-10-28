@@ -6,6 +6,14 @@ summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
 ## Unreleased
 
+- **`sync-configuration`: the signature check is strict by default.** A
+  sync build must be on Production, and no extension of it may have an
+  iCloud entitlement, unless the project opts out with
+  `SYNC_ALLOW_DEVELOPMENT = yes` (`--allow-development`) or
+  `SYNC_ALLOW_EXTENSION_ICLOUD = yes` (`--allow-extension-icloud`). A
+  project pinned to Development, or with an extension that uses iCloud,
+  must set the opt-out and record it in `app-tooling.toml`
+  (`patterns/sync-configuration/CHANGELOG.md`).
 - **Bottom bars go in the stack, not `safeAreaInset`** (`SWIFTUI-RULES.md`
   §2.6). `.safeAreaInset(edge: .bottom)` lets content run under the bar and
   relies on scroll views to inset themselves; the panes of `HSplitView`,

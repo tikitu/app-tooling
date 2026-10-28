@@ -1,5 +1,23 @@
 # sync-configuration changelog
 
+## Unreleased
+
+- **`scripts/check-sync-configuration.sh` is strict by default.** A sync
+  build must be on Production, with or without `--expect`, and an
+  extension in a sync build must have no iCloud entitlement. Two opt-outs
+  bring back the old behaviour: `--allow-development`
+  (`SYNC_ALLOW_DEVELOPMENT = yes`) lets a sync build be on Development,
+  though `--expect production` still refuses it, and
+  `--allow-extension-icloud` (`SYNC_ALLOW_EXTENSION_ICLOUD = yes`) lets an
+  extension carry iCloud keys that pin the app's environment. To take it:
+  a project pinned to Development sets `SYNC_ALLOW_DEVELOPMENT := yes`
+  before its include, or passes `--allow-development` on `build.sh`'s check
+  (step 6) and wherever else it calls the script itself; a project whose
+  extension uses iCloud does the same with the other opt-out. Record each
+  opt-out and its reason in `app-tooling.toml`. Then run every check the
+  project wires in (`make sync-check-test`, and the build checks of steps
+  6 and 9) to see that its own builds still pass.
+
 ## v0.6.0 (2026-10-24)
 
 - **`scripts/check-sync-configuration.sh` reads a built app's signature
