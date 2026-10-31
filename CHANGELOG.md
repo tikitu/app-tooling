@@ -6,6 +6,16 @@ summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
 ## Unreleased
 
+- **New pattern `event-log`**, documents only: conventions for an app whose
+  data is a record of what happened. Every event row has `occurredAt`,
+  `recordedAt` (set on insert, never changed) and the time zone it was
+  recorded in, which decides its day; definitions people edit are an
+  identity table plus versions; enum values are never `CHECK`ed; and the
+  schema stays within what SQLiteData's CloudKit sync allows. Two choices
+  in it, timestamp encoding and how corrections are made, await the
+  owner's decision. A project with event tables: follow
+  `patterns/event-log/apply.md`, which first asks whether the tables hold
+  real data (change the migration in place if not; add one if so).
 - **`sync-configuration`: the signature check is strict by default.** A
   sync build must be on Production, and no extension of it may have an
   iCloud entitlement, unless the project opts out with
