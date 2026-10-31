@@ -580,7 +580,9 @@ Run each and compare with the expected output.
   - the `CHECK`s refuse a row that is half event, half retraction;
   - for each append-only table, **every content column in turn**: an
     `UPDATE` setting it to itself fails. Take the columns from the table,
-    not a list in the test, so a column added later is covered:
+    not a list in the test, so a column added later is covered. Insert a
+    row in each table first: an `UPDATE` or `DELETE` that matches no row
+    fires no trigger, and the test fails on an empty table:
 
     ```swift
     @Test(arguments: ["doses", "doseRetractions"])
