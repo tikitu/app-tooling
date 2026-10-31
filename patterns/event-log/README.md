@@ -139,7 +139,7 @@ correction retracts the retraction (and the new row).
 | Option | What it buys | What it costs | Which existing choices it matches |
 |---|---|---|---|
 | **Append-only, with retraction rows** (decided) | Complete history: what the app believed at any moment can be replayed, which matters where the log is judged (a verdict, an audit, a streak). Under sync the log is a set that only grows, so two devices converge by union and nothing is lost to a race | Every read folds retractions out; a corrected time is a retraction plus a new row. The guard triggers must be `TEMPORARY`, made on every connection, let the sync engine through, and guard only content columns (5), or sync breaks. A retraction can arrive before what it retracts | One app (not synced), and one synced app's versions table |
-| **Edit in place, `recordedAt` kept** | The least code: one row per event, read as it is. `recordedAt` still tells a corrected or back-dated event from one recorded at the time. Under sync, SQLiteData merges concurrent edits column by column, last edit wins, with nothing to write | No history of fixes. Two devices correcting the same field offline keep only the later edit, silently. A deleted row is gone everywhere | Three apps' event tables, and the one mutable column of a fourth's otherwise immutable log |
+| **Edit in place, `recordedAt` kept** | The least code: one row per event, read as it is. `recordedAt` still tells a corrected or back-dated event from one recorded at the time. Under sync, SQLiteData merges concurrent edits column by column, last edit wins, with nothing to write | No history of fixes. Two devices correcting the same field offline keep only the later edit, silently. A deleted row is gone everywhere | Three apps' event tables (an activity log, a time tracker's hand-pressed rows, and a care log not yet in use), and the one mutable column of a fourth's otherwise immutable log |
 | **Compensating operations** | Every change to a derived quantity has a stated other side, so two ways of computing a total cannot drift apart; nothing is edited | Domain-specific: needs a fold with invariants (balances, budgets) to make sense, and a total order of operations across devices (a hybrid logical clock) | One app, a budget, where a bare correction once made two figures disagree by its amount |
 
 Why append-only: the history of what was recorded, and when it was
@@ -173,9 +173,28 @@ to matter to a result.
 
 **Imported rows** (copies of something whose truth lives elsewhere: Health
 samples, a calendar) take an id derived from the source (`HKSample.uuid`)
-and are inserted only when that id is not already there, never replaced,
-so re-importing an overlapping window costs nothing. A retraction of an
+and are inserted with `INSERT OR IGNORE`, never `OR REPLACE`, so
+re-importing an overlapping window costs nothing. (A REPLACE over an
+existing id deletes the row without firing its delete trigger and inserts
+anew, rewriting an event past every guard; `apply.md` step 5 has a trigger
+that makes such an insert do nothing.) A retraction of an
 imported row then stays in effect when the import runs again.
+
+**Retraction rows, or versions?** A second append-only shape suits a log
+that several writers edit concurrently: each event is a logical id with
+immutable, full-snapshot **versions**; an edit appends a version whose
+`replaces` names the versions it was made from; the current versions are
+those nothing replaces, and more than one is a conflict, shown to the
+person rather than resolved; a hybrid logical clock (6) orders versions so
+that one always sorts after what it replaces. It is section 4's
+definitions with conflicts made visible, applied to events. Pick it when
+the same event is edited on two devices, or by two people, and a
+concurrent edit must surface: with retraction rows, two devices that each
+move the same event offline each retract it and add their own new row, and
+after sync both new rows are in effect, silently. Pick retraction rows
+when an event is written once and corrected rarely, by its one author:
+they cost one column and one fold, where versions cost a clock, a
+`replaces` list of lower-case ids, and a conflict view.
 
 **When edit in place is acceptable instead**: an app that already syncs
 and whose history has been edited in place. Its past corrections left no
@@ -275,7 +294,9 @@ a table without a primary key is not a `PrimaryKeyedTable`, which
   that function there too (`db.add(function: SyncEngine.$isSynchronizing)`),
   since only a running `SyncEngine` registers it otherwise and the trigger
   fails with "no such function" in tests, previews and builds that do not
-  sync. Guard `UPDATE OF` the content columns, not every update: SQLiteData
+  sync. Guard `UPDATE OF` every content column, read from the table
+  rather than typed out (SQLite accepts a column that does not exist in
+  the list, and then guards nothing), not every update: SQLiteData
   runs `UPDATE … SET id = id`, outside sync, when it first uploads a
   table's rows; and leaving the mutable note out of the list is what lets
   it be edited. Received changes, leaving a share and signing out run with

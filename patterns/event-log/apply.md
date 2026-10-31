@@ -144,7 +144,7 @@ migrator.registerMigration("v2_doses") { db in
     ).execute(db)
     try #sql(#"CREATE INDEX "index_doses_on_occurredAt" ON "doses"("occurredAt")"#).execute(db)
     try #sql(#"CREATE INDEX "index_doses_on_retracts" ON "doses"("retracts")"#).execute(db)
-    try installDoseGuards(db)
+    try installAppendOnlyGuards(db)
 }
 ```
 
@@ -293,7 +293,7 @@ new columns and a new table; change nothing that is there.
   content columns are `NOT NULL` and cannot be relaxed without rebuilding
   it (which, under sync, renames a table). Adding a table is always safe
   under sync. The fold is the same, reading `(id, retracts)` from it.
-- The guard triggers (step 5) on both tables, and the new table in
+- Both tables in `appendOnlyTables` (step 5), and the new table in
   `SyncEngine(for:tables:)` if the app syncs.
 
 ```swift
@@ -315,7 +315,7 @@ migrator.registerMigration("v4_doses_append_only") { db in
     try #sql(
         #"CREATE INDEX "index_doseRetractions_on_retracts" ON "doseRetractions"("retracts")"#
     ).execute(db)
-    try installDoseGuards(db)
+    try installAppendOnlyGuards(db)
 }
 ```
 
@@ -325,49 +325,96 @@ and turn each into an insert: a retraction, or a retraction and a new row.
 
 **5. The guard triggers**, made on every connection, the preview and test
 databases included, and by the migration that creates the table (on a new
-database the table does not exist yet when `prepareDatabase` runs):
+database the table does not exist yet when `prepareDatabase` runs), and
+again at the end of any migration that adds a column to one:
 
 ```swift
 configuration.prepareDatabase { db in
     // Only a running SyncEngine registers it otherwise; the triggers call it.
     db.add(function: SyncEngine.$isSynchronizing)
-    if try db.tableExists("doses") { try installDoseGuards(db) }
+    try installAppendOnlyGuards(db)
 }
 
-/// Refuses changes to the log from the app's own code: it is append-only
-/// (docs/app-tooling/event-log/README.md, 3 and 5). Temporary, so made on
-/// every connection; a column added later joins the `UPDATE OF` list.
-func installDoseGuards(_ db: Database) throws {
-    try db.execute(sql: """
-        CREATE TEMPORARY TRIGGER IF NOT EXISTS "doses_noUpdate"
-        BEFORE UPDATE OF "medicineID", "occurredAt", "recordedAt", "zone", "retracts"
-        ON "doses" FOR EACH ROW
-        WHEN NOT sqlitedata_icloud_syncEngineIsSynchronizingChanges()
-        BEGIN SELECT RAISE(ABORT, 'the log is append-only: write a retraction'); END
-        """)
-    try db.execute(sql: """
-        CREATE TEMPORARY TRIGGER IF NOT EXISTS "doses_noDelete"
-        BEFORE DELETE ON "doses" FOR EACH ROW
-        WHEN NOT sqlitedata_icloud_syncEngineIsSynchronizingChanges()
-        BEGIN SELECT RAISE(ABORT, 'the log is append-only: write a retraction'); END
-        """)
+/// An append-only table: its name, the columns that may be edited in place,
+/// and, for a table with exactly one foreign key, that key's column and the
+/// table it points at.
+struct AppendOnlyTable {
+    var name: String
+    var mutable: Set<String> = ["note"]
+    var parent: (column: String, table: String)? = nil
+}
+
+/// Every append-only table (docs/app-tooling/event-log/README.md, 3).
+let appendOnlyTables = [
+    AppendOnlyTable(name: "doses"),
+    // A table with exactly one foreign key names it:
+    // AppendOnlyTable(name: "doses", parent: (column: "medicineID", table: "medicines")),
+    AppendOnlyTable(name: "doseRetractions"),
+]
+
+/// Refuses changes to the log from the app's own code (README, 3 and 5), on
+/// each append-only table that exists yet. Temporary, so made on every
+/// connection; a migration that adds a column calls it again at its end.
+func installAppendOnlyGuards(_ db: Database) throws {
+    let notSync = "NOT sqlitedata_icloud_syncEngineIsSynchronizingChanges()"
+    let refuse = "BEGIN SELECT RAISE(ABORT, 'the log is append-only: write a retraction'); END"
+    for table in appendOnlyTables where try db.tableExists(table.name) {
+        // Read from the table, never typed out: SQLite accepts a column that
+        // does not exist in `UPDATE OF`, and then guards nothing.
+        let guarded = try db.columns(in: table.name).map(\.name)
+            .filter { $0 != "id" && !table.mutable.contains($0) }
+            .map { "\"\($0)\"" }.joined(separator: ", ")
+        // SQLiteData's cleanup after a server reference violation deletes a
+        // row whose parent is gone; a row with no parent stays guarded.
+        let parentGone = table.parent.map { parent in
+            """
+            AND (OLD."\(parent.column)" IS NULL OR EXISTS (
+              SELECT 1 FROM "\(parent.table)" WHERE "id" = OLD."\(parent.column)"))
+            """
+        } ?? ""
+        let name = table.name
+        try db.execute(sql: """
+            DROP TRIGGER IF EXISTS temp."\(name)_noUpdate";
+            DROP TRIGGER IF EXISTS temp."\(name)_noDelete";
+            DROP TRIGGER IF EXISTS temp."\(name)_noReplace";
+            CREATE TEMPORARY TRIGGER "\(name)_noUpdate"
+              BEFORE UPDATE OF \(guarded) ON "\(name)" FOR EACH ROW
+              WHEN \(notSync) \(refuse);
+            CREATE TEMPORARY TRIGGER "\(name)_noDelete"
+              BEFORE DELETE ON "\(name)" FOR EACH ROW
+              WHEN \(notSync) \(parentGone) \(refuse);
+            -- `INSERT OR REPLACE` of an existing id deletes the row without
+            -- firing the delete trigger: such an insert does nothing instead.
+            CREATE TEMPORARY TRIGGER "\(name)_noReplace"
+              BEFORE INSERT ON "\(name)" FOR EACH ROW
+              WHEN \(notSync) AND EXISTS (SELECT 1 FROM "\(name)" WHERE "id" = NEW."id")
+              BEGIN SELECT RAISE(IGNORE); END;
+            """)
+    }
 }
 ```
 
-- **The `UPDATE OF` list is every column except `id` and the mutable
-  note.** Leaving out `id` lets SQLiteData's `UPDATE … SET id = id`
-  through; leaving out the note is what makes it editable. A project that
-  freezes the note too adds it to the list.
-- **If the table has exactly one foreign key**, the delete guard refuses
-  only while the parent exists, or the row has none (a retraction), so
+- **Every column but `id` and the mutable ones is guarded**, read from
+  the table rather than typed out. A typed list is how a guard silently
+  guards nothing: SQLite accepts a column that does not exist in `UPDATE
+  OF`, so a list copied from another table, or a column renamed in the
+  example, leaves the real column open. Leaving out `id` lets SQLiteData's
+  `UPDATE … SET id = id` through; leaving out the note is what makes it
+  editable.
+- **Every append-only table is in `appendOnlyTables`**, the retractions
+  table of step 4 included.
+- **Never `INSERT OR REPLACE`, `.insert(or: .replace)` or an upsert** on
+  an append-only table. A REPLACE over an existing id deletes the old row
+  without firing its delete trigger (unless `PRAGMA recursive_triggers` is
+  on) and inserts the new one, which is not an update: it rewrites an event
+  past both guards. Imports, which may meet a row they wrote before, use
+  `INSERT OR IGNORE` (`.insert(or: .ignore)`). The `_noReplace` trigger is
+  the backstop: an insert of an id that is already there does nothing,
+  whatever its conflict clause.
+- **A table with exactly one foreign key** names it in `parent`, so that
   SQLiteData's cleanup after a server reference violation, and a cascade,
-  can delete it:
-
-  ```sql
-  WHEN NOT sqlitedata_icloud_syncEngineIsSynchronizingChanges()
-    AND (OLD."medicineID" IS NULL
-      OR EXISTS (SELECT 1 FROM "medicines" WHERE "id" = OLD."medicineID"))
-  ```
+  can delete a row whose parent is gone; a row with no parent (a
+  retraction) stays guarded.
 - **An app that never syncs**, and never will, may make the triggers
   permanent in the migration instead. The `WHEN` clause then has nothing to
   call: drop it, and the `add(function:)`.
@@ -465,36 +512,57 @@ Run each and compare with the expected output.
   shows `occurredAt`, `recordedAt` and `zone`, and `STRICT`. An empty
   result means the wrong file or a table not created: check the path
   before concluding anything.
-- **Nothing sync refuses.** On the same database:
+- **What sync would refuse.** On the same database:
 
   ```sh
-  sqlite3 -readonly "$DB" "
-    SELECT 'unique: ' || m.name || '.' || il.name
-      FROM sqlite_schema m, pragma_index_list(m.name) il
-      WHERE m.type = 'table' AND il.\"unique\" AND il.origin != 'pk'
-        AND m.name NOT LIKE 'sqlite_%' AND m.name NOT LIKE 'grdb_%'
-    UNION ALL
-    SELECT 'self-reference: ' || m.name
-      FROM sqlite_schema m, pragma_foreign_key_list(m.name) fk
-      WHERE m.type = 'table' AND fk.\"table\" = m.name
-    UNION ALL
-    SELECT 'on delete: ' || m.name || '.' || fk.\"from\" || ' ' || fk.on_delete
-      FROM sqlite_schema m, pragma_foreign_key_list(m.name) fk
-      WHERE m.type = 'table' AND fk.on_delete IN ('RESTRICT', 'NO ACTION')
-    UNION ALL
-    SELECT 'reserved: ' || m.name || '.' || c.name
-      FROM sqlite_schema m, pragma_table_info(m.name) c
-      WHERE m.type = 'table' AND c.name IN ('creationDate', 'creatorUserRecordID', 'etag',
-        'lastModifiedUserRecordID', 'modificationDate', 'modifiedByDevice',
-        'recordChangeTag', 'recordID', 'recordType');
-    SELECT 'tables checked: ' || count(*) FROM sqlite_schema
-      WHERE type = 'table' AND name NOT LIKE 'sqlite_%';"
+  sqlite3 -readonly "$DB" <<'SQL'
+  WITH RECURSIVE
+    tables(name) AS (SELECT name FROM sqlite_schema
+      WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE 'grdb_%'),
+    edge(src, dst) AS (SELECT t.name, fk."table" FROM tables t, pragma_foreign_key_list(t.name) fk),
+    reach(start, node, depth) AS (SELECT src, dst, 1 FROM edge
+      UNION SELECT r.start, e.dst, r.depth + 1 FROM reach r JOIN edge e ON e.src = r.node
+      WHERE r.node != r.start AND r.depth < 32)
+  SELECT 'unique: ' || t.name || '.' || il.name
+    FROM tables t, pragma_index_list(t.name) il WHERE il."unique" AND il.origin != 'pk'
+  UNION ALL
+  SELECT DISTINCT 'cycle: ' || start FROM reach WHERE node = start
+  UNION ALL
+  SELECT 'on delete: ' || t.name || '.' || fk."from" || ' ' || fk.on_delete
+    FROM tables t, pragma_foreign_key_list(t.name) fk
+    WHERE fk.on_delete IN ('RESTRICT', 'NO ACTION')
+      AND (SELECT count(*) FROM pragma_foreign_key_list(t.name)) = 1
+  UNION ALL
+  SELECT 'reserved: ' || t.name || '.' || c.name
+    FROM tables t, pragma_table_info(t.name) c
+    WHERE c.name IN ('creationDate', 'creatorUserRecordID', 'etag',
+      'lastModifiedUserRecordID', 'modificationDate', 'modifiedByDevice',
+      'recordChangeTag', 'recordID', 'recordType')
+  UNION ALL
+  SELECT 'primary key: ' || t.name || ' has '
+      || (SELECT count(*) FROM pragma_table_info(t.name) WHERE pk > 0) || ' columns'
+    FROM tables t WHERE (SELECT count(*) FROM pragma_table_info(t.name) WHERE pk > 0) != 1
+  UNION ALL
+  SELECT 'name: ' || t.name || ' contains a colon' FROM tables t WHERE instr(t.name, ':') > 0;
+  SELECT 'tables checked: ' || count(*) FROM sqlite_schema
+    WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE 'grdb_%';
+  SQL
   ```
 
   prints only the `tables checked:` line, its count the number of names
-  `.tables` lists. Any other line is something `SyncEngine` will refuse,
-  or a table it cannot sync. (Its own check runs when it is created; this
-  one runs without CloudKit.)
+  `.tables` lists other than `grdb_migrations`. Each other line is
+  something `SyncEngine` refuses when it is created: a unique index, a
+  foreign-key cycle of any length (a table referencing itself is the
+  shortest), `ON DELETE RESTRICT` or `NO ACTION` on a table with exactly
+  one foreign key, a reserved column name, a primary key of other than one
+  column, a `:` in a table name. A `primary key` line for a table the app
+  does not sync can be ignored.
+
+  **What it cannot check**, because the list of synced tables is in Swift,
+  not in the database: that every table the app means to sync is in
+  `SyncEngine(for:tables:)`, and that every foreign key of a synced table
+  points at a synced table. Check both by hand against that call. A clean
+  result here does not cover them.
 - **Tests**, in the project's test target, against the in-memory database
   that runs the real migrator:
   - `Draft.record` with `\.date.now` and `\.timeZone` overridden stores
@@ -510,11 +578,32 @@ Run each and compare with the expected output.
   - a retraction inserted before its target: the target, inserted after,
     is never in effect;
   - the `CHECK`s refuse a row that is half event, half retraction;
-  - an `UPDATE` of a content column and a `DELETE` fail, an `UPDATE` of
-    the note and `UPDATE … SET "id" = "id"` (what SQLiteData runs before
-    its first upload) succeed, and with a foreign key, deleting the parent
-    cascades. That the sync engine's own writes pass is seen only in a
-    synced build: the flag it sets is not public;
+  - for each append-only table, **every content column in turn**: an
+    `UPDATE` setting it to itself fails. Take the columns from the table,
+    not a list in the test, so a column added later is covered:
+
+    ```swift
+    @Test(arguments: ["doses", "doseRetractions"])
+    func everyContentColumnIsGuarded(table: String) throws {
+        let columns = try db.read { try $0.columns(in: table).map(\.name) }
+        let content = columns.filter { $0 != "id" && $0 != "note" }
+        #expect(!content.isEmpty)
+        for column in content {
+            #expect(throws: (any Error).self, "\(table).\(column)") {
+                try db.write { try $0.execute(sql: #"UPDATE "\#(table)" SET "\#(column)" = "\#(column)""#) }
+            }
+        }
+        try db.write { try $0.execute(sql: #"UPDATE "\#(table)" SET "note" = 'edited', "id" = "id""#) }
+        #expect(throws: (any Error).self) { try db.write { try $0.execute(sql: #"DELETE FROM "\#(table)""#) } }
+    }
+    ```
+
+    (the note and `SET "id" = "id"`, what SQLiteData runs before its first
+    upload, succeed; a `DELETE` fails). With a foreign key, deleting the
+    parent cascades. That the sync engine's own writes pass is seen only in
+    a synced build: the flag it sets is not public;
+  - `INSERT OR REPLACE` with an existing id leaves the row as it was, and
+    `INSERT OR IGNORE` of an existing id does nothing;
   - an event recorded at 01:00 on 1 November in `Asia/Tokyo` is on 1
     November read through `calendar(from:)` with a base calendar in
     `Europe/Amsterdam`, where it is still 31 October;

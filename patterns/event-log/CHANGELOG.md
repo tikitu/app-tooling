@@ -7,7 +7,10 @@ record of what happened. The event row (a UUID `TEXT` key, `occurredAt`
 and `recordedAt`, a stored `zone` that decides the event's day, a note);
 timestamps as SQLiteData's default ISO-8601 text; corrections append-only,
 by retraction rows, folded out on read, with `TEMPORARY` guard triggers
-that let the sync engine through and leave the note editable; editable
+that let the sync engine through, leave the note editable, take the
+guarded columns from the table itself, and make `INSERT OR REPLACE` of an
+existing row do nothing (versions with `replaces` named as the shape for
+concurrent writers); editable
 definitions as an identity table plus versions, the latest `editedAt`
 winning; enum values never `CHECK`ed; and what SQLiteData's CloudKit sync
 forbids. Drawn from six apps that had each decided these differently; the
