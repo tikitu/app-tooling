@@ -20,7 +20,7 @@ difference as a deviation (step 9).
 
   ```sh
   grep -rn --include='*.swift' -E 'registerMigration|CREATE TABLE|ALTER TABLE|CREATE (TEMPORARY )?TRIGGER' .
-  grep -rn --include='*.swift' -E '"(occurred|happened|done|measured|recorded|logged|written|edited)At"|"zone"' .
+  grep -rn --include='*.swift' -E '"(occurred|happened|done|measured|recorded|logged|written|edited)At"|(occurred|happened|done|measured|recorded|logged|written|edited)_at|"zone"' .
   ```
 
   A table is an event table if each row says something happened at a time,
@@ -498,7 +498,9 @@ Run each and compare with the expected output.
 - **Tests**, in the project's test target, against the in-memory database
   that runs the real migrator:
   - `Draft.record` with `\.date.now` and `\.timeZone` overridden stores
-    both, and `recordedAt` and `occurredAt` equal the overridden now;
+    both, and `recordedAt` and `occurredAt` equal the overridden now
+    (make it a whole number of milliseconds: the stored text keeps no
+    finer, and `Date()` makes the comparison fail);
   - the fold, as a pure function: a retraction retracts its target; a
     retraction of that retraction brings the target back; a third level
     retracts it again;

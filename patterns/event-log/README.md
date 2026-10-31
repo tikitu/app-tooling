@@ -67,9 +67,10 @@ CREATE TABLE "doses" (
   (uuid())` lets a `Draft` insert without one; the app passes one when it
   needs to know it in advance (to undo, or to name it in a retraction).
   This is SQLiteData's own recommended shape for synced tables.
-- **Two timestamps, `occurredAt` and `recordedAt`.** Every app studied
-  keeps both, under various names (`happenedAt`, `doneAt`, `measuredAt`).
-  These two names are the ones most of them use. `recordedAt` is set by the
+- **Two timestamps, `occurredAt` and `recordedAt`.** Most of the apps
+  studied keep both, under various names (`happenedAt`, `writtenAt`,
+  `occurred_at`); one keeps only when it happened (`doneAt`,
+  `measuredAt`). These two names are the ones most of them use. `recordedAt` is set by the
   app, from `@Dependency(\.date.now)` so tests control it, when the row is
   inserted. No row is ever changed (3), so a correction is a new row with
   its own `recordedAt`, and the original survives beside it. An event
@@ -108,7 +109,7 @@ the person, see 4.
 `@Column(as:)` is stored as `TEXT`, `2026-10-31 17:05:52.123`: UTC, no zone
 designator, a space between date and time, milliseconds. (Swift
 StructuredQueries 0.39.2, `Internal/Date+ISO8601.swift`; bound as text in
-sqlite-data 1.12.0, `StructuredQueries+GRDB/QueryCursor.swift`.)
+sqlite-data 1.12.1, `StructuredQueries+GRDB/QueryCursor.swift`.)
 
 | Option | What it buys | What it costs | Which existing choices it matches |
 |---|---|---|---|
@@ -221,7 +222,7 @@ CREATE INDEX "index_medicineVersions_on_medicineID" ON "medicineVersions"("medic
   replaces (a `replaces` column holding their ids), the current versions
   are those nothing replaces, and more than one is a conflict to show.
   `replaces` is not a foreign key (5), and holds ids in lower case, the way
-  StructuredQueries binds a `UUID` (`QueryBinding.swift`, line 75): an
+  SQLiteData binds a `UUID` (`QueryCursor.swift`, `withLowercasedUTF8Text`): an
   upper-case `uuidString` from `JSONEncoder` never matches.
 - **`CHECK` constraints for "at most one of"**, and for column groups that
   are all set or all `NULL` (a cadence stored as six columns): rules two
@@ -237,9 +238,10 @@ CREATE INDEX "index_medicineVersions_on_medicineID" ON "medicineVersions"("medic
 
 Design within these from the first migration, even before sync is on: the
 schema is very hard to change once real data is in it. From sqlite-data
-1.12.0, `Documentation.docc/Articles/CloudKitSync.md` and
+1.12.1, `Documentation.docc/Articles/CloudKitSync.md` and
 `CloudKit/SyncEngine.swift`. `SyncEngine` checks unique indexes,
-foreign-key cycles and `ON DELETE` actions when it is created, and throws;
+foreign-key cycles and (on a table with exactly one foreign key) `ON
+DELETE` actions when it is created, and throws;
 a table without a primary key is not a `PrimaryKeyedTable`, which
 `SyncEngine(for:tables:)` requires.
 
