@@ -11,12 +11,13 @@ history, and what SQLiteData's CloudKit sync forbids in all of that.
 Documents only. The bootstrap that opens and migrates the database is the
 starter's, and is not repeated here.
 
-> **Two points are open, for the owner to decide**: how timestamps are
-> stored ([Timestamps](#2-timestamps-text-iso-8601-owner-decision)) and how
-> mistakes are corrected
-> ([Corrections](#3-corrections-edit-in-place-owner-decision)). Each has an
-> options table. The rest of this pattern is written for the recommended
-> answer; `apply.md` says what changes for the other ones.
+> **Two points were the owner's to decide**, and were decided on
+> 2026-10-31: timestamps are `TEXT` ISO-8601
+> ([Timestamps](#2-timestamps-text-iso-8601-decided)), and corrections are
+> append-only, with retraction rows
+> ([Corrections](#3-corrections-append-only-with-retraction-rows-decided)).
+> The options tables stay, so a project can see what it gives up by
+> choosing otherwise; `apply.md` says what changes if it does.
 
 ## The problem
 
@@ -51,11 +52,14 @@ cost, or would have:
 ```sql
 CREATE TABLE "doses" (
   "id"         TEXT PRIMARY KEY NOT NULL ON CONFLICT REPLACE DEFAULT (uuid()),
-  "medicineID" TEXT NOT NULL,          -- what it is about: a definition's id, see 4
-  "occurredAt" TEXT NOT NULL,          -- when it happened; may be corrected
-  "recordedAt" TEXT NOT NULL,          -- when it was written down; never changed
+  "medicineID" TEXT,                   -- what it is about (see 4); NULL on a retraction
+  "occurredAt" TEXT,                   -- when it happened; NULL on a retraction
+  "recordedAt" TEXT NOT NULL,          -- when this row was written down
   "zone"       TEXT NOT NULL,          -- TimeZone.identifier where it was recorded
-  "note"       TEXT NOT NULL ON CONFLICT REPLACE DEFAULT ''
+  "retracts"   TEXT,                   -- on a retraction, the row it retracts (see 3)
+  "note"       TEXT NOT NULL ON CONFLICT REPLACE DEFAULT '',
+  CHECK (("retracts" IS NULL) = ("medicineID" IS NOT NULL)),
+  CHECK (("retracts" IS NULL) = ("occurredAt" IS NOT NULL))
 ) STRICT
 ```
 
@@ -67,10 +71,10 @@ CREATE TABLE "doses" (
   keeps both, under various names (`happenedAt`, `doneAt`, `measuredAt`).
   These two names are the ones most of them use. `recordedAt` is set by the
   app, from `@Dependency(\.date.now)` so tests control it, when the row is
-  inserted, and is never changed afterwards. Correcting when something
-  happened changes `occurredAt` only, so the original moment survives as
-  the gap between the two. An event recorded as it happens has the two
-  equal, honestly.
+  inserted. No row is ever changed (3), so a correction is a new row with
+  its own `recordedAt`, and the original survives beside it. An event
+  recorded as it happens has the two equal, honestly; a back-dated one
+  shows the gap.
 - **`zone`: the time zone the event was recorded in**, as
   `TimeZone.current.identifier` (`Europe/Amsterdam`, not an offset, so the
   zone's daylight-saving rules come with it). It decides for good which
@@ -81,7 +85,8 @@ CREATE TABLE "doses" (
   back-dated, the zone is still the one it was recorded in: the app does
   not know where the person was, and the person nearly always was where
   they are.
-- **A note**, `NOT NULL DEFAULT ''`, because people want to say why.
+- **A note**, `NOT NULL DEFAULT ''`, because people want to say why. It
+  is the one column that may be edited in place (3).
 - **Payload columns, typed and nullable**, for what the event carries (a
   dose, a quantity, a reading), rather than a JSON blob, unless the app is
   deliberately collecting raw data whose meaning is not decided yet (then a
@@ -97,9 +102,9 @@ stable string id and is not a foreign key; a row naming an id this build
 does not know is shown as unknown, never refused. If they are defined by
 the person, see 4.
 
-### 2. Timestamps: `TEXT` ISO-8601 (owner decision)
+### 2. Timestamps: `TEXT` ISO-8601 (decided)
 
-**Recommended: SQLiteData's default.** A Swift `Date` property with no
+**Decided by the owner on 2026-10-31: SQLiteData's default.** A Swift `Date` property with no
 `@Column(as:)` is stored as `TEXT`, `2026-10-31 17:05:52.123`: UTC, no zone
 designator, a space between date and time, milliseconds. (Swift
 StructuredQueries 0.39.2, `Internal/Date+ISO8601.swift`; bound as text in
@@ -107,7 +112,7 @@ sqlite-data 1.12.0, `StructuredQueries+GRDB/QueryCursor.swift`.)
 
 | Option | What it buys | What it costs | Which existing choices it matches |
 |---|---|---|---|
-| **`TEXT` ISO-8601, the default** (recommended) | No annotation on any `Date`; readable in `sqlite3` without conversion; sorts correctly as text; the column `DEFAULT CURRENT_TIMESTAMP` writes is the same format (without milliseconds) and decodes too | Milliseconds only: sub-millisecond differences round away. Arithmetic in SQL needs `julianday()` or `unixepoch()` first. Every write must go through a `Date` binding: a hand-written string in another format (`T`, `Z`) still sorts, but wrongly beside the others | The starter; four of the apps' event tables, and the edited-at columns of their definitions |
+| **`TEXT` ISO-8601, the default** (decided) | No annotation on any `Date`; readable in `sqlite3` without conversion; sorts correctly as text; the column `DEFAULT CURRENT_TIMESTAMP` writes is the same format (without milliseconds) and decodes too | Milliseconds only: sub-millisecond differences round away. Arithmetic in SQL needs `julianday()` or `unixepoch()` first. Every write must go through a `Date` binding: a hand-written string in another format (`T`, `Z`) still sorts, but wrongly beside the others | The starter; four of the apps' event tables, and the edited-at columns of their definitions |
 | **`REAL` seconds since 1970** | Sub-millisecond precision; `recordedAt - occurredAt` in plain SQL; what a writer outside SQLiteData (raw `sqlite3`, an extension) most naturally writes | Not a SQLiteData default: StructuredQueries' `Date.UnixTimeRepresentation` is **integer** seconds (`QueryRepresentable/Date+UnixTime.swift`), which would truncate the gap being measured, and `JulianDayRepresentation` is days, not seconds. So the app stores `Double` and converts, or writes its own representation; every `Date` property needs it, and forgetting one fails silently | One app, whose writer was raw `sqlite3` in an extension before SQLiteData was involved |
 
 Neither is right for ordering writes across devices: where that matters
@@ -120,30 +125,64 @@ non-default representation is needed is a place to forget it. The app that
 chose `REAL` did so because a non-SQLiteData writer came first; an app
 in that position should keep what it has.
 
-### 3. Corrections: edit in place (owner decision)
+### 3. Corrections: append-only, with retraction rows (decided)
 
-**Recommended: edit in place, keeping `recordedAt`.** Moving an event's
-time changes `occurredAt`; fixing the note changes the note; an event
-recorded by mistake is deleted. Undo puts it back with the same `id`.
+**Decided by the owner on 2026-10-31: append-only, with retraction rows.**
+A row is inserted and never updated or deleted. A mistake is corrected by
+appending a **retraction**, a row whose `retracts` names the mistaken row;
+the right event, if there is one, is then recorded afresh, back-dated if
+need be. Moving an event's time is both, in one transaction: a retraction
+of the old row and a new row with the new `occurredAt`. Undoing a
+correction retracts the retraction (and the new row).
 
 | Option | What it buys | What it costs | Which existing choices it matches |
 |---|---|---|---|
-| **Edit in place, `recordedAt` kept** (recommended) | The least code: one row per event, read as it is. `recordedAt` still tells a corrected or back-dated event from one recorded at the time. Under sync, SQLiteData merges concurrent edits column by column, last edit wins, with nothing to write | No history of fixes. Two devices correcting the same field offline keep only the later edit, silently. A deleted row is gone everywhere | Three apps' event tables, and the one mutable column of a fourth's otherwise immutable log |
-| **Append-only, with retraction rows** | Complete history: what the app believed at any moment can be replayed, which matters where the log is judged (a verdict, an audit). Nothing is ever lost to a race | Every read folds retractions in; a corrected time is a retraction plus a new row. The guard triggers must be `TEMPORARY`, made on every connection, let the sync engine through, and guard only content columns (see 5), or sync breaks. A retraction can arrive before what it retracts | One app (not synced), and one synced app's versions table |
+| **Append-only, with retraction rows** (decided) | Complete history: what the app believed at any moment can be replayed, which matters where the log is judged (a verdict, an audit, a streak). Under sync the log is a set that only grows, so two devices converge by union and nothing is lost to a race | Every read folds retractions out; a corrected time is a retraction plus a new row. The guard triggers must be `TEMPORARY`, made on every connection, let the sync engine through, and guard only content columns (5), or sync breaks. A retraction can arrive before what it retracts | One app (not synced), and one synced app's versions table |
+| **Edit in place, `recordedAt` kept** | The least code: one row per event, read as it is. `recordedAt` still tells a corrected or back-dated event from one recorded at the time. Under sync, SQLiteData merges concurrent edits column by column, last edit wins, with nothing to write | No history of fixes. Two devices correcting the same field offline keep only the later edit, silently. A deleted row is gone everywhere | Three apps' event tables, and the one mutable column of a fourth's otherwise immutable log |
 | **Compensating operations** | Every change to a derived quantity has a stated other side, so two ways of computing a total cannot drift apart; nothing is edited | Domain-specific: needs a fold with invariants (balances, budgets) to make sense, and a total order of operations across devices (a hybrid logical clock) | One app, a budget, where a bare correction once made two figures disagree by its amount |
 
-Why edit in place: for a personal log, the history of fixes is not
-something anyone has asked to see, and the cost of the others is paid on
-every read. Take append-only instead where the app has to be able to say
-what it showed, or judged, at a time; compensating operations where events
-feed totals that must reconcile.
+Why append-only: the history of what was recorded, and when it was
+corrected, is the data these apps exist to keep, and the cost (a fold on
+every read) is paid once, in one tested function.
 
-**Deleting**, under edit in place: a row the person wrote may be deleted.
-A row copied from somewhere whose truth lives elsewhere (an import from
-Health, a calendar) is not deletable: deleting the copy leaves a gap the
-next import fills straight back in. Refuse it in the write, not only in
-the UI. Such rows have an id derived from the source (`HKSample.uuid`), so
-re-importing an overlapping window costs nothing.
+**The fold.** A row is *in effect* unless a retraction that is itself in
+effect names it. That is all: no ordering is needed, because a
+retraction can only name a row that existed when it was written, so
+chains of retractions never loop. Retractions are few, so read them all
+(`id`, `retracts`), work out the set of retracted ids in Swift, and fetch
+the events in effect with `"retracts" IS NULL AND "id" NOT IN (…)`.
+Retractions may also live in a table of their own; that is how a table
+that already holds real data, with `NOT NULL` content columns, becomes
+append-only (`apply.md`, step 4). SQL
+cannot do the fold itself: "not retracted by something not retracted" is
+recursion through negation, which a recursive CTE does not allow.
+
+**A retraction can arrive before its target**, under sync: `retracts` is
+not a foreign key (5), so SQLiteData does not hold the retraction back.
+The fold needs nothing special: the target is retracted from the moment
+it arrives, and is never shown. A retraction whose target never arrives
+retracts nothing; list it, if anywhere, only in a diagnostic view.
+
+**The one mutable column is the note.** A column that never enters the
+fold or anything derived from it may be edited in place; the guard
+triggers leave it out, and SQLiteData's per-column last edit wins merges
+concurrent edits. The note is that column by default. Name any other in
+the project's docs, with the reason, and freeze it before it ever starts
+to matter to a result.
+
+**Imported rows** (copies of something whose truth lives elsewhere: Health
+samples, a calendar) take an id derived from the source (`HKSample.uuid`)
+and are inserted only when that id is not already there, never replaced,
+so re-importing an overlapping window costs nothing. A retraction of an
+imported row then stays in effect when the import runs again.
+
+**When edit in place is acceptable instead**: an app that already syncs
+and whose history has been edited in place. Its past corrections left no
+trace, so retractions from now on would make only part of the history
+complete, and changing the model is a migration of meaning, not of
+columns. Such an app keeps edit in place, keeps `recordedAt` out of every
+`UPDATE`, deletes only rows the person wrote (an imported row's copy would
+come straight back), and records the choice as a deviation.
 
 ### 4. Editable definitions: identity plus versions
 
@@ -225,8 +264,9 @@ a table without a primary key is not a `PrimaryKeyedTable`, which
   has a default with `ON CONFLICT REPLACE`** ("Adding columns"): an older
   build writes rows without it.
 - **Conflicts are resolved per column, last edit wins** ("Record
-  conflicts"). This is what makes edit-in-place merge without code, and why
-  a field that must not be lost to a race needs versions instead.
+  conflicts"). This is what merges concurrent edits of a note without
+  code, and why anything that must not be lost to a race is appended, not
+  edited.
 - **Triggers that refuse writes must let the sync engine through.** Make
   them `TEMPORARY`, in `prepareDatabase` on every connection, with `WHEN
   NOT sqlitedata_icloud_syncEngineIsSynchronizingChanges()`, and register
@@ -235,11 +275,17 @@ a table without a primary key is not a `PrimaryKeyedTable`, which
   fails with "no such function" in tests, previews and builds that do not
   sync. Guard `UPDATE OF` the content columns, not every update: SQLiteData
   runs `UPDATE … SET id = id`, outside sync, when it first uploads a
-  table's rows. Received changes, leaving a share and signing out run with
-  that function true and pass; a delete SQLiteData makes outside sync (its
-  cleanup after a server reference violation) needs its own exception. The
-  SQLiteData article's "Updating triggers to be
-  compatible with synchronization" has the `WHEN` clause.
+  table's rows; and leaving the mutable note out of the list is what lets
+  it be edited. Received changes, leaving a share and signing out run with
+  that function true and pass. One delete SQLiteData makes with it false:
+  when the server refuses a row because its parent is gone, SQLiteData
+  deletes the local row, for a table with exactly one foreign key
+  (`SyncEngine.swift`, `.referenceViolation`). So on such a table the
+  delete guard refuses only while the parent exists, or the row has none
+  (a retraction): `AND (OLD."medicineID" IS NULL OR EXISTS (SELECT 1 FROM
+  "medicines" WHERE "id" = OLD."medicineID"))`. The SQLiteData
+  article's "Updating triggers to be compatible with synchronization" has
+  the `WHEN` clause.
 - **`eraseDatabaseOnSchemaChange` stays off**, in every configuration
   (the starter's `rules/erase-on-schema-change.md` enforces it, and
   `sync-configuration` says why).
@@ -283,5 +329,6 @@ this pattern does not require it.
 - It does not cover sharing records with other iCloud users beyond the
   `replaces` note in 4; sharing has more rules (which foreign keys a shared
   record may have) that belong in a pattern of their own.
-- It does not migrate an existing log from one correction model to
-  another; `apply.md` says to ask before doing that.
+- It does not rewrite history. A table with real data becomes
+  append-only from the migration that adds retractions on; the corrections
+  made in place before then left no trace, and stay that way.
