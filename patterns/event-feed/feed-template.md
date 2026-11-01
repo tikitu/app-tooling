@@ -16,6 +16,7 @@ MyApp writes its events to a feed, an append-only file in the App Group
 | Opt-in | no / a toggle in Settings, on by default |
 | Platforms | iOS. Mac: not yet (the pattern's changelog says when) |
 | Scratch runs | write beside the scratch database, never into the group |
+| Code | the projection (`Event.feedEvent()` in …), where the writer opens (…), the settings section (…) |
 
 ## Kinds
 

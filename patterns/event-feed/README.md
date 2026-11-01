@@ -104,6 +104,12 @@ fixes each lose data or invite it:
   on device 2, and the reader still folds device 1's retraction. The app's
   own store still shows the event; the timeline does not. Undo on the
   device that deleted.
+- **The diagnostic is per device.** An app whose store syncs between
+  devices removes a row on device 2 when device 1 deletes it, but only
+  device 1's feed retracts it. Device 2's diagnostic then shows it in
+  `onlyInFeed`. The reader already folds device 1's retraction, and
+  retracting it on device 2 too appends the same retraction id, so either
+  answer is harmless; a non-zero count there is not by itself a bug.
 - **Dates must be passed as the store holds them.** Ids derive from dates
   rounded to whole milliseconds. SQLiteData's `Date` text encoding
   truncates, so a `Date` that has not been through the store can round to

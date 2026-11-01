@@ -51,7 +51,7 @@ store**. If a step seems to need one of them, stop and ask the user.
 | iOS bundle id | `com.example.MyApp` | `project.yml`, `PRODUCT_BUNDLE_IDENTIFIER` of the iOS app target. The feed file is named by it, so a scratch bundle id writes a separate file |
 | Source name | `myApp` | new: the app's name in lower camel case, no `/`. It goes into every feed id, so it never changes once fed. Ask the user if the app has more than one plausible name |
 | Feed App Group id | `group.com.example.feed` | the reader's documentation, or ask the user. One id for the reader and every feeder; not the app's own group |
-| The events-in-effect query | `Event.inEffect` in `Sources/Core/Queries.swift` | the query the app's main list or "latest" view is built on, with retracted or deleted rows already left out |
+| The events-in-effect query | `Event.inEffect` in `Sources/Core/Queries.swift` | the query the app's history or "latest" view is built on, with retracted or deleted rows already left out. It is the events the app holds as having happened, not what one screen shows: a screen that hides a deleted definition's events is not it (step 4) |
 | The frozen columns of each fed table | `events`: `activityID`, `occurredAt`, `recordedAt`; not `notes` | the table and every `UPDATE` of it (step 3) |
 | Removing and replacing write paths | `Event.delete`, `Event.retime`, `Event.restore`, and the undo handlers that call them | Detect, above: every call that deletes a row, edits a frozen column, writes a retraction row, or undoes one of those. **Undo and redo handlers** (`registerUndo` closures) often write to the store directly rather than through the one write path: list them too |
 | Names | `activities.name`, versioned by `activityVersions.editedAt` | a definitions table with an edit time the app stores (the event-log pattern's versions) |
@@ -190,9 +190,15 @@ enum FeedDestination {
 let writer: FeedWriter?
 switch FeedDestination.current(scratchDatabase: launch.scratchDatabase, enabled: settings.feedEnabled) {
 case .directory(let base):
-    writer = try? FeedWriter(base: base, source: "myApp", bundle: Bundle.main.bundleIdentifier!)
+    do {
+        writer = try FeedWriter(base: base, source: "myApp", bundle: Bundle.main.bundleIdentifier!)
+    } catch {
+        writer = nil
+        feedStatus = .failed(error.description)   // shown in settings (step 8)
+    }
 case .none(let reason):
-    writer = nil   // show `reason` in settings (step 8)
+    writer = nil
+    feedStatus = .off(reason)   // shown in settings (step 8)
 }
 ```
 
@@ -234,8 +240,10 @@ func reconcileFeed() {
 }
 ```
 
-Undo and redo handlers that write directly to the store call it too,
-after their write. This is all the launch reconcile does: it adds. It never retracts.
+A `perform` that returns from each case of a `switch` has no single
+end: call it from a `defer` at the top, or from the function that calls
+`perform`, so no case is missed. Undo and redo handlers that write
+directly to the store call it too, after their write. This is all the launch reconcile does: it adds. It never retracts.
 Names are fed only from a stored edit time (`since`); if the app keeps
 names without one, leave names out and record that in `docs/feed.md`
 rather than inventing a time.
@@ -247,6 +255,7 @@ store before the write**, let the write commit, then tell the writer:
 | The app's write | Feed call, after the write |
 |---|---|
 | deletes an event, or writes a retraction row for it | `writer.retract(removed: old.feedEvent().id, recordedAt: …, zone: …)` |
+| corrects an event by a retraction row plus a new row, in one write | `writer.replace(removed: old.feedEvent().id, with: new.feedEvent(), recordedAt: …, zone: …)`, `new` read back after the write |
 | edits a frozen column (a retime) | `writer.replace(removed: old.feedEvent().id, with: new.feedEvent(), recordedAt: …, zone: …)`, where `new` is the row **read back after the write** |
 | undoes a delete, or writes a retraction of a retraction | `writer.restore(restored.feedEvent().id, recordedAt: …, zone: …)` |
 | undoes a record | `retract`, as a delete |
@@ -275,6 +284,11 @@ store before the write**, let the write commit, then tell the writer:
   behind a confirmation that says how many; for `suppliedButRetracted`,
   one that restores them; for `onlySupplied`, a button that runs the
   step 6 reconcile. Nothing runs unless the owner presses it.
+- **No retract button when the projection is empty.** An empty store is
+  the innocent case the pattern guards against (not loaded yet, a
+  reinstall, a sync still arriving): every fed row is then `onlyInFeed`,
+  and one confirmation would retract the whole feed. Show the counts and
+  say why the button is missing.
 
 **9. Mac targets: nothing yet.** A Mac target gets neither the
 entitlement nor a writer on the group (step 5's `#else`). A Mac scratch
@@ -282,7 +296,8 @@ run may feed beside its scratch data. The changelog will say when the
 Mac side is verified and what to add.
 
 **10. The group, iOS only, and `docs/feed.md`.** Find how the iOS app
-target gets its entitlements. If `project.yml` sets
+target gets its entitlements: the app target only, not a widget or other
+extension that shares the app's own group. If `project.yml` sets
 `CODE_SIGN_ENTITLEMENTS` to committed files (often one per configuration,
 such as a sync and a no-sync variant), add the group to **each** of those
 files, beside any group already there:
