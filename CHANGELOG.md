@@ -6,6 +6,18 @@ summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
 ## Unreleased
 
+- **New pattern `event-feed`**, documents only: an app projects the events
+  it has in effect into an append-only feed file in a shared App Group,
+  through app-utils' `EventFeed` 0.6.0, for another app's timeline. Only
+  frozen columns go in, built from rows read back from the store; `add`
+  after every write and at launch; `retract`, `replace` and `restore` only
+  from the call sites that remove (undo handlers included), after the
+  store's write; never a retraction by comparing the feed with the store;
+  a settings diagnostic that acts only when the owner presses; the group
+  on the iOS target only, and never opened from scratch data or without
+  the entitlement. A project that wants to feed: follow
+  `patterns/event-feed/apply.md`, copying `feed-template.md` to
+  `docs/feed.md`.
 - **New pattern `event-log`**, documents only: conventions for an app whose
   data is a record of what happened. Every event row has `occurredAt`,
   `recordedAt` and the time zone it was recorded in, which decides its
