@@ -1,6 +1,6 @@
 # event-log changelog
 
-## Unreleased
+## v0.7.0 (2026-11-02)
 
 First version, documents only: conventions for an app whose data is a
 record of what happened. The event row (a UUID `TEXT` key, `occurredAt`

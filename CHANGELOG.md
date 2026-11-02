@@ -4,7 +4,7 @@ What changed in each release of app-tooling. Each pattern has its own
 `CHANGELOG.md` with what a project must do to catch up; this file is the
 summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
-## Unreleased
+## v0.7.0 (2026-11-02)
 
 - **New pattern `event-feed`**, documents only: an app projects the events
   it has in effect into an append-only feed file in a shared App Group,

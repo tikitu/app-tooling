@@ -1,6 +1,6 @@
 # sync-configuration changelog
 
-## Unreleased
+## v0.7.0 (2026-11-02)
 
 - **`scripts/check-sync-configuration.sh` is strict by default.** A sync
   build must be on Production, with or without `--expect`, and an

@@ -1,6 +1,6 @@
 # event-feed changelog
 
-## Unreleased
+## v0.7.0 (2026-11-02)
 
 First version, documents only: how an app feeds its events to a shared
 timeline through app-utils' `EventFeed` (0.6.0). A pure projection of the

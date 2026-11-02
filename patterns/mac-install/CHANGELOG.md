@@ -1,6 +1,6 @@
 # mac-install changelog
 
-## Unreleased
+## v0.7.0 (2026-11-02)
 
 First version, from an app whose installed build had always been `1` and
 whose Dock kept an old icon after a new one was installed. `make install`
