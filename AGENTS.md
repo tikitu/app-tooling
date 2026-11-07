@@ -47,5 +47,7 @@ patterns is in `patterns/pattern-imports/README.md`; how to write one, in
 * **Projects may follow a branch.** Do not rewrite history on a pushed
   branch, and do not squash-merge one: projects record its commits.
 
-* Releases are made by the user; `RELEASING.md` has the steps. Do not tag
-  or push a release unasked.
+* Releases are made by the user, or by the night shift's coordinator when a
+  ticket it landed is one that other tickets wait on (the user, 2026-11-07:
+  hub 8F23CRV). `RELEASING.md` has the steps. Otherwise, do not tag or push
+  a release unasked.
