@@ -4,6 +4,16 @@ What changed in each release of app-tooling. Each pattern has its own
 `CHANGELOG.md` with what a project must do to catch up; this file is the
 summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
+## Unreleased
+
+- **instruments-profiling: `profile-mac.sh` attaches to the app it launched
+  itself**, rather than `xctrace --launch` (which refused the app as
+  "ambiguous" or launched another copy when one of the same name is
+  installed), and profiles the build as signed, rather than an ad-hoc copy
+  that a sandboxed app's container would not admit. Allocations and Leaks
+  need `get-task-allow` in the build's own entitlements. A project with the
+  pattern: update; see the pattern's changelog.
+
 ## v0.7.0 (2026-11-02)
 
 - **New pattern `event-feed`**, documents only: an app projects the events

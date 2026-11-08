@@ -30,8 +30,9 @@ the method, the scripts and their safety checks are the app-tooling pattern
   a copy of real data in a syncing build gets uploaded. The pattern's
   recorder copies the data and refuses syncing builds; if you record by hand,
   do the same.
-- **Launch the executable inside the bundle**, not the `.app`: xctrace
-  resolves an `.app` by bundle id and can launch another copy.
+- **Launch the app yourself and `--attach` to its pid**, never `--launch`:
+  xctrace resolves even an executable path through LaunchServices, and can
+  launch another copy or refuse it as "ambiguous".
 - **Ask before recording Network**: it captures all HTTP traffic on the Mac,
   unencrypted, credentials included.
 - **Say what Instruments says.** Main-thread delays are *Potential Interaction

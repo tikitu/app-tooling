@@ -96,7 +96,9 @@ scenario_scroll() {
 
 **3. A build that cannot sync**, if the project has none. Usually a variant of
 the existing Mac build target that signs ad hoc (`codesign --sign -`) with an
-entitlements file holding no iCloud, push or app-group keys. Name it in
+entitlements file holding no iCloud, push or app-group keys, and with
+`com.apple.security.get-task-allow` if Allocations or Leaks are wanted (the
+recorder profiles this build as it is signed). Name it in
 `BUILD_HINT`, and as `PROFILE_BUILD` in step 5.
 
 **4. A way to point the app at other data**, if it has none. Where the app

@@ -1,8 +1,8 @@
 #!/bin/zsh
 #
 # profile-mac.sh — record an Instruments trace of a Mac app with no one at the
-# keyboard: a copy of the app, a copy of its data, a scenario, and a check
-# afterwards that the trace is of the process it meant to trace.
+# keyboard: the project's own build, a copy of its data, a scenario, and a
+# check afterwards that the trace is of the process it meant to trace.
 #
 # Imported by peru from the app-tooling pattern `instruments-profiling`
 # (https://github.com/tikitu/app-tooling). Never edit it here: `peru sync`
@@ -47,10 +47,12 @@
 #   not take is caught, not trusted.
 # * A build that can sync is refused (REFUSE_ENTITLEMENTS, by default iCloud):
 #   given a copy of real data, it would upload it.
-# * The traced binary is the one named. xctrace resolves an `.app` argument
-#   through LaunchServices, which can pick another copy with the same bundle
-#   id, so this launches the executable inside the bundle, and afterwards
-#   checks the launched process's path in the trace.
+# * The traced binary is the one named. xctrace resolves even an executable
+#   path through LaunchServices, which can pick another copy with the same
+#   name or bundle id, or refuse it as "ambiguous". So this launches the
+#   executable inside the bundle itself, stopped, has xctrace attach to its
+#   pid, lets it run once recording has started, and afterwards checks the
+#   attached process's path in the trace.
 # * Nothing else distorts it: another recording (which also holds the
 #   system's kperf lock), or another copy of the app unless the project allows
 #   that (ALLOW_OTHER_COPIES), refuses the run. So does a nearly full disk.
@@ -62,10 +64,11 @@
 #   (DTServiceHub) this run's xctrace started, which holds it open and after a
 #   hung recording goes on writing it, is stopped. Never another one.
 #
-# The app is a copy re-signed ad hoc with get-task-allow added to its own
-# entitlements, which Allocations and Leaks need to attach. They also need
-# the Instruments authorization right: a password dialog the first time in
-# ~10 hours. Headless, the recording just waits; --start-timeout says so.
+# The app is the build itself, as signed: a copy re-signed ad hoc is not in a
+# sandboxed app's container ACL, and hangs at launch on a prompt. Allocations
+# and Leaks need get-task-allow in it (Debug builds have it), and the
+# Instruments authorization right: a password dialog the first time in ~10
+# hours. Headless, the recording just waits; --start-timeout says so.
 set -euo pipefail
 zmodload zsh/datetime  # EPOCHREALTIME
 
@@ -157,8 +160,13 @@ if [[ -n $REFUSE_ENTITLEMENTS ]] &&
 fi
 APP_NAME=${SRC_APP:t}
 EXE_NAME=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$SRC_APP/Contents/Info.plist")
-APP=$WORK/$APP_NAME
-EXE=$APP/Contents/MacOS/$EXE_NAME
+EXE=$SRC_APP/Contents/MacOS/$EXE_NAME
+if [[ "$template ${(j: :)instruments}" == *(Allocations|Leaks)* ]] &&
+    ! codesign -d --entitlements - "$SRC_APP" 2>/dev/null | grep -q get-task-allow; then
+  echo "✗ $template needs get-task-allow in $SRC_APP's entitlements, to attach;" >&2
+  echo "  a Debug build has it" >&2
+  exit 1
+fi
 
 # --- nothing else running -------------------------------------------------------
 # Matched by name, not path: a copy started with a relative path has no
@@ -182,20 +190,6 @@ if (( free_gb < MIN_FREE_GB )); then
   exit 3
 fi
 
-# --- a copy of the app, able to be attached to -------------------------------------
-# get-task-allow added to the app's own entitlements, not replacing them: a
-# sandboxed app re-signed without its sandbox would keep its data elsewhere.
-rm -rf $APP
-cp -R "$SRC_APP" $APP
-ENTITLEMENTS=$WORK/profiling.entitlements
-codesign -d --entitlements - --xml "$SRC_APP" > $ENTITLEMENTS 2>/dev/null || true
-if [[ ! -s $ENTITLEMENTS ]]; then
-  plutil -create xml1 $ENTITLEMENTS
-fi
-/usr/libexec/PlistBuddy -c 'Delete :com.apple.security.get-task-allow' $ENTITLEMENTS 2>/dev/null || true
-/usr/libexec/PlistBuddy -c 'Add :com.apple.security.get-task-allow bool true' $ENTITLEMENTS
-codesign --force --sign - --entitlements $ENTITLEMENTS $APP 2>/dev/null
-
 # --- a copy of the data, never the data itself -------------------------------------
 DATA=""
 if [[ -n $REAL_DATA || -n $data ]]; then
@@ -215,7 +209,7 @@ fi
 launch_env=()
 for e in $LAUNCH_ENV; do
   [[ $e == *'{DATA}'* && -z $DATA ]] && { echo "✗ LAUNCH_ENV uses {DATA} but there is no data to copy" >&2; exit 1; }
-  launch_env+=(--env "${e//\{DATA\}/$DATA}")
+  launch_env+=("${e//\{DATA\}/$DATA}")
 done
 launch_args=()
 for a in $LAUNCH_ARGS $scenario_args; do
@@ -235,10 +229,9 @@ if (( $+functions[drive] )) && [[ ! -x $DRIVER || $ROOT/scripts/ui-drive.swift -
   swiftc -O $ROOT/scripts/ui-drive.swift -o $DRIVER
 fi
 
-# Every running copy of the app, wherever it was built, as "PID PATH". xctrace
-# can launch another copy with the same bundle id than the one named, so what
-# it launched is the copy that appears after the launch, and that is the only
-# pid this kills: never a copy that was already running, such as the real app.
+# Every running copy of the app, wherever it was built, as "PID PATH". The
+# only one this kills is the one it launched, which appeared after the launch:
+# never a copy that was already running, such as the real app.
 copies() {
   ps -axo pid=,comm= | awk -v exe="/Contents/MacOS/$EXE_NAME" \
     '{ pid = $1; sub(/^ *[0-9]+ /, ""); if (substr($0, length($0) - length(exe) + 1) == exe) print pid, $0 }'
@@ -273,7 +266,7 @@ stamp=$(date +%Y%m%d-%H%M%S)
 label=$template
 (( ${#instruments} )) && label=${${template:#Blank}:+$template+}${(j:+:)instruments}
 trace=$out_dir/${label// /_}-$scenario-$stamp.trace
-args=(record --template "$template" --output "$trace" $launch_env
+args=(record --template "$template" --output "$trace"
       --notify-tracing-started $NOTIFICATION --no-prompt)
 for i in $instruments; do args+=(--instrument "$i"); done
 [[ -n $time_limit ]] && args+=(--time-limit $time_limit)
@@ -362,8 +355,28 @@ if (( scenario_notifies )); then
   scenario_done=$(listen $SCENARIO_NOTIFY_PREFIX.done)
 fi
 waiter=$(listen $NOTIFICATION)
+# The app is started here, not by xctrace (see the top), and stopped as soon as
+# it is the app, before its own code runs far: what it does is recorded once
+# it continues, launch included, as with xctrace --launch.
+(
+  for e in $launch_env; do export $e; done
+  exec $EXE $launch_args
+) > $WORK/app.log 2>&1 &
+PID=$!
+for _ in $(seq 1 500); do
+  [[ $(ps -o comm= -p $PID 2>/dev/null) == $EXE ]] && break
+  sleep 0.01
+done
+if [[ $(ps -o comm= -p $PID 2>/dev/null) != $EXE ]]; then
+  kill $PID 2>/dev/null || true
+  cat $WORK/app.log >&2
+  echo "✗ $EXE did not start" >&2
+  exit 1
+fi
+kill -STOP $PID
+echo "→ launched $PID $(ps -o comm= -p $PID 2>/dev/null)"
 echo "→ xctrace $template, scenario $scenario"
-xcrun xctrace "${args[@]}" --launch -- $EXE $launch_args > $WORK/xctrace.log 2>&1 &
+xcrun xctrace "${args[@]}" --attach $PID > $WORK/xctrace.log 2>&1 &
 recorder=$!
 
 listeners() { print -r -- $waiter $scenario_started $scenario_done | tr ' ' '\n' | grep -v '^0$' || true; }
@@ -371,6 +384,7 @@ cleanup() {
   note_own_hubs
   kill -INT $recorder 2>/dev/null || true
   kill $(listeners) 2>/dev/null || true
+  kill -CONT $PID 2>/dev/null || true
   kill_launched
   # A recorder still saving holds kperf, and the next run would fail with
   # "could not lock kperf"; wait for it to let go.
@@ -393,26 +407,17 @@ for _ in $(seq 1 $start_timeout); do
   sleep 1
 done
 if [[ $started != 1 ]]; then
-  cat $WORK/xctrace.log >&2
-  echo "✗ recording did not start within ${start_timeout}s. If the template needs" >&2
-  echo "  Allocations or Leaks, a password dialog is probably waiting on screen." >&2
+  echo "✗ recording did not start within ${start_timeout}s. xctrace's last lines:" >&2
+  tail -n 15 $WORK/xctrace.log | sed 's/^/    /' >&2
+  if [[ $template == (Allocations|Leaks) ]] && ! grep -q -i -E 'error|fail|ambiguous|could not' $WORK/xctrace.log; then
+    echo "  Nothing there failed: $template may be waiting on a password dialog on screen." >&2
+  fi
   exit 1
 fi
-
-# What xctrace launched, and that it is the copy named.
-launched=""
-for _ in $(seq 1 $(( start_timeout * 5 ))); do
-  launched=$(launched_copies)
-  launched=${launched%%$'\n'*}
-  [[ -n $launched ]] && break
-  kill -0 $recorder 2>/dev/null || break
-  sleep 0.2
-done
-[[ -n $launched ]] || { cat $WORK/xctrace.log >&2; echo "✗ app did not start" >&2; exit 1; }
-PID=${launched%% *}
-echo "→ launched $PID ${launched#* }"
-if [[ ${launched#* } != $EXE ]]; then
-  echo "✗ xctrace launched another copy of the app, not $EXE; stopped it" >&2
+kill -CONT $PID 2>/dev/null || true
+if [[ $(ps -o comm= -p $PID 2>/dev/null) != $EXE ]]; then
+  cat $WORK/app.log >&2
+  echo "✗ the app ($EXE) did not start, or exited" >&2
   exit 1
 fi
 
@@ -480,11 +485,11 @@ remove_staging
 
 grep -E '\[Error\]|failed' $WORK/xctrace.log >&2 || true
 [[ -d $trace ]] || { cat $WORK/xctrace.log >&2; echo "✗ no trace written" >&2; exit 1; }
-# The launched process's own path, by pid: some templates list every process
+# The attached process's own path, by pid: some templates list every process
 # on the Mac, which can include another running copy of the app. Attribute
-# order varies: with launch arguments, `arguments=` comes before `type=`.
+# order varies: with arguments, `arguments=` comes before `type=`.
 toc=$(xcrun xctrace export --input $trace --toc)
-target=$(grep -o '<process [^>]*type="launched"[^>]*>' <<<$toc | grep -o ' pid="[0-9]*"' | head -1 | tr -d ' ' || true)
+target=$(grep -o '<process [^>]*type="attached"[^>]*>' <<<$toc | grep -o ' pid="[0-9]*"' | head -1 | tr -d ' ' || true)
 traced=$(grep -o "<process name=\"[^\"]*\" $target path=\"[^\"]*\"" <<<$toc | grep -o 'path="[^"]*"' | head -1 || true)
 if [[ -z $target || $traced != "path=\"$EXE\"" ]]; then
   echo "✗ the trace is not of $EXE: launched ${target:-?}, ${traced:-no path}" >&2

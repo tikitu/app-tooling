@@ -22,8 +22,8 @@ scripts/profile-compare.sh --data <frozen copy> --warmup \
 scripts/trace-compare.py build/profile/compare --builds before,after
 ```
 
-`profile-mac.sh` records any template against a re-signed copy of the app and
-a copy of its data, while the app runs a scenario, and checks afterwards which
+`profile-mac.sh` records any template against the project's own build and a
+copy of its data, while the app runs a scenario, and checks afterwards which
 process it traced. `trace-query.py` turns `xctrace export` XML into summaries.
 `profile-compare.sh` records several builds in turn; `trace-compare.py` gives
 medians.
@@ -43,12 +43,17 @@ absence went wrong once.
    upload it, and its sync engine would treat the copy as a new device. The
    script refuses a build whose entitlements match `REFUSE_ENTITLEMENTS`
    (iCloud by default). Build an ad-hoc, unentitled variant for profiling.
-3. **Launch the executable, not the bundle.** `xctrace --launch -- My.app`
-   resolves the bundle through LaunchServices by bundle id, which can pick a
-   different copy: another checkout's signed build, in the case that taught
-   this. The script launches `My.app/Contents/MacOS/<exe>`.
+3. **Launch the app yourself, and attach.** `xctrace --launch` resolves what
+   it is given through LaunchServices, even `My.app/Contents/MacOS/<exe>`,
+   and can pick a different copy (another checkout's signed build, in the
+   case that taught this) or refuse it as "ambiguous" when another app of
+   the same name is installed. The script starts the executable itself,
+   stopped, attaches xctrace to its pid, and lets it run once recording has
+   started, so launch is still in the trace. It runs the build as signed: a
+   copy re-signed ad hoc is not in a sandboxed app's container ACL, and
+   hangs at launch on a prompt.
 4. **Check what was traced, by pid.** The trace's table of contents names
-   the launched process; look its path up by that pid. Templates such as
+   the attached process; look its path up by that pid. Templates such as
    Animation Hitches list every process on the Mac, including any other
    running copy of the same app.
 5. **Find your own processes by an anchored path**, or by `$!`: `pgrep -f
@@ -64,7 +69,7 @@ absence went wrong once.
 |---|---|---|
 | Developer Mode | everything | `DevToolsSecurity -status` |
 | The Instruments authorization right | Allocations, Leaks | a password dialog on first use, cached ~10 hours (`security authorizationdb read com.apple.dt.instruments.process.analysis`, `timeout`). Headless, the recording waits with the app suspended; `--start-timeout` reports it. A restart clears it |
-| `get-task-allow` on the target | Allocations, Leaks, `heap`, `leaks`, `malloc_history` | the script adds it to a copy of the app, keeping the app's own entitlements |
+| `get-task-allow` on the target | Allocations, Leaks, `heap`, `leaks`, `malloc_history` | in the build's own entitlements: Debug builds have it (`codesign -d --entitlements - My.app`). The script refuses Allocations and Leaks without it |
 | Accessibility for the process that runs the scripts | `ui-drive` (keys, accessibility) | System Settings → Privacy & Security → Accessibility; a Swift one-liner printing `AXIsProcessTrusted()` checks it |
 | Posting events | `ui-drive` scrolling and trackpad | `CGPreflightPostEventAccess()` |
 | Processor Trace | the Processor Trace template | System Settings → Privacy & Security → Developer Tools |

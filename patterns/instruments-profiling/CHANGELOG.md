@@ -1,5 +1,30 @@
 # instruments-profiling changelog
 
+## Unreleased
+
+- **`profile-mac.sh` launches the app itself and attaches** (`xctrace
+  record --attach PID`) instead of `--launch`. xctrace resolved even the
+  executable path through LaunchServices: with another app of the same name
+  installed it refused it as "ambiguous", or launched another copy with the
+  same bundle id. The script now starts the executable, stopped as soon as
+  it is the app, attaches, and lets it run once recording has started, so
+  launch is still in the trace. The trace's process is now `type="attached"`.
+- **It profiles the build as signed, not an ad-hoc re-signed copy** under
+  `build/profile/`. A sandboxed app's copy was not in its container's ACL
+  (secinitd: "binary identity … signer:none … not in ACL … prompting") and
+  hung at launch. Allocations and Leaks need `get-task-allow` in the build's
+  own entitlements now (Debug builds have it); the script refuses them
+  without it.
+- **"recording did not start" quotes xctrace's last lines**, and mentions a
+  password dialog only for Allocations and Leaks when xctrace reported no
+  error.
+
+A project that has the pattern: update it (the changes are in imported
+files). If its profiling build signs with its own entitlements file and it
+uses Allocations or Leaks, add `com.apple.security.get-task-allow` to that
+file. A `build/profile/<App>.app` left by earlier runs is no longer used and
+can be deleted.
+
 ## v0.6.0 (2026-10-24)
 
 - **`profile-compare.sh` no longer reports success with nothing recorded.**

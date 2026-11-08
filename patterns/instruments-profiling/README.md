@@ -16,11 +16,12 @@ had made something else slower.
 
 Profiling unattended goes wrong in ways that look like success:
 
-- **The real data reaches the profiled app.** An `.app` given to xctrace is
-  resolved by bundle id, and once launched another checkout's signed build,
-  which then synced the copy of the data it had been handed. The script
-  launches the executable itself, refuses builds that can sync, copies the
-  data, and checks with `lsof` that the app does not have the real file open.
+- **The real data reaches the profiled app.** xctrace resolves what it is
+  told to launch through LaunchServices, and once launched another
+  checkout's signed build, which then synced the copy of the data it had
+  been handed. The script launches the build itself and has xctrace attach
+  to its pid, refuses builds that can sync, copies the data, and checks with
+  `lsof` that the app does not have the real file open.
 - **The numbers are of something else.** Another copy of the app running, a
   recording left over, the screen of the accessibility driver itself, or a
   scenario starting from wherever the app was left. The script refuses to
