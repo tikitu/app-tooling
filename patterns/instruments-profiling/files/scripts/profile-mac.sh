@@ -348,6 +348,32 @@ remove_staging() {
   done
 }
 
+recorder="" waiter=0 scenario_started=0 scenario_done=0
+listeners() { print -r -- $waiter $scenario_started $scenario_done | tr ' ' '\n' | grep -v '^0$' || true; }
+cleanup() {
+  note_own_hubs
+  kill -INT $recorder 2>/dev/null || true
+  kill $(listeners) 2>/dev/null || true
+  kill -CONT $PID 2>/dev/null || true
+  kill_launched
+  # A recorder still saving holds kperf, and the next run would fail with
+  # "could not lock kperf"; wait for it to let go.
+  for _ in $(seq 1 $stop_timeout); do kill -0 $recorder 2>/dev/null || break; sleep 1; done
+  if kill -0 $recorder 2>/dev/null; then
+    kill -9 $recorder 2>/dev/null || true
+    recorder_killed=1
+  fi
+  # A target whose recorder was killed while stopping ignores SIGTERM.
+  sleep 1
+  kill_launched -9
+  remove_staging
+}
+# zsh runs the EXIT trap on INT, but not on TERM or HUP: without these, a
+# killed run would leave the app stopped and xctrace and the listeners running.
+trap cleanup EXIT
+trap 'exit 143' TERM
+trap 'exit 129' HUP
+
 scenario_started=0
 scenario_done=0
 if (( scenario_notifies )); then
@@ -379,27 +405,6 @@ echo "→ xctrace $template, scenario $scenario"
 xcrun xctrace "${args[@]}" --attach $PID > $WORK/xctrace.log 2>&1 &
 recorder=$!
 
-listeners() { print -r -- $waiter $scenario_started $scenario_done | tr ' ' '\n' | grep -v '^0$' || true; }
-cleanup() {
-  note_own_hubs
-  kill -INT $recorder 2>/dev/null || true
-  kill $(listeners) 2>/dev/null || true
-  kill -CONT $PID 2>/dev/null || true
-  kill_launched
-  # A recorder still saving holds kperf, and the next run would fail with
-  # "could not lock kperf"; wait for it to let go.
-  for _ in $(seq 1 $stop_timeout); do kill -0 $recorder 2>/dev/null || break; sleep 1; done
-  if kill -0 $recorder 2>/dev/null; then
-    kill -9 $recorder 2>/dev/null || true
-    recorder_killed=1
-  fi
-  # A target whose recorder was killed while stopping ignores SIGTERM.
-  sleep 1
-  kill_launched -9
-  remove_staging
-}
-trap cleanup EXIT
-
 started=0
 for _ in $(seq 1 $start_timeout); do
   if ! kill -0 $waiter 2>/dev/null; then started=1; t0=$EPOCHREALTIME; note_own_hubs; break; fi
@@ -407,7 +412,11 @@ for _ in $(seq 1 $start_timeout); do
   sleep 1
 done
 if [[ $started != 1 ]]; then
-  echo "✗ recording did not start within ${start_timeout}s. xctrace's last lines:" >&2
+  if kill -0 $recorder 2>/dev/null; then
+    echo "✗ recording did not start within ${start_timeout}s. xctrace's last lines:" >&2
+  else
+    echo "✗ xctrace exited before recording started. Its last lines:" >&2
+  fi
   tail -n 15 $WORK/xctrace.log | sed 's/^/    /' >&2
   if [[ $template == (Allocations|Leaks) ]] && ! grep -q -i -E 'error|fail|ambiguous|could not' $WORK/xctrace.log; then
     echo "  Nothing there failed: $template may be waiting on a password dialog on screen." >&2

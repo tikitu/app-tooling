@@ -15,9 +15,12 @@
   hung at launch. Allocations and Leaks need `get-task-allow` in the build's
   own entitlements now (Debug builds have it); the script refuses them
   without it.
-- **"recording did not start" quotes xctrace's last lines**, and mentions a
-  password dialog only for Allocations and Leaks when xctrace reported no
-  error.
+- **"recording did not start" quotes xctrace's last lines**, says so when
+  xctrace exited instead, and mentions a password dialog only for
+  Allocations and Leaks when xctrace reported no error.
+- **A run killed with TERM or HUP now cleans up** (exit 143 or 129) like one
+  interrupted with ^C: it stops xctrace and its listeners and kills the app,
+  rather than leaving the app stopped.
 
 A project that has the pattern: update it (the changes are in imported
 files). If its profiling build signs with its own entitlements file and it
