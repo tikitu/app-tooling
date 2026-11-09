@@ -1,6 +1,6 @@
 # instruments-profiling changelog
 
-## Unreleased
+## v0.8.0 (2026-11-09)
 
 - **`profile-mac.sh` launches the app itself and attaches** (`xctrace
   record --attach PID`) instead of `--launch`. xctrace resolved even the
