@@ -368,9 +368,11 @@ cleanup() {
   kill_launched -9
   remove_staging
 }
-# zsh runs the EXIT trap on INT, but not on TERM or HUP: without these, a
-# killed run would leave the app stopped and xctrace and the listeners running.
+# zsh does not run the EXIT trap when a signal kills it: without these, an
+# interrupted or killed run would leave the app stopped and xctrace and the
+# listeners running.
 trap cleanup EXIT
+trap 'exit 130' INT
 trap 'exit 143' TERM
 trap 'exit 129' HUP
 

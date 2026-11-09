@@ -18,8 +18,8 @@
 - **"recording did not start" quotes xctrace's last lines**, says so when
   xctrace exited instead, and mentions a password dialog only for
   Allocations and Leaks when xctrace reported no error.
-- **A run killed with TERM or HUP now cleans up** (exit 143 or 129) like one
-  interrupted with ^C: it stops xctrace and its listeners and kills the app,
+- **A run interrupted or killed with INT, TERM or HUP now cleans up** (exit
+  130, 143 or 129): it stops xctrace and its listeners and kills the app,
   rather than leaving the app stopped.
 
 A project that has the pattern: update it (the changes are in imported
