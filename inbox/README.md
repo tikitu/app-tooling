@@ -38,3 +38,4 @@ line in the commit message saying why.
 - [2026-10-20 Which patterns an app takes by default](2026-10-20-default-patterns.md)
 - [2026-10-20 After the TestFlight device guard: an empty list, and a development app](2026-10-20-testflight-guard-followups.md)
 - [2026-10-22 A sandboxed app's scratch data is still in its container](2026-10-22-scratch-data-outside-container.md)
+- [2026-11-11 A cask in a private tap: nothing here, so each app copies it](2026-11-11-private-tap-cask.md)
