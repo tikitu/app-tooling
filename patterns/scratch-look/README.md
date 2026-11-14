@@ -11,7 +11,7 @@ app's. A project that does not take it declines it in its
 
 ```toml
 [declined.scratch-look]
-as_of = "v0.8.0"   # the release it was declined against
+as_of = "v0.9.0"   # the release it was declined against
 reason = "…"
 ```
 

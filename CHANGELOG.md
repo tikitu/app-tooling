@@ -4,7 +4,7 @@ What changed in each release of app-tooling. Each pattern has its own
 `CHANGELOG.md` with what a project must do to catch up; this file is the
 summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
-## Unreleased
+## v0.9.0 (2026-11-14)
 
 - **command-inbox: `command-inbox-send.sh --udid <id>`** sends to a named
   simulator, rather than `booted`, which picks one when several are booted.

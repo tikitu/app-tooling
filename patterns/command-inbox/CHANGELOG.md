@@ -1,6 +1,6 @@
 # command-inbox changelog
 
-## Unreleased
+## v0.9.0 (2026-11-14)
 
 - **`command-inbox-send.sh --udid <id>`** names the simulator for
   `--simulator`, in all three `simctl` calls (finding the container,

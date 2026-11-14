@@ -1,6 +1,6 @@
 # scratch-look changelog
 
-## Unreleased
+## v0.9.0 (2026-11-14)
 
 - **Expected of every app that has `scratch-data`** (README). Nothing to
   do for a project that has it. One that has `scratch-data` without it:
