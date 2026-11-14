@@ -6,6 +6,11 @@ summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
 ## Unreleased
 
+- **command-inbox: `command-inbox-send.sh --udid <id>`** sends to a named
+  simulator, rather than `booted`, which picks one when several are booted.
+  A project with an iOS app: update, and pass the UDID from its simulator
+  send path; see the pattern's changelog.
+
 - **scratch-look is expected of every app with `scratch-data`**: adopt it,
   or decline it in `app-tooling.toml` with the reason. A project that has
   it need do nothing.
