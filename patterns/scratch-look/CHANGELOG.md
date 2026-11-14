@@ -1,5 +1,20 @@
 # scratch-look changelog
 
+## Unreleased
+
+- **The Dock icon of a scratch run on the Mac gets the caution band.** New
+  `ScratchDockIcon.swift`, imported beside `ScratchDataBanner.swift` by the
+  same `scratch-look-swift` rule: `ScratchDockIcon.apply(isScratch:)`, called
+  at launch, draws the band over the app's own icon and makes that the Dock
+  icon. It does nothing on real data, or when the build's icon is already
+  a scratch set (an icon name ending `-Scratch`). A project with the
+  pattern: `make app-tooling-update`; call
+  `ScratchDockIcon.apply(isScratch: isScratch)` at launch (`apply.md`,
+  step 4), on a Mac target that has a Dock icon; extend any formatter
+  exclusion to the new file (step 5); add the Dock icon to the
+  `AGENTS.md` lines (step 6); and check it with a Dock screenshot of a
+  scratch run (Verify).
+
 ## v0.6.0 (2026-10-24)
 
 First version: `scripts/make-scratch-icon.py` (with its lock), which

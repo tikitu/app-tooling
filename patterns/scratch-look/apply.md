@@ -14,6 +14,10 @@ Read [`README.md`](README.md) first for what this does and why.
   delete them first. Keep the generated `AppIcon-Scratch.appiconset`, and
   rerun step 2 over it: with the same script, `git status` then shows it
   unchanged.
+- **Adopted before the Dock icon** (no `ScratchDockIcon.swift` beside
+  `ScratchDataBanner.swift`): update the imports
+  (`make app-tooling-update`), then do step 4 below, and step 5's
+  formatter exclusion for the new file.
 - **Something else doing this job.** Look for:
   - a second app icon set (`AppIcon-Debug`, `AppIcon-Dev`, `-Beta`), and
     `ASSETCATALOG_COMPILER_APPICON_NAME` set per configuration (in
@@ -21,6 +25,7 @@ Read [`README.md`](README.md) first for what this does and why.
     --app-icon` in a build script);
   - a ribbon, badge or overlay on the icon made by a build phase or a
     tool (a "debug ribbon" script, `badge`);
+  - code that sets `applicationIconImage` or a Dock tile on scratch data;
   - a banner, toolbar item or window title suffix the app shows on test,
     demo or scratch data (search the views for `scratch`, `isScratch`,
     `demo`, `Debug`).
@@ -35,7 +40,7 @@ Read [`README.md`](README.md) first for what this does and why.
 |---|---|
 | The banner's directory | a source directory of the target or module that holds the app's shared UI, and that every window's views can import: for a Swift package, `Sources/<UIModule>/`; for an Xcode app target, a folder of that target. The file is `public`, so it works inside a module |
 | The real icon set | the `.appiconset` the app builds with, usually `<App>/Assets.xcassets/AppIcon.appiconset` |
-| The scratch build | how the project builds its scratch app: a configuration (`Debug`, `Scratch`), an XcodeGen config, or a build script. Without one, skip step 2: the scratch run is the real build, and gets the banner only |
+| The scratch build | how the project builds its scratch app: a configuration (`Debug`, `Scratch`), an XcodeGen config, or a build script. Without one, skip step 2: the scratch run is the real build, and gets the banner and, on the Mac, the Dock icon |
 | The banner's text | what the app already knows about the run: its scratch flag from `scratch-data` (`isScratch`), or a property of the scratch build |
 
 ## Steps
@@ -64,8 +69,10 @@ rule scratch-look-swift:
 ```
 
 Then `uvx peru@1.3.5 sync`, which puts `scripts/make-scratch-icon.py`, its
-lock, and `ScratchDataBanner.swift` in place. An Xcode target whose folder
-is not a synchronized folder needs the Swift file added to it.
+lock, `ScratchDataBanner.swift` and `ScratchDockIcon.swift` in place. An
+Xcode target whose folder is not a synchronized folder needs the Swift
+files added to it. `ScratchDockIcon.swift` compiles to nothing outside
+macOS, so a shared iOS and Mac module can hold it.
 
 **2. The scratch icon.** Make the icon set beside the real one:
 
@@ -106,23 +113,37 @@ on macOS 26 the floating sidebar ignores an inset on the window, and the
 strip covers its first row. A sheet or second window that shows the data
 gets one too.
 
-**4. Formatters.** If the project formats or lints Swift on commit
+**4. The Dock icon** (Mac). At launch, with the same scratch flag:
+
+```swift
+ScratchDockIcon.apply(isScratch: isScratch)
+```
+
+from the `@main` entry point before the app runs, the `App`'s `init`, or
+`applicationDidFinishLaunching`. On real data it does nothing; on a scratch
+build whose icon is already the scratch set (`AppIcon-Scratch`) it does
+nothing either, so call it there too, without a check of the project's
+own. An app with no Dock icon (a menu-bar app, `LSUIElement`) has nothing
+for it to change.
+
+**5. Formatters.** If the project formats or lints Swift on commit
 (swift-format, SwiftLint, a pre-commit hook), exclude the imported Swift
-file from it, so it is never rewritten in place. With pre-commit, on the
+files from it, so they are never rewritten in place. With pre-commit, on the
 formatting hook:
 
 ```yaml
-        exclude: ^Sources/MyAppUI/ScratchDataBanner\.swift$
+        exclude: ^Sources/MyAppUI/Scratch(DataBanner|DockIcon)\.swift$
 ```
 
-**5. `AGENTS.md`**, beside the `scratch-data` lines:
+**6. `AGENTS.md`**, beside the `scratch-data` lines:
 
 > A scratch run shows a yellow-and-black caution strip across the top of
-> each window, and the scratch build's icon has a caution band. A window
-> without the strip is on real data. When the real icon changes, rerun
+> each window, and its icon (the scratch build's, and on the Mac the Dock
+> icon of any scratch run) has a caution band. A window without the strip
+> is on real data. When the real icon changes, rerun
 > `scripts/make-scratch-icon.py` and commit its output.
 
-**6. Record it** in `app-tooling.toml`, with what was filled in:
+**7. Record it** in `app-tooling.toml`, with what was filled in:
 
 ```toml
 [patterns.scratch-look]
@@ -149,5 +170,11 @@ params = { banner_dir = "Sources/MyAppUI", icon = "MyApp/Assets.xcassets/AppIcon
   To take one without bringing the app forward: find its window number
   for the pid `pgrep -f` gives (`CGWindowListCopyWindowInfo`, layer 0),
   then `screencapture -x -o -l <window number> scratch.png`.
+- Mac: with the `make run-scratch` app running, a screenshot of the Dock
+  (`screencapture -x dock.png`, then crop the bottom of the screen) shows
+  its icon with the band. The screen must be unlocked: a locked screen
+  captures as the lock screen. On a real-data run the call returns at its
+  first line (`guard isScratch`), so the real app keeps its plain icon;
+  check that by reading the call site, not by running the real app.
 - `make app-tooling-check` prints `✓ app-tooling imports match peru.yaml`
   after committing, including after a commit that ran the formatter.

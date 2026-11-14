@@ -1,8 +1,7 @@
 # scratch-look
 
 A run on scratch data looks different from the real app: a caution band on
-the scratch build's icon, and a caution strip across the top of its
-windows. Requires
+its icon, and a caution strip across the top of its windows. Requires
 [`scratch-data`](https://github.com/tikitu/app-tooling/tree/main/patterns/scratch-data).
 
 ## The problem
@@ -17,7 +16,7 @@ working on the real data while thinking it is scratch.
 
 ## What it does
 
-Two pieces, in the same yellow and black, so each points at the other:
+Three pieces, in the same yellow and black, so each points at the others:
 
 - **`scripts/make-scratch-icon.py`** derives a scratch icon set from any
   `.appiconset`: a copy with a caution band across the lower right corner of
@@ -36,25 +35,34 @@ Two pieces, in the same yellow and black, so each points at the other:
   chooses, inside whichever target or module holds its shared UI. The app
   decides when it shows: on a scratch build, and on a `--scratch-database`
   run.
+- **`ScratchDockIcon.swift`**, Mac only: `ScratchDockIcon.apply(isScratch:)`,
+  called at launch, draws the same band over the app's own icon and makes
+  that the Dock icon, so a scratch run of the real build is told apart in
+  the Dock and the app switcher too. It does nothing on real data, or when
+  the build's icon is already a scratch set (an icon name ending
+  `-Scratch`), so a scratch build is not banded twice. Self-contained
+  (AppKit only), beside the banner. iOS cannot change the home screen icon
+  without asking, so there it does not exist.
 
 ## What it asks of a project
 
 - `scratch-data`, and `uv` (`brew install uv`) to make the icon.
 - For the icon: a scratch **build** (its own configuration, bundle id or
   build script) whose app icon can be set apart from the real one's.
-- For the banner: a place for one Swift file, and a value the app already
-  knows (is this a scratch run?) to pass to it. On the Mac with
+- For the banner and the Dock icon: a place for two Swift files, and a
+  value the app already knows (is this a scratch run?) to pass to them. On the Mac with
   `NavigationSplitView`, one modifier per column.
-- If the project formats or lints Swift on commit, the imported Swift file
+- If the project formats or lints Swift on commit, the imported Swift files
   excluded from it: a reformatted imported file fails `make
   app-tooling-check`.
 
 ## What it does not do
 
-- **No icon for a scratch run of the real build.** `--scratch-database` on
-  its own runs the same binary as the real app, with the same icon; such a
-  run gets the banner only. (A Mac app could set its Dock icon at launch;
-  the pattern does not.)
+- **No icon for a scratch run of the real build on iOS, or in Finder.**
+  `--scratch-database` on its own runs the same binary as the real app: on
+  the Mac its Dock icon is banded while it runs, but the app's icon in
+  Finder and Launchpad is the real one, and on iOS such a run gets the
+  banner only.
 - **It does not decide what is scratch.** The banner shows whatever text it
   is given; the app's own scratch flag (from `scratch-data`, or its scratch
   build) supplies it.

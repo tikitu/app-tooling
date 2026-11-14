@@ -4,6 +4,14 @@ What changed in each release of app-tooling. Each pattern has its own
 `CHANGELOG.md` with what a project must do to catch up; this file is the
 summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
+## Unreleased
+
+- **scratch-look: a Mac scratch run's Dock icon gets the caution band**,
+  through the new `ScratchDockIcon.apply(isScratch:)`, so a scratch run of
+  the real build is told apart in the Dock and app switcher too. A project
+  with the pattern: update, and add the call at launch; see the pattern's
+  changelog.
+
 ## v0.8.0 (2026-11-09)
 
 - **instruments-profiling: `profile-mac.sh` attaches to the app it launched
