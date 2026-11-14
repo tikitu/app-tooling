@@ -4,6 +4,17 @@ A run on scratch data looks different from the real app: a caution band on
 its icon, and a caution strip across the top of its windows. Requires
 [`scratch-data`](https://github.com/tikitu/app-tooling/tree/main/patterns/scratch-data).
 
+**Expected of every app that has `scratch-data`.** Agents leave scratch
+runs open, and without it nobody can tell those windows from the real
+app's. A project that does not take it declines it in its
+`app-tooling.toml`, with the reason:
+
+```toml
+[declined.scratch-look]
+as_of = "v0.8.0"   # the release it was declined against
+reason = "…"
+```
+
 ## The problem
 
 With a scratch copy of an app and the real one on the same machine, only

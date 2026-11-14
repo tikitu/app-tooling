@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Expected of every app that has `scratch-data`** (README). Nothing to
+  do for a project that has it. One that has `scratch-data` without it:
+  adopt it, or record it under `[declined.scratch-look]` with the reason.
+
 - **The Dock icon of a scratch run on the Mac gets the caution band.** New
   `ScratchDockIcon.swift`, imported beside `ScratchDataBanner.swift` by the
   same `scratch-look-swift` rule: `ScratchDockIcon.apply(isScratch:)`, called

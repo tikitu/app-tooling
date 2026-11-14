@@ -6,6 +6,10 @@ summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
 ## Unreleased
 
+- **scratch-look is expected of every app with `scratch-data`**: adopt it,
+  or decline it in `app-tooling.toml` with the reason. A project that has
+  it need do nothing.
+
 - **scratch-look: a Mac scratch run's Dock icon gets the caution band**,
   through the new `ScratchDockIcon.apply(isScratch:)`, so a scratch run of
   the real build is told apart in the Dock and app switcher too. A project
