@@ -56,10 +56,15 @@ enum Entry {
 struct StarterApp: App {
     var body: some Scene {
         Window("Starter App", id: "main") {
-            MainWindow(model: Entry.model).scratchDataBanner(
-                ScratchBuild.isScratch
-                    ? "Starter Scratch: scratch data" + (Entry.inbox == nil ? "" : ", accepting commands")
-                    : nil)
+            MainWindow(model: Entry.model).scratchDataBanner(banner)
         }.defaultSize(width: 640, height: 480).commands { ItemCommands(model: Entry.model) }
+    }
+
+    /// The scratch build's strip; it says "accepting commands" only when the
+    /// inbox runs (launched with `--commands <dir>`).
+    private var banner: String? {
+        guard ScratchBuild.isScratch else { return nil }
+        return Entry.inbox == nil
+            ? "Starter Scratch: scratch data" : "Starter Scratch: scratch data, accepting commands"
     }
 }
