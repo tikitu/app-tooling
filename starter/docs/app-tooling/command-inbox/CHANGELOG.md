@@ -1,6 +1,6 @@
 # command-inbox changelog
 
-## Unreleased
+## v0.10.0 (2026-11-15)
 
 **Each project uses its own named iOS simulator: new
 `scripts/ios-sim-udid.sh <name> [<device type>]`.** It prints the UDID of
