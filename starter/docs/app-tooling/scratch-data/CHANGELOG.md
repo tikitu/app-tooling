@@ -20,7 +20,9 @@ New:
   key, banded icon, entitlements fit for ad hoc, ad hoc signature), embedded
   helper apps included. Needs scratch-look's `make-scratch-icon.py`. It
   refuses app extensions, XPC services and apps inside frameworks (not
-  supported yet), and an asset-catalog icon.
+  supported yet), and an asset-catalog icon. It stops, rather than sign
+  without entitlements (which would drop the sandbox), when a signed
+  bundle's entitlements cannot be read.
 - **`mk/scratch-data.mk`:** new parameter `SCRATCH_APP` (the scratch
   bundle); `SCRATCH_BUILD` is now required and builds it; `run-scratch`
   launches it without `--scratch-database`, and refuses a bundle without
@@ -47,8 +49,11 @@ A project that has the pattern, in this order (`apply.md` has each step):
    its own. **An unsandboxed app keys its data directory on the bundle id
    for the scratch build, without moving the real build's data**: if the
    real directory is not already named by the bundle id, the real build
-   keeps its name. Code naming a helper's bundle id derives it from the
-   app's own.
+   keeps its name. **Every App Group id and shared defaults suite named in
+   code gets `.scratch` in the scratch build** (unsandboxed, the
+   entitlements do not stop `UserDefaults(suiteName: "<group>")` reaching
+   the real build's data); the real build's ids stay as they are. Code
+   naming a helper's bundle id derives it from the app's own.
 4. In the `Makefile` (step 4): set `SCRATCH_APP` and `SCRATCH_BUILD`, move
    `SCRATCH_DIR` and `SCRATCH_DEFAULTS` to the scratch bundle id's
    locations, and take `--scratch-database` out of anything else that
