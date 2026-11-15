@@ -21,7 +21,7 @@ imports:
 git module app-tooling:
     url: https://github.com/tikitu/app-tooling
     reup: scratch-build-G73FTP6
-    rev: 2dd542ad6105c44239dc2c14f3da8c4acf80ac53
+    rev: 532af54661b8cca53db69a89c54b69f2cb56fb5e
 
 rule pattern-imports:
     export: patterns/pattern-imports/files
