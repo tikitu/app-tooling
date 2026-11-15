@@ -22,6 +22,13 @@ summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
   directory on its bundle id and leaves the real one where it is. A project
   with these patterns: follow the steps in scratch-data's changelog, then
   scratch-look's and command-inbox's.
+- **command-inbox: each project uses its own named iOS simulator**, through
+  the new `scripts/ios-sim-udid.sh <name> [<device type>]`: found by exact
+  name (booted first), made on the newest iOS runtime if missing, never a
+  device type's own name. `make ios-run` and the sender's `--udid` both
+  take it. A project with an iOS app: update, then name its simulator after
+  itself and use the script (the pattern's changelog). Mac-only projects:
+  nothing to do.
 - **scratch-look: the strip no longer turns the title bar yellow.**
   Arrives with the update.
 - **The starter takes scratch-data and scratch-look through peru**: its

@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+**Each project uses its own named iOS simulator: new
+`scripts/ios-sim-udid.sh <name> [<device type>]`.** It prints the UDID of
+the simulator called exactly `<name>` (a booted one first, `IOS_SIM_UDID`
+overriding), makes it on the newest iOS runtime if it is missing, and
+refuses a device type's own name ("iPhone 17"), which other projects'
+simulators share. A project with an iOS app: `make app-tooling-update`,
+then (`apply.md` step 6a) name its simulator after itself (`IOS_SIM ?=
+MyApp iPhone`) with a stated `IOS_SIM_DEVICE_TYPE`, take `ios-run`'s UDID
+and the sender's `--udid` from the script, and delete its own lookup
+(`IOS_SIM` by a generic name, "first booted iPad", a project copy of
+`ios-sim-udid.sh`). A Mac-only project: nothing to do; the script arrives
+with the update.
+
 **The inbox's condition is `ScratchBuild.isScratch`** (scratch-data's
 scratch build), not `--scratch-database`, which is gone, nor a check of the
 simulator on iOS (every simulator build is a scratch build). A project with

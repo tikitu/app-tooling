@@ -52,6 +52,23 @@ The pattern supplies, with app-utils:
   once when no app is listening, rather than timing out. `--simulator <bundle
   id>` sends to an iOS app in a simulator instead: the booted one, or the
   one `--udid <id>` names, which it needs when several are booted.
+- **`scripts/ios-sim-udid.sh <name> [<device type>]`**, the UDID of the
+  project's own simulator (below), made on the newest iOS runtime if it is
+  missing. `make ios-run` and the sender both use it.
+
+## Each project has its own simulator
+
+Several projects' simulators are booted at once, so a generic name
+("iPhone 17") or "the first booted iPad" lands on another project's: a send
+there fails safely, but `make ios-run` installs the app onto it. So:
+
+- **The simulator is named after the project** ("MyApp iPhone"), never a
+  device type's own name, which `ios-sim-udid.sh` refuses.
+- **It is made on demand**, with a device type the project states, on the
+  newest iOS runtime, the first time anything needs it.
+- **Everything addresses it by UDID**: `make ios-run` (boot, install,
+  launch) and the sender's `--udid`, both from `ios-sim-udid.sh`, so they
+  cannot disagree. `IOS_SIM_UDID=<udid>` sends a one-off run elsewhere.
 - **[`guide.md`](guide.md)**, the transport, file format, result and the
   inbox's own commands, which the project's `docs/commands.md` refers to
   rather than repeats.
