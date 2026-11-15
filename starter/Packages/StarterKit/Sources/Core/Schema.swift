@@ -32,11 +32,12 @@ extension DependencyValues {
 
     /// Opens the app's database, migrating it, and installs it.
     ///
-    /// `scratch: true` opens a disposable copy under the app's `tmp`
-    /// directory. That is the only mode in which the app accepts commands
-    /// (`--scratch-database`), so a script can never touch real data.
-    public mutating func bootstrapDatabase(scratch: Bool = false) throws {
-        let url = try starterDatabaseURL(scratch: scratch)
+    /// The scratch build ("Starter Scratch", `ScratchBuild.isScratch`) opens
+    /// the same path, which is in its own container, since its bundle id is
+    /// another app's. It is the only build that accepts commands, so a script
+    /// can never touch real data.
+    public mutating func bootstrapDatabase() throws {
+        let url = try starterDatabaseURL()
         // `path(percentEncoded: false)`, not `path()`: the RFC 3986 accessor
         // keeps the escaping, and "Application Support" arrives at SQLite as
         // "Application%20Support". See `docs/gotchas.md`.
@@ -56,14 +57,13 @@ extension DependencyValues {
 }
 
 /// Where the database file lives. Application Support, which under the
-/// sandbox is inside the app's container.
-public func starterDatabaseURL(scratch: Bool = false) throws -> URL {
-    let directory =
-        scratch
-        ? URL.temporaryDirectory.appending(path: "Starter-scratch", directoryHint: .isDirectory)
-        : URL.applicationSupportDirectory.appending(path: "Starter", directoryHint: .isDirectory)
+/// sandbox is inside the app's container: the real build's, or the scratch
+/// build's own.
+public func starterDatabaseURL() throws -> URL {
+    let directory = URL.applicationSupportDirectory.appending(
+        path: "Starter", directoryHint: .isDirectory)
     try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-    return directory.appending(path: scratch ? "scratch.sqlite" : "Starter.sqlite")
+    return directory.appending(path: "Starter.sqlite")
 }
 
 /// The schema, in one place. The real database and the in-memory one previews

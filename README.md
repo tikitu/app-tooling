@@ -70,10 +70,11 @@ Always, as the core:
   control performing an `AppCommand` through it, so a script reaches
   everything a click does. Nonisolated default actor isolation.
 - **Verifying without a human, and without taking focus.** A command inbox
-  on scratch data (`make run-scratch`, `scripts/send-commands.sh`), keys
+  in the scratch build, "Starter Scratch" (`make run-scratch`,
+  `scripts/send-commands.sh`), keys
   posted to the process (`send-keys.swift`), screenshots by window id
   (`make screenshot`). `make run` opens in front for a person;
-  `make run-background` is the agent's.
+  agents run only the scratch build.
 - **Keyboard-driven lists on the Mac.** Explicit selection on the model, →
   for an actions menu, and the selection moving on after acting.
 - **Lint rules that carry their own reasoning.** ast-grep rules for mistakes

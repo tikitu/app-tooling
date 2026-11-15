@@ -8,3 +8,7 @@ note: |
 rule:
   kind: directive
   regex: '^#(if|elseif)\b.*\b(os|canImport|targetEnvironment)\s*\('
+# Imported from app-tooling (scratch-look), which cannot carry an ignore
+# comment; rules/platform-conditionals.md, "Known exceptions".
+ignores:
+  - Packages/StarterMacKit/Sources/MacUI/ScratchMenuBarBadge.swift

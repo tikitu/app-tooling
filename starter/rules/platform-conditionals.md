@@ -56,7 +56,11 @@ appears.
 
 ## Known exceptions
 
-None yet.
+- `Packages/StarterMacKit/Sources/MacUI/ScratchMenuBarBadge.swift`, ignored in
+  `platform-conditionals.yml`. It is imported from app-tooling (scratch-look),
+  so it can carry no ignore comment of this project's, and its `#if os(macOS)`
+  is there for projects whose shared module holds it. Here it is already in
+  the Mac package, where the condition is always true.
 
 ## Tested by
 

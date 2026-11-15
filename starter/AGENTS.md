@@ -10,9 +10,14 @@ commands. `docs/` has the depth.
 
 * **Verify without taking focus.** Someone may be using the machine while
   you work. Never activate a window, script a click or move the pointer.
-  Use `make run-background` or `make run-scratch`, never plain `make run`,
-  which brings the app to the front. `make screenshot` captures the window by
-  id; `scripts/send-keys.swift <pid> down right return` posts keys to the
+  Use `make run-scratch`, never `make run` (which brings the app to the
+  front) or `make run-background` (the real build, on real data). It builds
+  and launches, in the background, the scratch build "Starter Scratch"
+  (bundle id `org.example.starter.scratch`), a separate app that only ever
+  opens scratch data; `make scratch-reset` throws that data away. It has a
+  caution band on its icon and a yellow-and-black caution strip across its
+  window: a window without the strip is the real app, on real data.
+  `make screenshot` captures the scratch build's window by id; `scripts/send-keys.swift <pid> down right return` posts keys to the
   process without activating it. If a check genuinely needs a click, say it
   is unverified rather than taking it.
 
@@ -24,7 +29,7 @@ commands. `docs/` has the depth.
   way to set remembered options.
 
 * **Which build is this?** `plutil -extract AppGitCommit raw
-  build/Starter.app/Contents/Info.plist` gives the commit a bundle was built
+  "build/Starter Scratch.app/Contents/Info.plist"` gives the commit a bundle was built
   from, with `-dirty` if there were uncommitted changes. Check it before
   concluding that a running app shows (or lacks) a change.
 

@@ -11,11 +11,17 @@ imports:
     app-tooling|command-inbox-docs: docs/app-tooling/command-inbox/
     app-tooling|mac-install: ./
     app-tooling|mac-install-docs: docs/app-tooling/mac-install/
+    app-tooling|scratch-data: ./
+    app-tooling|scratch-data-docs: docs/app-tooling/scratch-data/
+    app-tooling|scratch-data-swift: Packages/StarterKit/Sources/Core/
+    app-tooling|scratch-look: ./
+    app-tooling|scratch-look-docs: docs/app-tooling/scratch-look/
+    app-tooling|scratch-look-swift: Packages/StarterMacKit/Sources/MacUI/
 
 git module app-tooling:
     url: https://github.com/tikitu/app-tooling
-    reup: v0.9.0
-    rev: 4236ae400923a8985bdedf90ddec8d4965aa388b
+    reup: scratch-build-G73FTP6
+    rev: d6a34c891b79473efb8aadccc66cfd28cad7eac2
 
 rule pattern-imports:
     export: patterns/pattern-imports/files
@@ -46,3 +52,19 @@ rule mac-install:
 rule mac-install-docs:
     pick: [patterns/mac-install/README.md, patterns/mac-install/apply.md, patterns/mac-install/CHANGELOG.md]
     export: patterns/mac-install
+
+rule scratch-data:
+    export: patterns/scratch-data/files
+rule scratch-data-docs:
+    pick: [patterns/scratch-data/README.md, patterns/scratch-data/apply.md, patterns/scratch-data/CHANGELOG.md]
+    export: patterns/scratch-data
+rule scratch-data-swift:
+    export: patterns/scratch-data/swift
+
+rule scratch-look:
+    export: patterns/scratch-look/files
+rule scratch-look-docs:
+    pick: [patterns/scratch-look/README.md, patterns/scratch-look/apply.md, patterns/scratch-look/CHANGELOG.md]
+    export: patterns/scratch-look
+rule scratch-look-swift:
+    export: patterns/scratch-look/swift

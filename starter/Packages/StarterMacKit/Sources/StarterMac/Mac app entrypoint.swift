@@ -19,11 +19,6 @@ import UI
 /// Do not "simplify" this into `App.init()`.
 @main
 enum Entry {
-    /// `--scratch-database` runs on a disposable database and its own user
-    /// defaults, and accepts commands (given `--commands <dir>`). The real
-    /// app does neither — see `docs/commands.md`.
-    static let isScratch = CommandLine.arguments.contains("--scratch-database")
-
     /// Made here rather than in the `App`, for the same ordering reason: a
     /// scratch run has to accept commands from launch, and a view's `.task`
     /// never runs while the app is in the background, which is exactly how
@@ -32,26 +27,23 @@ enum Entry {
     static let model = AppModel()
 
     /// Commands from scripts (`docs/commands.md`), in the directory given as
-    /// `--commands <dir>`: only on scratch data, so a command can never touch
-    /// real data or settings.
+    /// `--commands <dir>`: only in the scratch build, "Starter Scratch", whose
+    /// database and settings are its own, so a command can never touch real
+    /// data or settings.
     @MainActor
     static let inbox: CommandInbox<AppCommand>? = {
-        guard isScratch, let directory = InboxDirectory.argument(in: CommandLine.arguments) else {
-            return nil
-        }
+        guard ScratchBuild.isScratch,
+            let directory = InboxDirectory.argument(in: CommandLine.arguments)
+        else { return nil }
         return CommandInbox(directory: directory, notificationName: "org.example.starter.commands")
         { CommandReply(try await model.perform($0)) }
     }()
 
     static func main() {
         withErrorReporting {
-            try prepareDependencies {
-                try $0.bootstrapDatabase(scratch: isScratch)
-                if isScratch, let defaults = UserDefaults(suiteName: "org.example.starter.scratch")
-                {
-                    $0.defaultAppStorage = defaults
-                }
-            }
+            // The same database and defaults in either build: the scratch
+            // build's bundle id gives it a container of its own.
+            try prepareDependencies { try $0.bootstrapDatabase() }
         }
         MainActor.assumeIsolated {
             // Started from here, not a view's `.task`, for the reason above.
@@ -63,8 +55,9 @@ enum Entry {
 
 struct StarterApp: App {
     var body: some Scene {
-        Window("Starter App", id: "main") { MainWindow(model: Entry.model) }.defaultSize(
-            width: 640, height: 480
-        ).commands { ItemCommands(model: Entry.model) }
+        Window("Starter App", id: "main") {
+            MainWindow(model: Entry.model).scratchDataBanner(
+                ScratchBuild.isScratch ? "Starter Scratch: scratch data, accepting commands" : nil)
+        }.defaultSize(width: 640, height: 480).commands { ItemCommands(model: Entry.model) }
     }
 }

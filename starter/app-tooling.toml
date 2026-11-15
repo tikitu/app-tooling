@@ -21,3 +21,16 @@ params = { package = "Packages/StarterKit", notification = "org.example.starter.
 # Installs the everyday build, which passes MAC_INSTALL_BUILD_NUMBER to
 # build.sh as BUILD_NUMBER.
 [patterns.mac-install]
+
+# The scratch build, "Starter Scratch" (org.example.starter.scratch), made from
+# build/Starter.app by scripts/make-scratch-app.sh (`make build-scratch`).
+# Sandboxed: its database and defaults are in its own container.
+[patterns.scratch-data]
+params = { swift_dir = "Packages/StarterKit/Sources/Core" }
+
+# In the Mac package, not the shared one: the menu-bar badge has an
+# `#if os(macOS)`, which rules/platform-conditionals.yml ignores for that
+# file only. The icon is the .icns of make-icon.swift, banded by
+# make-scratch-app.sh at every build; there is no asset catalog.
+[patterns.scratch-look]
+params = { banner_dir = "Packages/StarterMacKit/Sources/MacUI" }

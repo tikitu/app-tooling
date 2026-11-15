@@ -35,11 +35,15 @@ remembered options.
 
 | | accepts commands | database | settings |
 |---|---|---|---|
-| `make run-scratch` (`--commands <dir> --scratch-database`) | yes | scratch file under the app's `tmp` | the `org.example.starter.scratch` defaults suite |
-| `make run`, `make run-background`, or the installed app | **no** | the real one | the real defaults |
+| `make run-scratch`: the scratch build, "Starter Scratch" (`org.example.starter.scratch`), given `--commands <dir>` | yes | its own, in its own container | its own |
+| `make run`, `make run-background`, or the installed app: the real build, "Starter" | **no** | the real one | the real defaults |
 
-`send-commands.sh` refuses rather than timing out when the app is running on
-its real data. `make scratch-reset` throws the scratch data away.
+Which is which is decided when the app is built, never by how it is
+launched: only the scratch build has `ScratchBuild = YES` in its Info.plist
+(app-tooling's `scratch-data`; `ScratchBuild.isScratch`), a banded icon and
+the caution strip across its window. `send-commands.sh` refuses rather than
+timing out when the scratch build is not running. `make scratch-reset`
+throws the scratch data away.
 
 ## The transport
 

@@ -17,5 +17,5 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 exec "$ROOT/scripts/command-inbox-send.sh" \
 	--notification org.example.starter.commands \
 	--dir "$HOME/Library/Caches/Starter-scratch/Commands" \
-	--process "$ROOT/build/Starter.app/Contents/MacOS/StarterMac.*--commands" \
+	--process "$ROOT/build/Starter Scratch.app/Contents/MacOS/StarterMac.*--commands" \
 	"$@"

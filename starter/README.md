@@ -34,8 +34,8 @@ make check           # compile (fast gate)
 make test            # the test suite
 make run             # build and launch, in front
 make run-background  # build and launch behind whatever has focus
-make run-scratch     # in the background, on scratch data, accepting commands
-make screenshot      # build/window.png, by window id, without focus
+make run-scratch     # "Starter Scratch", the scratch build: in the background, accepting commands
+make screenshot      # its window to build/window.png, by window id, without focus
 make fmt             # reformat every Swift file in place
 make lint            # format check + ast-grep rules
 make install         # build, copy to /Applications, restart a running copy
@@ -44,9 +44,12 @@ make help            # everything else
 scripts/send-commands.sh '<json>'   # drive a run-scratch app
 ```
 
-Every `run` target quits a running copy first. `run` is for a person at the
-keyboard; `run-background` and `run-scratch` are for agents, so that a check
-never pulls the window in front of someone working.
+Every `run` target quits a running copy first. `run` and `run-background`
+are the real build, for a person. `run-scratch` is for agents: it builds the
+scratch build, "Starter Scratch" (`org.example.starter.scratch`, an icon with
+a caution band, a caution strip across the window), a separate app with its
+own container, so a check never touches real data, and launches it in the
+background, so it never pulls a window in front of someone working.
 
 ## Shape of the repo
 
@@ -85,7 +88,7 @@ together, and the diff is the review.
 ## Documentation
 
 - **`docs/commands.md`** — driving the app from a script: every command,
-  the inbox transport, the scratch mode.
+  the inbox transport, the scratch build.
 - **`docs/keyboard.md`** — the list's keyboard model: explicit selection on
   the model, → for actions, acting moves on, and verifying it without focus.
 - **`docs/gotchas.md`** — traps. Every one fails silently. Read before

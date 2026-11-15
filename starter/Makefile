@@ -77,7 +77,7 @@ MAC_INSTALL_BUNDLE_ID := $(BUNDLE_ID)
 MAC_INSTALL_BUILD     := build
 include mk/mac-install.mk
 
-.PHONY: all deps outdated update-pins check-pins check-shared-ios build check test release run run-background run-scratch scratch-reset \
+.PHONY: all deps outdated update-pins check-pins check-shared-ios build build-scratch check test release run run-background run-scratch scratch-reset \
         screenshot clean uninstall register help \
         icon check-version notary-setup sign zip-notary notarize staple zip-release \
         checksum verify-release dist github-release print-version \
@@ -92,10 +92,11 @@ help:
 	@echo "  test              Run the SwiftPM test suite"
 	@echo "  release           Build release into ./$(APP)"
 	@echo "  run               Build and launch $(APP_NAME), in front, as if opened from Finder"
-	@echo "  run-background    The same, but launched behind whatever has focus (for agents)"
-	@echo "  run-scratch       Build and launch in the background, on scratch data, accepting commands"
-	@echo "  scratch-reset     Delete the scratch database and settings"
-	@echo "  screenshot        Capture the running app's window to build/window.png, without focus"
+	@echo "  run-background    The same, but launched behind whatever has focus"
+	@echo "  build-scratch     Build $(APP_NAME) Scratch, the scratch build, into ./$(SCRATCH_APP)"
+	@echo "  run-scratch       Build and launch $(APP_NAME) Scratch in the background, accepting commands (agents)"
+	@echo "  scratch-reset     Delete the scratch build's database and settings"
+	@echo "  screenshot        Capture $(APP_NAME) Scratch's window to build/window.png, without focus"
 	@echo "  icon              Regenerate build/AppIcon.icns from scripts/make-icon.swift"
 	@echo "  clean             Remove ./build/ ./.build/ ./dist/"
 	@echo "  deps              Verify build prerequisites (auto-run before build)"
@@ -258,26 +259,14 @@ print-version:
 
 # Every launch quits any running copy first — `open` would otherwise just
 # bring the old one forward, and `open -n` leaves old copies whose windows
-# screenshots then come from (docs/gotchas.md). Only this checkout's build
-# is touched, by absolute path and pid: the bundle id, or a relative path,
-# would also reach the real app built from another checkout.
-_quit_running_pids = ps -axo pid=,args= | awk -v p='$(abspath $(APP))/Contents/MacOS/' \
-  '{ pid = $$1; sub(/^ *[0-9]+ /, ""); if (index($$0, p) == 1) print pid }'
-define quit-running
-	@pids=$$($(_quit_running_pids)); \
-	if [ -n "$$pids" ]; then \
-	  for pid in $$pids; do \
-	    osascript -l JavaScript -e "ObjC.import('AppKit'); \$$.NSRunningApplication.runningApplicationWithProcessIdentifier($$pid).terminate" >/dev/null 2>&1 || true; \
-	  done; \
-	  for i in $$(seq 50); do [ -n "$$($(_quit_running_pids))" ] || break; sleep 0.2; done; \
-	  pids=$$($(_quit_running_pids)); [ -z "$$pids" ] || kill $$pids 2>/dev/null || true; \
-	fi
-endef
+# screenshots then come from (docs/gotchas.md). `$(quit-running)` and
+# `$(scratch-pids)` come from mk/scratch-data.mk (below): only this
+# checkout's build is touched, by absolute path and pid, since the bundle id,
+# or a relative path, would also reach the app built from another checkout.
 
-# `make run` is what a person expects: the app opens in front. An agent
-# working while someone else uses the machine wants `run-background`, whose
-# `open -g` launches behind whatever has focus. They are separate targets
-# because a plain `make run` that appears to do nothing is baffling.
+# `make run` is what a person expects: the real app opens in front, on the
+# real data. `run-background` launches it behind whatever has focus. Agents
+# use neither: they run the scratch build (`run-scratch`, below).
 run: build
 	$(quit-running)
 	open -n "$(APP)"
@@ -288,38 +277,37 @@ run-background: build
 	open -g -n "$(APP)"
 	@echo "✓ launched in the background"
 
-# The app on a disposable database and its own user defaults, accepting
-# commands from scripts/send-commands.sh. See docs/commands.md. Always in the
-# background: this is the target for scripted checks.
-CONTAINER   := $(HOME)/Library/Containers/$(BUNDLE_ID)/Data
-SCRATCH_DIR := $(CONTAINER)/tmp/Starter-scratch
+# The scratch build (app-tooling: scratch-data, scratch-look): "Starter
+# Scratch", bundle id org.example.starter.scratch, an icon with the caution
+# band, ScratchBuild = YES. It is another app, so its database and settings
+# are in a container of its own, and it is the only build that accepts
+# commands from scripts/send-commands.sh (docs/commands.md). `run-scratch`
+# launches it in the background: the target for agents and scripted checks.
+# `scratch-reset` throws its data away. docs/app-tooling/scratch-data/.
+SCRATCH_APP       := build/$(APP_NAME) Scratch.app
+SCRATCH_BUILD     := build-scratch
+SCRATCH_CONTAINER := $(HOME)/Library/Containers/$(BUNDLE_ID).scratch/Data
+SCRATCH_DIR       := $(SCRATCH_CONTAINER)/Library/Application Support/Starter
+SCRATCH_DEFAULTS  := $(SCRATCH_CONTAINER)/Library/Preferences/$(BUNDLE_ID).scratch
 # The command inbox (app-tooling: command-inbox), outside the container: a
 # terminal that touches the container raises a privacy prompt on screen. The
 # entitlements open it to the app, which cannot create it, so it is made here.
-# --commands goes before --scratch-database, which takes no value: AppKit
-# reads launch arguments as `-key value` pairs.
-COMMANDS_DIR := $(HOME)/Library/Caches/Starter-scratch/Commands
+COMMANDS_DIR      := $(HOME)/Library/Caches/Starter-scratch/Commands
+SCRATCH_ARGS      := --commands "$(COMMANDS_DIR)"
 
-run-scratch: build
-	$(quit-running)
+build-scratch: build
+	scripts/make-scratch-app.sh "$(APP)" "$(SCRATCH_APP)"
 	mkdir -p "$(COMMANDS_DIR)"
-	open -g -n "$(APP)" --args --commands "$(COMMANDS_DIR)" --scratch-database
-	@echo "✓ launched on scratch data, in the background"
 
-scratch-reset:
-	$(quit-running)
-	rm -rf "$(SCRATCH_DIR)"
-	@# `defaults delete`, not `rm`: cfprefsd caches the file, and a plist
-	@# removed underneath it comes back with the old values (docs/gotchas.md).
-	-defaults delete "$(CONTAINER)/Library/Preferences/$(BUNDLE_ID).scratch" 2>/dev/null
-	@echo "✓ removed the scratch database and settings (takes effect at the next run-scratch)"
+include mk/scratch-data.mk
 
-# This checkout's build only, by absolute path and then pid: by name, the
-# window of a copy built in another checkout could be photographed instead.
+# The scratch build from this checkout only, by absolute path and then pid:
+# by name, the window of a copy built in another checkout, or of the real
+# app, could be photographed instead.
 screenshot:
 	@mkdir -p build
-	@pids=$$($(_quit_running_pids)); set -- $$pids; \
-	  [ $$# -eq 1 ] || { echo "✗ $$# copies of $(abspath $(APP)) running; want exactly 1 (make run-background)"; exit 1; }; \
+	@pids=$$($(scratch-pids)); set -- $$pids; \
+	  [ $$# -eq 1 ] || { echo "✗ $$# copies of $(SCRATCH_APP) running; want exactly 1 (make run-scratch)"; exit 1; }; \
 	  ID=$$(swift scripts/window-id.swift --pid $$1) && \
 	  screencapture -o -x -l $$ID build/window.png && echo "✓ build/window.png (window $$ID, pid $$1)"
 
@@ -349,15 +337,19 @@ register: build
 
 # NOT scripts/: swift-format mangles a `#!/usr/bin/env swift` script, folding
 # the shebang and the comment block beneath it into one ever-growing line.
-# See docs/gotchas.md.
-SWIFT_FORMAT_PATHS := Packages
+# See docs/gotchas.md. Nor the Swift files imported from app-tooling
+# (peru.yaml), which are never reformatted here: `make app-tooling-check`
+# would fail, and they cannot carry an ignore comment of this project's.
+SWIFT_FORMAT_IMPORTED := ScratchBuild.swift ScratchDataBanner.swift ScratchMenuBarBadge.swift
+_swift_format_files = find Packages -name .build -prune -o -name '*.swift' \
+  $(foreach f,$(SWIFT_FORMAT_IMPORTED),-not -name '$(f)') -print0
 
 fmt:
-	@swift format --configuration .swift-format --recursive --in-place $(SWIFT_FORMAT_PATHS)
+	@$(_swift_format_files) | xargs -0 swift format --configuration .swift-format --in-place
 	@echo "✓ formatted"
 
 fmt-check:
-	@swift format lint --configuration .swift-format --recursive --strict $(SWIFT_FORMAT_PATHS) \
+	@$(_swift_format_files) | xargs -0 swift format lint --configuration .swift-format --strict \
 	  && echo "✓ formatting clean"
 
 # The tests first: a rule whose pattern has quietly stopped matching would

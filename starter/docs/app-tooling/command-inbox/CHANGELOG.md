@@ -1,5 +1,15 @@
 # command-inbox changelog
 
+## Unreleased
+
+**The inbox's condition is `ScratchBuild.isScratch`** (scratch-data's
+scratch build), not `--scratch-database`, which is gone, nor a check of the
+simulator on iOS (every simulator build is a scratch build). A project with
+the pattern: when it takes scratch-data's update, replace the condition in
+`Entry` (`apply.md` step 4) and, on iOS, `#if targetEnvironment(simulator)`
+around the inbox with `if ScratchBuild.isScratch`. Its `run-scratch` keeps
+passing `--commands <dir>` (`SCRATCH_ARGS`).
+
 ## v0.9.0 (2026-11-14)
 
 - **`command-inbox-send.sh --udid <id>`** names the simulator for
