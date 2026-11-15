@@ -19,13 +19,18 @@
 #     and the like), and with each App Group given ".scratch";
 #   - signed ad hoc.
 # Every app bundle inside it (a login item, a menu-bar helper) gets the same,
-# before the app itself. The real bundle is not touched.
+# before the app itself. It refuses app extensions (.appex), XPC services
+# (.xpc) and apps inside frameworks, which it cannot make scratch yet: left
+# as they are, they would open the real app's data. It assembles the bundle
+# beside the destination and moves it into place only once it is finished,
+# so a failure never leaves a "Scratch" app that is the real one. The real
+# bundle is not touched.
 #
 # For an app a script bundles (build.sh). An Xcode app uses a scratch build
 # configuration instead (apply.md).
 set -euo pipefail
 
-usage() { sed -n '9,25p' "$0" >&2; exit 2; }
+usage() { sed -n '9,30p' "$0" >&2; exit 2; }
 fail() { echo "✗ $*" >&2; exit 1; }
 
 [ $# -eq 2 ] || usage
@@ -49,15 +54,25 @@ icon_script="$(cd "$(dirname "$0")" && pwd)/make-scratch-icon.py"
 [ -x "$icon_script" ] ||
 	fail "needs scripts/make-scratch-icon.py (scratch-look) beside it, to band the icon"
 
+# Nested code this cannot make scratch: refuse before copying anything.
+unsupported="$(find "$real/Contents" \( -name '*.appex' -o -name '*.xpc' -o -path '*.framework/*.app' \) -prune -print)"
+[ -z "$unsupported" ] ||
+	fail "$real embeds code this cannot make a scratch build of yet (app extensions, XPC services, apps in frameworks), which would open the real app's data: $unsupported"
+
 work="$(mktemp -d)"
-trap 'rm -rf "$work"' EXIT
+stage="$(mktemp -d "$(dirname "$scratch")/.scratch-build.XXXXXX")"
+trap 'rm -rf "$work" "$stage"' EXIT
 
 plist_get() { plutil -extract "$2" raw -o - "$1" 2>/dev/null; }
 
 # Bands the .icns the bundle names, in place.
 band_icon() {
 	local bundle="$1" plist="$1/Contents/Info.plist" icon icns
-	if icon="$(plist_get "$plist" CFBundleIconFile)"; then
+	# First: with both keys, macOS shows the asset catalog's icon, so banding
+	# the .icns would leave the scratch app looking like the real one.
+	if plist_get "$plist" CFBundleIconName >/dev/null; then
+		fail "$bundle's icon is in an asset catalog (CFBundleIconName), which this cannot band: build the scratch app with AppIcon-Scratch instead (scratch-look)"
+	elif icon="$(plist_get "$plist" CFBundleIconFile)"; then
 		icns="$bundle/Contents/Resources/${icon%.icns}.icns"
 		[ -f "$icns" ] || fail "$bundle names CFBundleIconFile $icon, but $icns is missing"
 		rm -rf "$work/real.iconset" "$work/scratch.iconset"
@@ -65,19 +80,19 @@ band_icon() {
 		"$icon_script" "$work/real.iconset" "$work/scratch.iconset" >/dev/null
 		iconutil -c icns -o "$icns" "$work/scratch.iconset"
 		echo "  banded $icns"
-	elif plist_get "$plist" CFBundleIconName >/dev/null; then
-		fail "$bundle's icon is in an asset catalog (CFBundleIconName), which this cannot band: build the scratch app with AppIcon-Scratch instead (scratch-look)"
 	else
 		echo "  (no icon in $bundle to band)"
 	fi
 }
 
 # The entitlements the bundle was signed with, made fit for an ad hoc scratch
-# build, in $work/entitlements.plist; fails (returns 1) if it has none.
+# build, in $work/entitlements.plist; returns 1 if it has none, and stops
+# the script if they cannot be read (signing without them would drop the
+# sandbox, and with it the scratch build's own container).
 scratch_entitlements() {
 	codesign -d --entitlements - --xml "$1" >"$work/entitlements.plist" 2>/dev/null || return 1
 	[ -s "$work/entitlements.plist" ] || return 1
-	python3 -I - "$work/entitlements.plist" <<'PY'
+	python3 -I - "$work/entitlements.plist" <<'PY' || fail "could not derive scratch entitlements for $1"
 import plistlib, sys
 path = sys.argv[1]
 with open(path, "rb") as f:
@@ -124,16 +139,18 @@ make_scratch() {
 	fi
 }
 
-rm -rf "$scratch"
-ditto "$real" "$scratch"
+built="$stage/$(basename "$scratch")"
+ditto "$real" "$built"
 
 # Embedded apps first, deepest first: a bundle is signed after everything in
 # it, since changing what is inside breaks the signature around it.
-find "$scratch/Contents" -type d -name '*.app' | awk -F/ '{ print NF "\t" $0 }' |
+find "$built/Contents" -type d -name '*.app' | awk -F/ '{ print NF "\t" $0 }' |
 	sort -rn | cut -f2- | while IFS= read -r helper; do
 	make_scratch "$helper"
 done
-make_scratch "$scratch"
+make_scratch "$built"
+codesign --verify --strict "$built"
 
-codesign --verify --strict "$scratch"
+rm -rf "$scratch"
+mv "$built" "$scratch"
 echo "✓ $scratch: a scratch build of $(basename "$real")"

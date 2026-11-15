@@ -18,13 +18,17 @@ New:
 - **`scripts/make-scratch-app.sh <MyApp.app> <MyApp Scratch.app>`**, for an
   app a script bundles: makes the scratch app from the real one (id, name,
   key, banded icon, entitlements fit for ad hoc, ad hoc signature), embedded
-  helper apps included. Needs scratch-look's `make-scratch-icon.py`.
+  helper apps included. Needs scratch-look's `make-scratch-icon.py`. It
+  refuses app extensions, XPC services and apps inside frameworks (not
+  supported yet), and an asset-catalog icon.
 - **`mk/scratch-data.mk`:** new parameter `SCRATCH_APP` (the scratch
   bundle); `SCRATCH_BUILD` is now required and builds it; `run-scratch`
   launches it without `--scratch-database`, and refuses a bundle without
   `ScratchBuild = YES`; `scratch-reset` now requires `SCRATCH_DIR` to be
   under the scratch bundle id (a path component ending `.scratch`) rather
-  than to have "scratch" in its last component; `APP` is only used by
+  than to have "scratch" in its last component, and `SCRATCH_DEFAULTS`
+  (when set) to end `.scratch`; quitting also reaches the bundle's embedded
+  helpers; `APP` is only used by
   `quit-running`; new `quit-scratch` and `scratch-pids`.
 
 A project that has the pattern, in this order (`apply.md` has each step):
