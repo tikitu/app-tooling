@@ -1,5 +1,62 @@
 # scratch-data changelog
 
+## Unreleased
+
+**Breaking: scratch is a separate build, "MyApp Scratch", never a launch
+flag. `--scratch-database` is removed.** A scratch build is its own app:
+bundle id `<id>.scratch`, the name "MyApp Scratch", an icon banded when it
+is built (scratch-look), the Info.plist key `ScratchBuild = YES`, and no
+iCloud. It always opens scratch data; the real build never does. On iOS,
+every simulator build is a scratch build; a device build never is. The
+real build's bundle id, container and data location do not change.
+
+New:
+
+- **`ScratchBuild.swift`**, imported by a new third rule
+  (`scratch-data-swift`) into a directory the project chooses:
+  `ScratchBuild.isScratch` reads the key, on the Mac and iOS.
+- **`scripts/make-scratch-app.sh <MyApp.app> <MyApp Scratch.app>`**, for an
+  app a script bundles: makes the scratch app from the real one (id, name,
+  key, banded icon, entitlements fit for ad hoc, ad hoc signature), embedded
+  helper apps included. Needs scratch-look's `make-scratch-icon.py`.
+- **`mk/scratch-data.mk`:** new parameter `SCRATCH_APP` (the scratch
+  bundle); `SCRATCH_BUILD` is now required and builds it; `run-scratch`
+  launches it without `--scratch-database`, and refuses a bundle without
+  `ScratchBuild = YES`; `scratch-reset` now requires `SCRATCH_DIR` to be
+  under the scratch bundle id (a path component ending `.scratch`) rather
+  than to have "scratch" in its last component; `APP` is only used by
+  `quit-running`; new `quit-scratch` and `scratch-pids`.
+
+A project that has the pattern, in this order (`apply.md` has each step):
+
+1. `make app-tooling-update`, then add the `scratch-data-swift` import and
+   rule to `peru.yaml` (step 1) and sync.
+2. Make the scratch build (step 3): for a `build.sh` app a `build-scratch`
+   target calling `scripts/make-scratch-app.sh`; for an Xcode app a
+   configuration with the `.scratch` bundle id, "MyApp Scratch",
+   `IS_SCRATCH_BUILD = YES` and entitlements without iCloud; on iOS the
+   `[sdk=iphonesimulator*]` settings. Take scratch-look's update with it
+   (the icon).
+3. In the app (step 2): remove `--scratch-database` and every other scratch
+   check of its own, and use `ScratchBuild.isScratch`. A sandboxed app
+   drops its scratch database path and defaults suite: the container is
+   its own. **An unsandboxed app keys its data directory on the bundle id
+   for the scratch build, without moving the real build's data**: if the
+   real directory is not already named by the bundle id, the real build
+   keeps its name. Code naming a helper's bundle id derives it from the
+   app's own.
+4. In the `Makefile` (step 4): set `SCRATCH_APP` and `SCRATCH_BUILD`, move
+   `SCRATCH_DIR` and `SCRATCH_DEFAULTS` to the scratch bundle id's
+   locations, and take `--scratch-database` out of anything else that
+   passed it (`profile`, `run-adhoc`).
+5. Exclude `ScratchBuild.swift` from formatters and lint rules (step 5).
+6. Rewrite the `AGENTS.md` lines (step 6) and record `swift_dir` in
+   `app-tooling.toml`.
+7. Verify as `apply.md` says: both builds side by side (name, bundle id,
+   icon, key), and the scratch build on scratch data only. Anything that
+   changes where data lives is tested on a scratch copy, never on the real
+   data.
+
 ## v0.6.0 (2026-10-24)
 
 **A sandboxed app cannot pass `--scratch-database`, or any argument, to an

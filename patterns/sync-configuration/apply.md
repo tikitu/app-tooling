@@ -133,7 +133,8 @@ extension CloudKitEnvironment.Check {
 ```
 
 Where the database is opened, **before** it is opened, and only for the
-real database (a `--scratch-database` run never syncs):
+real database (a scratch build never syncs; `isScratch` is
+`ScratchBuild.isScratch`, from `scratch-data`):
 
 ```swift
 let refusal =

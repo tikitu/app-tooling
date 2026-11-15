@@ -8,8 +8,8 @@
 
 import SwiftUI
 
-/// A caution strip across the top of a column: this run is on scratch data,
-/// not the real data, and nothing in it syncs.
+/// A caution strip across the top of a column: this is a scratch build, on
+/// scratch data, not the real data, and nothing in it syncs.
 ///
 /// In the colours of the scratch icon's band (`scripts/make-scratch-icon.py`),
 /// so a scratch run is never mistaken for the real app. Self-contained
@@ -41,7 +41,9 @@ public struct ScratchDataBanner: View {
     .padding(.horizontal, Self.stripeWidth + 8)
     .padding(.vertical, 3)
     .frame(maxWidth: .infinity)
-    .background(Self.caution)
+    // Only behind the strip: the `ShapeStyle` overload's default fills the
+    // top safe area too, under the window's title bar and toolbar.
+    .background(Self.caution, ignoresSafeAreaEdges: [])
     .overlay(alignment: .leading) { CautionStripes().frame(width: Self.stripeWidth) }
     .overlay(alignment: .trailing) { CautionStripes().frame(width: Self.stripeWidth) }
     .accessibilityElement(children: .ignore)
@@ -80,7 +82,7 @@ private struct CautionStripes: View {
 
 extension View {
   /// Puts a `ScratchDataBanner` across the top of this view, or nothing
-  /// when `text` is nil (a run on the real data).
+  /// when `text` is nil (the real build).
   ///
   /// Apply it to each column of a `NavigationSplitView`, not to the split
   /// view: on macOS 26 the floating sidebar ignores an inset on the window,

@@ -24,7 +24,7 @@ hub ticket "app-tooling: lint for safe-area insets over split views
 
       swift build --package-path scroll-check
       DYLD_INSERT_LIBRARIES=scroll-check/.build/debug/libScrollCheck.dylib \
-        build/MyApp.app/Contents/MacOS/MyApp --scratch-database
+        "build/MyApp Scratch.app/Contents/MacOS/MyApp"
 
 - `inset-probe/`: the experiment. Hosts the same layouts in windows and runs
   the runtime check on each: which ones drop the inset, and that the

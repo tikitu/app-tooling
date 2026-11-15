@@ -72,9 +72,9 @@ fixes each lose data or invite it:
 - A model with one write path (a `perform`, or whatever the project calls
   the one function every mutation goes through), so "after every write"
   is one call site.
-- A launch flag or setting that says the database is scratch, such as
+- A way to know the app is on scratch data:
   [`scratch-data`](https://github.com/tikitu/app-tooling/blob/main/patterns/scratch-data/README.md)'s
-  `--scratch-database`.
+  `ScratchBuild.isScratch`.
 
 ## What it does not do
 

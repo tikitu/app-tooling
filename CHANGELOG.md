@@ -4,6 +4,30 @@ What changed in each release of app-tooling. Each pattern has its own
 `CHANGELOG.md` with what a project must do to catch up; this file is the
 summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
+## Unreleased
+
+- **Breaking: scratch is a separate build, "MyApp Scratch", never a launch
+  flag** (scratch-data, scratch-look, command-inbox). A scratch build is its
+  own app: bundle id `<id>.scratch`, an icon banded when it is built, the
+  Info.plist key `ScratchBuild = YES`, no iCloud; it always opens scratch
+  data, and the real build never does. On iOS every simulator build is a
+  scratch build. `--scratch-database` and scratch-look's `ScratchDockIcon`
+  are removed. New: `ScratchBuild.isScratch` (scratch-data's
+  `ScratchBuild.swift`, a new import), which every scratch check uses;
+  `scripts/make-scratch-app.sh`, which makes the scratch app of a
+  `build.sh` app, embedded helpers included; scratch-look's
+  `ScratchMenuBarBadge` for menu-bar apps; `make-scratch-icon.py` reads
+  `.iconset`s. **The real build's bundle id, container and data location
+  must not change**: an unsandboxed app keys the scratch build's data
+  directory on its bundle id and leaves the real one where it is. A project
+  with these patterns: follow the steps in scratch-data's changelog, then
+  scratch-look's and command-inbox's.
+- **scratch-look: the strip no longer turns the title bar yellow.**
+  Arrives with the update.
+- **The starter takes scratch-data and scratch-look through peru**: its
+  `make run-scratch` builds and launches "Starter Scratch"
+  (`org.example.starter.scratch`), with a banded icon and the strip.
+
 ## v0.9.0 (2026-11-14)
 
 - **command-inbox: `command-inbox-send.sh --udid <id>`** sends to a named

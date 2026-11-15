@@ -12,14 +12,17 @@
 # `make app-tooling-check` fails while this copy differs.
 #
 # Usage: scripts/make-scratch-icon.py <AppIcon.appiconset> <AppIcon-Scratch.appiconset>
+#        scripts/make-scratch-icon.py <AppIcon.iconset> <AppIcon-Scratch.iconset>
 #
 # Copies the icon set and draws a yellow-and-black caution band across the
 # lower right corner of every image, with "SCRATCH" on it where the image is
-# big enough to read. A build on scratch data then cannot be mistaken for
-# the real app in the Dock, the app switcher or the home screen.
+# big enough to read. A scratch build then cannot be mistaken for the real
+# app in Finder, the Dock, the app switcher or the home screen.
 #
-# It reads any .appiconset. Rerun it whenever the real icon changes, and
-# commit the output; the build does not run it. Pillow is pinned here and
+# It reads any asset catalog .appiconset, and any .iconset (what `iconutil
+# -c iconset` makes of an .icns). For an asset catalog, rerun it whenever the
+# real icon changes and commit the output. scripts/make-scratch-app.sh
+# (scratch-data) runs it over the .icns of each build. Pillow is pinned here and
 # locked in make-scratch-icon.py.lock beside it (`--locked` refuses to run
 # if the two disagree; `uv lock --script` updates the lock).
 import json
@@ -109,8 +112,16 @@ def main() -> int:
         return 2
     source, dest = Path(sys.argv[1]), Path(sys.argv[2])
     contents = source / "Contents.json"
-    if not contents.is_file():
-        print(f"✗ no Contents.json in {source}", file=sys.stderr)
+    if contents.is_file():
+        names = {i["filename"] for i in json.loads(contents.read_text())["images"] if "filename" in i}
+    elif source.suffix == ".iconset" and source.is_dir():
+        # iconutil's layout: every image a PNG named by its size, no index.
+        names = {p.name for p in source.glob("*.png")}
+    else:
+        print(f"✗ {source} is neither an .appiconset (with Contents.json) nor an .iconset", file=sys.stderr)
+        return 1
+    if not names:
+        print(f"✗ no images in {source}", file=sys.stderr)
         return 1
     if dest.resolve() == source.resolve():
         print("✗ the destination must differ from the source", file=sys.stderr)
@@ -119,9 +130,9 @@ def main() -> int:
     if dest.exists():
         shutil.rmtree(dest)
     dest.mkdir(parents=True)
-    shutil.copy2(contents, dest / "Contents.json")
+    if contents.is_file():
+        shutil.copy2(contents, dest / "Contents.json")
 
-    names = {i["filename"] for i in json.loads(contents.read_text())["images"] if "filename" in i}
     for name in sorted(names):
         with Image.open(source / name) as image:
             if image.width != image.height:

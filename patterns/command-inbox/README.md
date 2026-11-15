@@ -84,9 +84,9 @@ Access. So the app takes the directory as a launch argument, `--commands
 
 ## Never on real data
 
-The app starts the inbox only where its data does not matter: a scratch run
-on the Mac (`scratch-data`'s `--scratch-database`, or the project's own
-scratch database), the iOS simulator. A command can then never act on what
+The app starts the inbox only where its data does not matter: in a scratch
+build (`scratch-data`'s `ScratchBuild.isScratch`: the Mac's "MyApp Scratch",
+and every iOS simulator build). A command can then never act on what
 someone is working with. The pattern cannot check this; `apply.md` says
 where the condition goes.
 

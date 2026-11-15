@@ -35,7 +35,7 @@ store**. If a step seems to need one of them, stop and ask the user.
 
   ```sh
   grep -rn --include='*.swift' -E 'func perform\(|func (record|delete|retime|restore|undo|update|edit)[A-Z(]' .
-  grep -rn --include='*.swift' -E 'scratch-database|isScratch|scratchDatabase' .
+  grep -rn --include='*.swift' -E 'ScratchBuild|scratch-database|isScratch|scratchDatabase' .
   ```
 
   The first finds the model's one write path and the call sites that
@@ -56,7 +56,7 @@ store**. If a step seems to need one of them, stop and ask the user.
 | Removing and replacing write paths | `Event.delete`, `Event.retime`, `Event.restore`, and the undo handlers that call them | Detect, above: every call that deletes a row, edits a frozen column, writes a retraction row, or undoes one of those. **Undo and redo handlers** (`registerUndo` closures) often write to the store directly rather than through the one write path: list them too |
 | Names | `activities.name`, versioned by `activityVersions.editedAt` | a definitions table with an edit time the app stores (the event-log pattern's versions) |
 | Opt-in, and its default | none: always on; or a toggle, on by default | ask the user. A feed carries health or private data the reader then syncs; the user decides whether that is a toggle |
-| The scratch signal | `--scratch-database` | Detect, above |
+| The scratch signal | `ScratchBuild.isScratch` | Detect, above |
 
 ## Steps
 
@@ -336,7 +336,7 @@ fill it in from step 3. In `AGENTS.md`, one line:
 
 ```toml
 [patterns.event-feed]
-params = { source = "myApp", group = "group.com.example.feed", opt_in = "no", scratch = "--scratch-database" }
+params = { source = "myApp", group = "group.com.example.feed", opt_in = "no", scratch = "ScratchBuild.isScratch" }
 # Kinds and deviations are in docs/feed.md.
 ```
 

@@ -134,8 +134,8 @@ static let inbox: CommandInbox<AppCommand>? = {
 ```
 
 and `inbox?.start()` in `main()`, from `MainActor.assumeIsolated` if
-`main()` is not isolated. The condition is the app's: `--scratch-database`
-(`scratch-data`), or a database other than the real one. If `perform`
+`main()` is not isolated. The condition is `ScratchBuild.isScratch`
+(`scratch-data`): only a scratch build has an inbox. If `perform`
 returns a `CommandReply` already, pass it as it is.
 
 Give `isReady:` if commands need something first, for example
@@ -144,19 +144,19 @@ state waiting will not fix. Give `snapshot:` if the app can draw its windows
 to files. A `state` command returns `CommandReply("state", state: …)` with
 an `Encodable` value, which the result carries as it is.
 
-For an iOS app, start it in the simulator only, with the default
-directory:
+For an iOS app, start it in a scratch build only (every simulator build is
+one), with the default directory:
 
 ```swift
-#if targetEnvironment(simulator)
-inbox = CommandInbox(directory: InboxDirectory.applicationSupport, …)
-inbox?.start()
-#endif
+if ScratchBuild.isScratch {
+    inbox = CommandInbox(directory: InboxDirectory.applicationSupport, …)
+    inbox?.start()
+}
 ```
 
 **5. Pass the directory.** The scratch run launches the app with
-`--commands <dir>`, **before** any switch without a value
-(`--scratch-database`): AppKit reads launch arguments as `-key value` pairs.
+`--commands <dir>`, **before** any switch without a value: AppKit reads
+launch arguments as `-key value` pairs.
 
 - With `scratch-data`: before its include, `SCRATCH_ARGS := --commands
   "$(COMMANDS_DIR)"`, and `COMMANDS_DIR` set to the directory.
