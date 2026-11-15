@@ -57,7 +57,9 @@ struct StarterApp: App {
     var body: some Scene {
         Window("Starter App", id: "main") {
             MainWindow(model: Entry.model).scratchDataBanner(
-                ScratchBuild.isScratch ? "Starter Scratch: scratch data, accepting commands" : nil)
+                ScratchBuild.isScratch
+                    ? "Starter Scratch: scratch data" + (Entry.inbox == nil ? "" : ", accepting commands")
+                    : nil)
         }.defaultSize(width: 640, height: 480).commands { ItemCommands(model: Entry.model) }
     }
 }
