@@ -1,6 +1,6 @@
 # scratch-data changelog
 
-## Unreleased
+## v0.10.0 (2026-11-15)
 
 **Breaking: scratch is a separate build, "MyApp Scratch", never a launch
 flag. `--scratch-database` is removed.** A scratch build is its own app:

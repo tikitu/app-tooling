@@ -4,7 +4,7 @@ What changed in each release of app-tooling. Each pattern has its own
 `CHANGELOG.md` with what a project must do to catch up; this file is the
 summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
-## Unreleased
+## v0.10.0 (2026-11-15)
 
 - **Breaking: scratch is a separate build, "MyApp Scratch", never a launch
   flag** (scratch-data, scratch-look, command-inbox). A scratch build is its

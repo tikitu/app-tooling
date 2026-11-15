@@ -1,6 +1,6 @@
 # scratch-look changelog
 
-## Unreleased
+## v0.10.0 (2026-11-15)
 
 **Breaking, with scratch-data: what is marked is the scratch build ("MyApp
 Scratch", its own app), and every mark is fixed when it is built.**
