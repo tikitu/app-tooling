@@ -30,12 +30,13 @@ $(if $(SCRATCH_BUILD),,$(error scratch-data: set SCRATCH_BUILD, the target that 
 .PHONY: run-scratch scratch-reset
 
 # A shell command printing the pids of processes started from the bundle at
-# $(1), a path relative to here or absolute, which may contain spaces. Only
-# processes whose command line starts with that absolute path are found: a
-# relative path or the bundle id would also reach a build from another
-# checkout of the same project.
+# $(1), a path relative to here or absolute, which may contain spaces, its
+# embedded helpers included. Only processes whose command line starts with
+# that absolute (physical) path are found: a relative path or the bundle id
+# would also reach a build from another checkout of the same project.
 app-pids = app='$(1)'; [ "$${app\#/}" != "$$app" ] || app='$(CURDIR)'/"$$app"; \
-  ps -axo pid=,args= | awk -v p="$$app/Contents/MacOS/" \
+  d=$$(cd "$$(dirname "$$app")" 2>/dev/null && pwd -P) && app="$$d/$$(basename "$$app")"; \
+  ps -axo pid=,args= | awk -v p="$$app/Contents/" \
   '{ pid = $$1; sub(/^ *[0-9]+ /, ""); if (index($$0, p) == 1) print pid }'
 
 # The scratch build's processes, for a project's screenshot target.
@@ -69,11 +70,14 @@ run-scratch: $(SCRATCH_BUILD)
 	open -g -n "$(SCRATCH_APP)" $(if $(strip $(SCRATCH_ARGS)),--args $(SCRATCH_ARGS))
 	@echo "✓ launched the scratch build, in the background"
 
-# Refuses a SCRATCH_DIR whose path does not name the scratch bundle id: an
-# empty or mistyped variable must not become `rm -rf` of the real data.
+# Refuses a SCRATCH_DIR or SCRATCH_DEFAULTS that does not name the scratch
+# bundle id: an empty or mistyped variable must not become `rm -rf` of the
+# real data, or `defaults delete` of the real settings.
 scratch-reset:
 	@case "$(SCRATCH_DIR)" in *.scratch|*.scratch/*) ;; \
 	  *) echo "✗ SCRATCH_DIR ('$(SCRATCH_DIR)') must be under the scratch bundle id (a path component ending \".scratch\")"; exit 1;; esac
+	@case "$(SCRATCH_DEFAULTS)" in ""|*.scratch|*.scratch/*) ;; \
+	  *) echo "✗ SCRATCH_DEFAULTS ('$(SCRATCH_DEFAULTS)') must be the scratch bundle id's (ending \".scratch\")"; exit 1;; esac
 	$(quit-scratch)
 	rm -rf "$(SCRATCH_DIR)"
 	@# `defaults delete`, not `rm`: cfprefsd caches the file, and a plist

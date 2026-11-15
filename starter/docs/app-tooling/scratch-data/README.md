@@ -49,7 +49,10 @@ The pattern supplies:
   icon banded by scratch-look's `make-scratch-icon.py`, the entitlements
   made fit for an ad hoc signature (App Groups given `.scratch`), and the
   same done to every app embedded in it (a login item, a menu-bar helper).
-  An Xcode app uses a build configuration instead (`apply.md`).
+  It refuses an app that embeds app extensions, XPC services or apps inside
+  frameworks, which it cannot make scratch yet, and an icon in an asset
+  catalog, which it cannot band. An Xcode app uses a build configuration
+  instead (`apply.md`).
 - **`mk/scratch-data.mk`**:
   - **`make run-scratch`**: builds the scratch app, quits the copy of it
     from this checkout if it is running, and launches it behind whatever has
@@ -58,9 +61,10 @@ The pattern supplies:
     started from this checkout's bundle, by absolute path, each by its pid,
     never by bundle id.
   - **`make scratch-reset`**: quits it and deletes the scratch data
-    directory and defaults. It refuses a directory whose path does not name
-    the scratch bundle id, so an empty or mistyped variable cannot become
-    `rm -rf` of the real data.
+    directory and defaults. It refuses a directory or defaults domain that
+    does not name the scratch bundle id, so an empty or mistyped variable
+    cannot become `rm -rf` of the real data or `defaults delete` of the real
+    settings.
   - **`quit-running`** (the real app) and **`scratch-pids`**, for the
     project's own `run` and screenshot targets.
 
