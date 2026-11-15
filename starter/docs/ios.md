@@ -56,7 +56,7 @@ updates all three packages.
 | `ios-project` | `xcodegen generate`, then copy in the lockfile |
 | `ios-build` | build for the simulator with `CODE_SIGNING_ALLOWED=NO`, so no provisioning profile is needed |
 | `ios-test` | the iOS package's suite on a simulator (`xcodebuild test -workspace Packages/StarterIOSKit`) |
-| `ios-run` | install and launch on the booted simulator with `xcrun simctl` |
+| `ios-run` | install and launch with `xcrun simctl` on the project's own simulator ("Starter iPhone"), by the UDID `scripts/ios-sim-udid.sh` gives, never `booted`: other projects' simulators are booted too (`docs/app-tooling/command-inbox/apply.md`, step 6a) |
 | `ios-device-build`, `ios-device-run` | sign for real (`-allowProvisioningUpdates`) and install with `xcrun devicectl` |
 | `ios-device-which` | which commit the app on the device was built from |
 | `ios-clean` | delete the generated project |

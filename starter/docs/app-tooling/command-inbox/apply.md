@@ -205,6 +205,34 @@ one its `make ios-run` installs to). Without `--udid` the script uses
 `booted`, and with several simulators booted `simctl` picks one, which may
 not have the app.
 
+**6a. The project's simulator** (an iOS app). Name it after the project and
+state its device type, once, in the `Makefile`, and have `ios-run` and the
+sender both take the UDID from `scripts/ios-sim-udid.sh`:
+
+```make
+# The project's own simulator, made on the newest iOS runtime if missing
+# (app-tooling: command-inbox). Never a bare device name: other projects'
+# simulators have those too.
+IOS_SIM             ?= MyApp iPhone
+IOS_SIM_DEVICE_TYPE := iPhone 17
+IOS_SIM_UDID_CMD     = scripts/ios-sim-udid.sh '$(IOS_SIM)' '$(IOS_SIM_DEVICE_TYPE)'
+
+ios-sim-udid:
+	@$(IOS_SIM_UDID_CMD)
+
+ios-run: ios-build
+	@udid=$$($(IOS_SIM_UDID_CMD)) || exit 1; \
+	  xcrun simctl boot "$$udid" 2>/dev/null || true; \
+	  xcrun simctl install "$$udid" "$(IOS_SIM_APP)"; \
+	  xcrun simctl launch "$$udid" $(IOS_BUNDLE_ID)
+```
+
+and in `scripts/send-commands.sh`, for the simulator,
+`--udid "$(make -s ios-sim-udid)"`, so the name is defined only in the
+`Makefile`. A project whose own lookup (by `IOS_SIM` name, "the first
+booted iPad", a script of its own) does this job replaces it with the
+script. `IOS_SIM_UDID=<udid>` overrides both for one run.
+
 **7. `docs/commands.md`**, the project's: how to start a scratch run and
 send commands, the invariant (every control performs a command through
 `perform`, and how the project keeps it), what each command does, at least
@@ -278,6 +306,12 @@ params = { package = "Packages/MyAppKit", notification = "org.example.myapp.comm
   as the document has examples).
 - `scripts/send-commands.sh '{"commands":[]}'` with no app running exits 1
   with `✗ no process matches …`.
+- An iOS app: `make ios-sim-udid` prints the same UDID twice running (the
+  first run may make the simulator, saying so on stderr), and
+  `scripts/ios-sim-udid.sh 'iPhone 17'` exits 1. With another simulator
+  booted beside the project's, `make ios-run` launches on the project's
+  (`xcrun simctl listapps <its udid>` lists the bundle id) and a send
+  reaches it, exit 0.
 - On a scratch run (`make run-scratch`), a round trip: a command the app
   has, `state` if it has one, and a typo.
 
