@@ -223,13 +223,13 @@ ios-sim-udid:
 ios-run: ios-build
 	@udid=$$($(IOS_SIM_UDID_CMD)) || exit 1; \
 	  xcrun simctl boot "$$udid" 2>/dev/null || true; \
-	  xcrun simctl install "$$udid" "$(IOS_SIM_APP)"; \
+	  xcrun simctl install "$$udid" "$(IOS_SIM_APP)" && \
 	  xcrun simctl launch "$$udid" $(IOS_BUNDLE_ID)
 ```
 
 and in `scripts/send-commands.sh`, for the simulator,
-`--udid "$(make -s ios-sim-udid)"`, so the name is defined only in the
-`Makefile`. A project whose own lookup (by `IOS_SIM` name, "the first
+`--udid "$(make -s --no-print-directory ios-sim-udid)"`, so the name is
+defined only in the `Makefile`. A project whose own lookup (by `IOS_SIM` name, "the first
 booted iPad", a script of its own) does this job replaces it with the
 script. `IOS_SIM_UDID=<udid>` overrides both for one run.
 
