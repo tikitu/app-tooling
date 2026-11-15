@@ -86,11 +86,20 @@ band_icon() {
 }
 
 # The entitlements the bundle was signed with, made fit for an ad hoc scratch
-# build, in $work/entitlements.plist; returns 1 if it has none, and stops
-# the script if they cannot be read (signing without them would drop the
-# sandbox, and with it the scratch build's own container).
+# build, in $work/entitlements.plist; returns 1 if it is unsigned or has
+# none, and stops the script if a signed bundle's cannot be read (signing
+# without them would drop the sandbox, and with it the scratch build's own
+# container).
 scratch_entitlements() {
-	codesign -d --entitlements - --xml "$1" >"$work/entitlements.plist" 2>/dev/null || return 1
+	local err
+	if ! err="$(codesign -d --entitlements - --xml "$1" 2>&1 >"$work/entitlements.plist")"; then
+		# Truly unsigned (no _CodeSignature either): there are none to keep.
+		# A damaged signature also reads as "not signed at all", so it stops.
+		case "$err" in *"not signed at all"*)
+			[ -e "$1/Contents/_CodeSignature" ] || return 1 ;;
+		esac
+		fail "could not read the entitlements $1 was signed with, and will not sign it without them: $err"
+	fi
 	[ -s "$work/entitlements.plist" ] || return 1
 	python3 -I - "$work/entitlements.plist" <<'PY' || fail "could not derive scratch entitlements for $1"
 import plistlib, sys

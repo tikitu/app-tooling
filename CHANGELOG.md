@@ -19,7 +19,10 @@ summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
   `ScratchMenuBarBadge` for menu-bar apps; `make-scratch-icon.py` reads
   `.iconset`s. **The real build's bundle id, container and data location
   must not change**: an unsandboxed app keys the scratch build's data
-  directory on its bundle id and leaves the real one where it is. A project
+  directory on its bundle id and leaves the real one where it is, and gives
+  every App Group id and defaults suite named in code `.scratch` in the
+  scratch build (unsandboxed, its entitlements do not keep it out of the
+  real build's). A project
   with these patterns: follow the steps in scratch-data's changelog, then
   scratch-look's and command-inbox's.
 - **command-inbox: each project uses its own named iOS simulator**, through

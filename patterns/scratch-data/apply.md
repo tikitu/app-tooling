@@ -107,6 +107,24 @@ file added to it.
 - **User defaults:** the standard ones. The scratch build's domain is its
   own bundle id, so delete a `UserDefaults(suiteName: "<id>.scratch")` and
   `.defaultAppStorage` that only existed for scratch runs.
+- **App Groups and defaults suites named in code.** The scratch build's
+  entitlements give each App Group `.scratch` (step 3), but nothing holds
+  an **unsandboxed** app to its entitlements: a hard-coded
+  `UserDefaults(suiteName: "group.com.example.MyApp")`, `containerURL(forSecurityApplicationGroupIdentifier:)`
+  or `~/Library/Group Containers/…` path in the scratch build opens the
+  real build's data. Name each group id and shared suite in one place,
+  with `.scratch` added in the scratch build, matching its entitlements.
+  The real build's ids stay as they are:
+
+  ```swift
+  /// The real build's App Group, unchanged; the scratch build's ends
+  /// ".scratch", as its entitlements do, so they never share data.
+  let appGroup = "group.com.example.MyApp" + (ScratchBuild.isScratch ? ".scratch" : "")
+  ```
+
+  Helpers use the same (the scratch build sets `ScratchBuild` in them
+  too). Sandboxed apps should do it as well: it costs nothing and keeps
+  the code honest if the sandbox is ever dropped.
 - **Sync:** when `ScratchBuild.isScratch`, do not start it. Put the
   condition where sync is started, so it is visible at launch.
 - **Helpers:** a scratch build launches only its own embedded helpers, and
