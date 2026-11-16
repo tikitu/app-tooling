@@ -4,7 +4,7 @@ What changed in each release of app-tooling. Each pattern has its own
 `CHANGELOG.md` with what a project must do to catch up; this file is the
 summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
-## Unreleased
+## v0.10.1 (2026-11-16)
 
 - **scratch-data: iOS device builds could get an empty display name**
   (patch). With no unconditional display name on the target, v0.10.0's
