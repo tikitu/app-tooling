@@ -4,6 +4,16 @@ What changed in each release of app-tooling. Each pattern has its own
 `CHANGELOG.md` with what a project must do to catch up; this file is the
 summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
+## Unreleased
+
+- **scratch-data: iOS device builds could get an empty display name**
+  (patch). With no unconditional display name on the target, v0.10.0's
+  simulator-only `CFBundleDisplayName` left device and Mac builds with
+  `""`. A project that followed v0.10.0 with an iOS app: check a device
+  build's `CFBundleDisplayName`, and if it is empty set
+  `INFOPLIST_KEY_CFBundleDisplayName` to the real name (the pattern's
+  changelog).
+
 ## v0.10.0 (2026-11-15)
 
 - **Breaking: scratch is a separate build, "MyApp Scratch", never a launch
