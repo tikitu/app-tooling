@@ -1,6 +1,6 @@
 # scratch-data changelog
 
-## Unreleased
+## v0.10.1 (2026-11-16)
 
 **Fix: an iOS target with no display name of its own got an empty one on
 device builds.** v0.10.0's `INFOPLIST_KEY_CFBundleDisplayName[sdk=iphonesimulator*]`

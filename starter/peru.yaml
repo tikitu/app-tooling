@@ -20,8 +20,8 @@ imports:
 
 git module app-tooling:
     url: https://github.com/tikitu/app-tooling
-    reup: display-name-K9NBZYP
-    rev: 48f710196d0037e76128eef486a555774d18d0bd
+    reup: v0.10.1
+    rev: f8bf6e93f8b5a7949d366d7da4e7805318847806
 
 rule pattern-imports:
     export: patterns/pattern-imports/files
