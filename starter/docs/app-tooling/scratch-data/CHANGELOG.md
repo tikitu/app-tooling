@@ -1,5 +1,21 @@
 # scratch-data changelog
 
+## Unreleased
+
+**Fix: an iOS target with no display name of its own got an empty one on
+device builds.** v0.10.0's `INFOPLIST_KEY_CFBundleDisplayName[sdk=iphonesimulator*]`
+gives every other SDK `CFBundleDisplayName = ""` when the target has no
+unconditional display name and a generated Info.plist: the device build
+(TestFlight included) and any Mac build of the same target. `apply.md`
+step 3 now says to set the unconditional one to the real name, and Verify
+checks the device build's name. A project that followed v0.10.0 with an
+iOS app: build for a device (`-destination 'generic/platform=iOS'`, each
+configuration that ships) and run `plutil -extract CFBundleDisplayName raw`
+on its `Info.plist`. If it prints nothing, add
+`INFOPLIST_KEY_CFBundleDisplayName = MyApp` (the real name) to the app
+target, and check again. Projects whose target already had a display name
+(XcodeGen with one in `settings.base`, say) have nothing to do.
+
 ## v0.10.0 (2026-11-15)
 
 **Breaking: scratch is a separate build, "MyApp Scratch", never a launch

@@ -181,9 +181,19 @@ worked example of a sandboxed app.
   INFOPLIST_KEY_CFBundleDisplayName[sdk=iphonesimulator*] = MyApp Scratch
   ```
 
-  with the same Info.plist entry. XcodeGen: the same keys under the
-  target's `settings.base`, and `ScratchBuild: $(IS_SCRATCH_BUILD)` under
-  `info.properties`. The icon is scratch-look's step 2.
+  with the same Info.plist entry. If the target has no unconditional
+  display name yet (no `INFOPLIST_KEY_CFBundleDisplayName` without an
+  `[sdk=…]`, and none in its Info.plist file), add one with the real name:
+
+  ```
+  INFOPLIST_KEY_CFBundleDisplayName = MyApp
+  ```
+
+  Without it, a generated Info.plist gives every device build an empty
+  `CFBundleDisplayName` (`""`), not the product name. XcodeGen: the same
+  keys under the target's `settings.base`, and
+  `ScratchBuild: $(IS_SCRATCH_BUILD)` under `info.properties`. The icon is
+  scratch-look's step 2.
 
 **4. The Makefile.** Set the parameters and include the fragment, after the
 target that builds the scratch app:
@@ -247,4 +257,8 @@ params = { swift_dir = "Sources/MyAppCore" }
   or directory".
 - iOS: a simulator build's `Info.plist` has `ScratchBuild` `YES` and the
   display name "MyApp Scratch"; a device build (`-destination
-  'generic/platform=iOS'`) has neither.
+  'generic/platform=iOS'`) has no `ScratchBuild`, and its
+  `CFBundleDisplayName` is the real name ("MyApp"), never empty:
+  `plutil -extract CFBundleDisplayName raw <device build>.app/Info.plist`
+  prints `MyApp`. Check every configuration that builds for a device
+  (the TestFlight one too), and the Mac build's if the target has one.
