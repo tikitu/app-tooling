@@ -22,6 +22,9 @@ usage() { sed -n '3,12p' "$0" >&2; exit 2; }
 repo="" tap="" cask_name="" asset="" version=""
 while [ $# -gt 0 ]; do
 	case "$1" in
+		--repo|--tap|--cask|--asset) [ $# -ge 2 ] || usage ;;
+	esac
+	case "$1" in
 		--repo) repo="${2:-}"; shift 2 ;;
 		--tap) tap="${2:-}"; shift 2 ;;
 		--cask) cask_name="${2:-}"; shift 2 ;;
@@ -35,6 +38,10 @@ done
 tap_dir="$(brew --repository "$tap")"
 cask="$tap_dir/Casks/$cask_name.rb"
 [ -f "$cask" ] || { echo "✗ no $cask — brew tap $tap first" >&2; exit 1; }
+# The two lines this rewrites, in the form it rewrites; otherwise the sed
+# below would change nothing and report the cask as already up to date.
+grep -qE '^  version "[^"]*"' "$cask" && grep -qE '^  sha256 "[^"]*"' "$cask" || {
+	echo "✗ $cask has no '  version \"…\"' and '  sha256 \"…\"' lines to rewrite" >&2; exit 1; }
 if [ -n "$(git -C "$tap_dir" status --porcelain)" ]; then
 	echo "✗ $tap_dir has uncommitted changes" >&2; exit 1
 fi

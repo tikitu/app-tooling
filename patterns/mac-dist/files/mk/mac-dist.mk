@@ -19,7 +19,8 @@
 #   MAC_DIST_SIGN_NESTED   a target of the project's that signs code nested
 #                          in the app (a helper tool, a helper app), with
 #                          $(mac_dist_codesign); it must depend on
-#                          $(MAC_DIST_BUILD)                        (optional)
+#                          $(MAC_DIST_BUILD), and its rule must come after
+#                          the Makefile's default target    (optional)
 #   TEAM_ID, DEVELOPER_NAME  as on the Developer ID Application certificate
 #   NOTARY_PROFILE         the notarytool keychain profile
 #
@@ -78,8 +79,8 @@ dist: check-version $(MAC_DIST_CLEAN) $(MAC_DIST_BUILD) sign zip-notary notarize
 	@echo "  next: make github-release   (or upload $(RELEASE_ZIP) manually)"
 
 check-version:
-	@[ -n "$(MAC_DIST_APP)" ] && [ -n "$(MAC_DIST_NAME)" ] && [ -n "$(MAC_DIST_BUILD)" ] || \
-	  { echo "✗ set MAC_DIST_APP, MAC_DIST_NAME and MAC_DIST_BUILD before including mk/mac-dist.mk"; exit 1; }
+	@[ -n "$(MAC_DIST_APP)" ] && [ -n "$(MAC_DIST_NAME)" ] && [ -n "$(MAC_DIST_ENTITLEMENTS)" ] && [ -n "$(MAC_DIST_BUILD)" ] || \
+	  { echo "✗ set MAC_DIST_APP, MAC_DIST_NAME, MAC_DIST_ENTITLEMENTS and MAC_DIST_BUILD before including mk/mac-dist.mk"; exit 1; }
 	@if [ -z "$(VERSION)" ]; then \
 	  echo "✗ VERSION is empty — no exact vX.Y.Z git tag at HEAD and no VERSION file."; \
 	  echo "  Tag the release first:   git tag v0.1.0 && make dist"; \

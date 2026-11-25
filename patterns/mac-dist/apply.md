@@ -85,12 +85,22 @@ include mk/mac-dist.mk
 The `MAC_DIST_*` variables must be set before the `include`. Recipes that
 read `$(VERSION)` (the build passing it to `build.sh`) can be anywhere.
 
-**3. Nested code, if any.** A target of the project's, set as
+**3. Nested code, if any.** A target of the project's, named as
 `MAC_DIST_SIGN_NESTED` before the `include`. It depends on the build and
-signs each piece inside out, each with its own identifier:
+signs each piece inside out, each with its own identifier. Set the variable
+with the others:
 
 ```make
-MAC_DIST_SIGN_NESTED := sign-nested
+MAC_DIST_SIGN_NESTED  := sign-nested
+```
+
+and write the rule itself **after the `Makefile`'s default target** (`all:`
+or whichever comes first), beside the release target. A rule written
+before it becomes the default goal, and a bare `make` would then build a
+release and sign it with the Developer ID:
+
+```make
+# The helper is signed first, with its own identifier (app-tooling: mac-dist).
 sign-nested: release
 	$(mac_dist_codesign) --identifier com.example.myapp.helper "$(APP)/Contents/MacOS/MyAppHelper"
 ```
@@ -99,10 +109,18 @@ Add it to `.PHONY`. Entitlements of its own, if the nested code has any,
 go on its line with `--entitlements`.
 
 **4. `help`.** If the `Makefile`'s `help` lists the release targets, keep
-the lines; check they still name `$(RELEASE_ZIP)` and `$(NOTARY_PROFILE)`,
-which the pattern defines.
+the lines; check they still name `$(RELEASE_ZIP)`, which the pattern
+defines, and `$(NOTARY_PROFILE)`, which the project sets (step 2).
 
-**5. The release notes.** Where the project's docs say how to release
+**5. `app-tooling.toml`.** Record the pattern, with what is not obvious
+from the `Makefile`:
+
+```toml
+[patterns.mac-dist]
+params = { team_id = "XXXXXXXXXX", notary_profile = "myapp-notary", sign_nested = "sign-nested" }
+```
+
+**6. The release notes.** Where the project's docs say how to release
 (`docs/releasing.md`, a README section), link
 `docs/app-tooling/mac-dist/README.md` for the targets, and keep only what
 is the project's: who releases, on which Mac, where the secrets are kept.
@@ -123,9 +141,14 @@ make print-version
   `stapler staple` and `validate`; `ditto` to the `-macos.zip`; `spctl` and
   `codesign --verify --deep`. A nested piece missing here is missing from
   the release.
-- Where the project already released with its own targets, compare: `make
-  -n dist VERSION=0.0.0` before the change and after should differ only in
-  the order of `codesign`'s options.
+- `make -n` with no target prints the everyday build, as before: not
+  `./build.sh release` or a `codesign` with the Developer ID. If it signs,
+  the `sign-nested` rule came before the default target (step 3).
+- Where the project already released with its own targets, compare `make
+  -n dist VERSION=0.0.0` before the change and after. They should differ
+  only in the order of `codesign`'s options, the fragment's two-line check
+  of its `MAC_DIST_*` parameters at the top, and nested code's `codesign`
+  coming before the `→ signing` line rather than after it.
 - `print-version` shows the `VERSION` file's version, and `(none)` for the
   tag unless `HEAD` has one.
 

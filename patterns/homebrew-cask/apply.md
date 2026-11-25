@@ -68,7 +68,14 @@ HOMEBREW_CASK_NAME := myapp
 include mk/homebrew-cask.mk
 ```
 
-**3. The docs.** The app's README says how to install it: the three
+**3. `app-tooling.toml`.**
+
+```toml
+[patterns.homebrew-cask]
+params = { repo = "example/myapp", tap = "example/internal", cask = "myapp" }
+```
+
+**4. The docs.** The app's README says how to install it: the three
 commands from this pattern's README, with the tap, the trust and the SSH
 address. Its releasing notes add the tap and the trust to the once-per-Mac
 setup, and `make bump-cask` and the push after `make github-release`. If
