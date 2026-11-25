@@ -4,6 +4,24 @@ What changed in each release of app-tooling. Each pattern has its own
 `CHANGELOG.md` with what a project must do to catch up; this file is the
 summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
+## Unreleased
+
+- **New pattern `mac-dist`**: the starter's `make dist`, `make
+  github-release` and `make notary-setup`, moved into `mk/mac-dist.mk`.
+  `notary-setup` takes an App Store Connect team API key as well as an
+  Apple Account; nested code is signed first by a target the project names
+  as `MAC_DIST_SIGN_NESTED`. A project with the starter's release targets
+  in its `Makefile`: follow `patterns/mac-dist/apply.md`, which replaces
+  them.
+- **New pattern `homebrew-cask`**, from the inbox item "A cask in a private
+  tap": `make bump-cask` points a cask in a private tap at the published
+  release, the install steps include Homebrew 7's `brew trust`, and
+  `tap/` has the `gh` download strategy for the tap. A project with a
+  hand-copied `bump-cask.sh`: follow `patterns/homebrew-cask/apply.md`.
+- **The starter takes `mac-dist`**: its release targets are now
+  `mk/mac-dist.mk`. Nothing for an existing project to do beyond the
+  above.
+
 ## v0.10.1 (2026-11-16)
 
 - **scratch-data: iOS device builds could get an empty display name**

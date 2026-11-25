@@ -34,3 +34,7 @@ params = { swift_dir = "Packages/StarterKit/Sources/Core" }
 # make-scratch-app.sh at every build; there is no asset catalog.
 [patterns.scratch-look]
 params = { banner_dir = "Packages/StarterMacKit/Sources/MacUI" }
+
+# No TEAM_ID, DEVELOPER_NAME or nested code yet: an app made from the
+# starter fills them in before its first `make dist`.
+[patterns.mac-dist]

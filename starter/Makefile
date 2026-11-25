@@ -25,40 +25,23 @@ APP_NAME      := Starter
 DISPLAY_NAME  := Starter App
 ENTITLEMENTS  := StarterMac/StarterMac.entitlements
 
-# ---------------------------------------------------------------------------
-# Release variables
-# ---------------------------------------------------------------------------
-# Version is resolved in this order:
-#   1. VERSION=... on the command line (one-off testing, no tag needed).
-#   2. An exact `vX.Y.Z` git tag at HEAD (the canonical `make dist` path).
-#   3. The VERSION file at the repo root (preview the pipeline pre-tag).
-GIT_TAG_VERSION := $(shell git describe --tags --exact-match --match 'v[0-9]*' 2>/dev/null | sed 's/^v//')
-FILE_VERSION    := $(shell test -f VERSION && sed -n '1p' VERSION | tr -d '[:space:]')
-VERSION         ?= $(or $(GIT_TAG_VERSION),$(FILE_VERSION))
-
-DIST_DIR      := dist
-NOTARY_ZIP    := $(DIST_DIR)/$(APP_NAME)-$(VERSION)-notary.zip
-RELEASE_ZIP   := $(DIST_DIR)/$(APP_NAME)-$(VERSION)-macos.zip
-
 # Dev signing identity. Ad-hoc is enough until the app needs an entitlement
 # that a provisioning profile has to grant, such as iCloud.
 DEV_IDENTITY  ?= -
 
-# Distribution signing. Developer ID + hardened runtime + notarization.
-# Fill in TEAM_ID and DEVELOPER_NAME (as on the certificate) before the first
-# `make dist`, or pass CERT_NAME=... in full.
-TEAM_ID        ?=
-DEVELOPER_NAME ?=
-CERT_NAME      ?= $(if $(TEAM_ID),Developer ID Application: $(DEVELOPER_NAME) ($(TEAM_ID)),)
-
-# Notarization credentials profile name. Populate once with
-# `make notary-setup` (interactive; never puts the password on the cmdline).
-NOTARY_PROFILE ?= starter-notary
-
-# Hand-written notes for `make github-release` (generated ones otherwise).
-# Keep the file outside the worktree, not in dist/: `make dist` starts with
-# `clean`, which deletes dist/. The GitHub release is where the notes live.
-NOTES_FILE       ?=
+# `make dist`: signed with the Developer ID, notarized, stapled, zipped and
+# checked; `make github-release` publishes it (app-tooling: mac-dist).
+# docs/app-tooling/mac-dist/. Fill in TEAM_ID and DEVELOPER_NAME (as on the
+# certificate) before the first `make dist`, or pass CERT_NAME=... in full.
+# The notary profile is stored once per Mac with `make notary-setup`.
+TEAM_ID               ?=
+DEVELOPER_NAME        ?=
+NOTARY_PROFILE        ?= starter-notary
+MAC_DIST_APP          := $(APP)
+MAC_DIST_NAME         := $(APP_NAME)
+MAC_DIST_ENTITLEMENTS := $(ENTITLEMENTS)
+MAC_DIST_BUILD        := release
+include mk/mac-dist.mk
 
 # app-tooling-update and app-tooling-check, for the conventions imported from
 # app-tooling (peru.yaml; docs/app-tooling/pattern-imports/README.md).
@@ -79,8 +62,7 @@ include mk/mac-install.mk
 
 .PHONY: all deps outdated update-pins check-pins check-shared-ios build build-scratch check test release run run-background run-scratch scratch-reset \
         screenshot clean uninstall register help \
-        icon check-version notary-setup sign zip-notary notarize staple zip-release \
-        checksum verify-release dist github-release print-version \
+        icon \
         fmt fmt-check lint rules
 
 all: build
@@ -248,11 +230,6 @@ test: deps
 	swift test --package-path $(SHARED) $(SWIFT_PINNED)
 	@echo "✓ tests pass"
 
-print-version:
-	@echo "VERSION=$(VERSION)"
-	@echo "  git tag at HEAD: $(if $(GIT_TAG_VERSION),$(GIT_TAG_VERSION),(none))"
-	@echo "  VERSION file:    $(if $(FILE_VERSION),$(FILE_VERSION),(missing))"
-
 # ---------------------------------------------------------------------------
 # Run / install / register
 # ---------------------------------------------------------------------------
@@ -371,101 +348,3 @@ lint: fmt-check rules
 clean:
 	rm -rf build .build $(SHARED)/.build $(PACKAGE)/.build $(DIST_DIR)
 	@echo "✓ removed build/, .build/, and $(DIST_DIR)/"
-
-# ---------------------------------------------------------------------------
-# Release pipeline: sign → zip-notary → notarize → staple → zip-release →
-# checksum → verify-release. The two-zip dance is on purpose: Apple's notary
-# service operates on a zip; stapling writes the ticket back into the .app;
-# the zip we distribute must be a fresh one taken AFTER stapling.
-#
-#   git tag v0.1.0 && make dist
-# ---------------------------------------------------------------------------
-
-dist: check-version clean release sign zip-notary notarize staple zip-release checksum verify-release
-	@echo "✓ release artifact ready: $(RELEASE_ZIP)"
-	@echo "  next: make github-release   (or upload $(RELEASE_ZIP) manually)"
-
-check-version:
-	@if [ -z "$(VERSION)" ]; then \
-	  echo "✗ VERSION is empty — no exact vX.Y.Z git tag at HEAD and no VERSION file."; \
-	  echo "  Tag the release first:   git tag v0.1.0 && make dist"; \
-	  echo "  Or override:             make dist VERSION=0.1.0"; \
-	  exit 1; \
-	fi
-	@if [ -z "$(GIT_TAG_VERSION)" ]; then \
-	  echo "✗ make dist requires an exact 'vX.Y.Z' git tag at HEAD."; \
-	  echo "  HEAD currently has no matching tag; VERSION=$(VERSION) came from a fallback."; \
-	  echo "  Tag the release first:   git tag v$(VERSION) && make dist"; \
-	  exit 1; \
-	fi
-	@echo "→ release version $(VERSION)"
-
-notary-setup:
-	@command -v xcrun >/dev/null 2>&1 || { echo "✗ xcrun not found — install Xcode or the Command Line Tools"; exit 1; }
-	@if [ ! -t 0 ]; then \
-	  echo "✗ make notary-setup is interactive — run it in a real terminal,"; \
-	  echo "  not from an editor / agent shell (it prompts for your password)."; \
-	  echo "    1. Create an App-Specific Password at https://appleid.apple.com → Sign-In and Security."; \
-	  echo "    2. Run: make notary-setup APPLE_ID=you@example.com TEAM_ID=XXXXXXXXXX"; \
-	  echo "    3. Paste the App-Specific Password when prompted."; \
-	  exit 1; \
-	fi
-	@if [ -z "$(TEAM_ID)" ]; then echo "✗ TEAM_ID required: make notary-setup TEAM_ID=XXXXXXXXXX APPLE_ID=you@example.com"; exit 1; fi
-	@echo "→ storing notary credentials in keychain profile '$(NOTARY_PROFILE)' (team $(TEAM_ID))"
-	xcrun notarytool store-credentials "$(NOTARY_PROFILE)" \
-	  --team-id "$(TEAM_ID)" \
-	  $(if $(APPLE_ID),--apple-id "$(APPLE_ID)",)
-	@echo "✓ stored. 'make dist' / 'make notarize' will use profile '$(NOTARY_PROFILE)'."
-
-sign: release
-	@if [ -z "$(CERT_NAME)" ]; then echo "✗ CERT_NAME required (set TEAM_ID, or pass CERT_NAME=...)"; exit 1; fi
-	@echo "→ signing $(APP) as $(CERT_NAME)"
-	codesign --force --options runtime --timestamp \
-	  --entitlements "$(ENTITLEMENTS)" \
-	  --sign "$(CERT_NAME)" "$(APP)"
-	codesign --verify --strict --verbose=2 "$(APP)"
-
-zip-notary: sign
-	@mkdir -p "$(DIST_DIR)"
-	rm -f "$(NOTARY_ZIP)"
-	ditto -c -k --keepParent "$(APP)" "$(NOTARY_ZIP)"
-	@echo "✓ wrote $(NOTARY_ZIP)"
-
-notarize: zip-notary
-	@if [ -z "$(NOTARY_PROFILE)" ]; then \
-	  echo "✗ NOTARY_PROFILE is empty. Run 'make notary-setup' once first."; \
-	  exit 1; \
-	fi
-	@echo "→ submitting $(NOTARY_ZIP) via profile '$(NOTARY_PROFILE)' (a few minutes)"
-	xcrun notarytool submit "$(NOTARY_ZIP)" \
-	  --keychain-profile "$(NOTARY_PROFILE)" \
-	  --wait
-
-staple: notarize
-	xcrun stapler staple "$(APP)"
-	xcrun stapler validate "$(APP)"
-
-zip-release: staple
-	rm -f "$(RELEASE_ZIP)"
-	ditto -c -k --keepParent "$(APP)" "$(RELEASE_ZIP)"
-	@echo "✓ wrote $(RELEASE_ZIP)"
-
-checksum: zip-release
-	cd "$(DIST_DIR)" && shasum -a 256 "$$(basename $(RELEASE_ZIP))" > "$$(basename $(RELEASE_ZIP)).sha256"
-	@echo "✓ wrote $(RELEASE_ZIP).sha256"
-
-verify-release: zip-release
-	spctl --assess --type execute --verbose "$(APP)"
-	codesign --verify --deep --strict --verbose=2 "$(APP)"
-
-github-release:
-	@if ! command -v gh >/dev/null 2>&1; then echo "✗ gh CLI not installed (brew install gh)"; exit 1; fi
-	@if [ -z "$(VERSION)" ]; then echo "✗ VERSION required (tag or override)"; exit 1; fi
-	@if [ ! -f "$(RELEASE_ZIP)" ]; then echo "✗ $(RELEASE_ZIP) not found — run make dist first"; exit 1; fi
-	@if [ ! -f "$(RELEASE_ZIP).sha256" ]; then echo "✗ $(RELEASE_ZIP).sha256 not found — run make dist first"; exit 1; fi
-	gh release create "v$(VERSION)" \
-	  "$(RELEASE_ZIP)" \
-	  "$(RELEASE_ZIP).sha256" \
-	  --title "$(APP_NAME) $(VERSION)" \
-	  $(if $(NOTES_FILE),--notes-file "$(NOTES_FILE)",--generate-notes)
-	@echo "✓ published v$(VERSION)"
