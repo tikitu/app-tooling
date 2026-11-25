@@ -17,11 +17,13 @@ imports:
     app-tooling|scratch-look: ./
     app-tooling|scratch-look-docs: docs/app-tooling/scratch-look/
     app-tooling|scratch-look-swift: Packages/StarterMacKit/Sources/MacUI/
+    app-tooling|mac-dist: ./
+    app-tooling|mac-dist-docs: docs/app-tooling/mac-dist/
 
 git module app-tooling:
     url: https://github.com/tikitu/app-tooling
-    reup: v0.10.1
-    rev: f8bf6e93f8b5a7949d366d7da4e7805318847806
+    reup: developer-id-release
+    rev: dfef2462a30e05f03fa94fdd5f82342aaa42a2fb
 
 rule pattern-imports:
     export: patterns/pattern-imports/files
@@ -68,3 +70,9 @@ rule scratch-look-docs:
     export: patterns/scratch-look
 rule scratch-look-swift:
     export: patterns/scratch-look/swift
+
+rule mac-dist:
+    export: patterns/mac-dist/files
+rule mac-dist-docs:
+    pick: [patterns/mac-dist/README.md, patterns/mac-dist/apply.md, patterns/mac-dist/CHANGELOG.md]
+    export: patterns/mac-dist
