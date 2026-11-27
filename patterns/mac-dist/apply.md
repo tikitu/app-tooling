@@ -17,6 +17,8 @@ Read [`README.md`](README.md) first for what this does and why.
     project's `MAC_DIST_SIGN_NESTED` target (step 3);
   - a `notary-setup` that takes only one kind of credential: the pattern
     takes both;
+  - a check for a dirty checkout in `check-version` (`git diff --quiet`,
+    say): the pattern's checks for changed and untracked files both;
   - anything else: describe it to the user before replacing it. It may
     belong in the pattern instead.
 - **Something else doing this job.** Look for `notarytool`, `altool`,
@@ -147,10 +149,15 @@ make print-version
 - Where the project already released with its own targets, compare `make
   -n dist VERSION=0.0.0` before the change and after. They should differ
   only in the order of `codesign`'s options, the fragment's two-line check
-  of its `MAC_DIST_*` parameters at the top, and nested code's `codesign`
-  coming before the `→ signing` line rather than after it.
+  of its `MAC_DIST_*` parameters at the top, its clean-checkout check after
+  the tag check, and nested code's `codesign` coming before the `→ signing`
+  line rather than after it.
 - `print-version` shows the `VERSION` file's version, and `(none)` for the
   tag unless `HEAD` has one.
+- After the release build (`make <MAC_DIST_BUILD>`), `git status
+  --porcelain` prints nothing on an otherwise clean checkout. Anything it
+  lists is build output that `make dist` would refuse after an earlier
+  build: add it to `.gitignore`.
 
 On the Mac that releases, the real check is the next release: `make dist`
 must end with `spctl` printing `accepted` and `source=Notarized Developer

@@ -4,6 +4,17 @@ What changed in each release of app-tooling. Each pattern has its own
 `CHANGELOG.md` with what a project must do to catch up; this file is the
 summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
+## Unreleased
+
+- **mac-dist: `make dist` refuses a checkout with changed or untracked
+  files**, which it used to sign, notarize and label with the tag.
+  Git-ignored files do not count. A project with mac-dist: check that its
+  release build leaves `git status --porcelain` empty, and add whatever it
+  lists to `.gitignore` (the pattern's changelog).
+- **homebrew-cask: `make bump-cask` pulls the tap before looking for the
+  cask**, so the first bump after a new cask is merged into the tap no
+  longer fails. Nothing to do.
+
 ## v0.11.0 (2026-11-27)
 
 - **New pattern `mac-dist`**: the starter's `make dist`, `make

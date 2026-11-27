@@ -94,7 +94,10 @@ make bump-cask VERSION=<the version the cask is at now>
 - The second, for the version already in the cask, downloads the
   published checksum, finds nothing to change and prints `✓ the cask is
   already at <version>`. `✗ no … .sha256` means the repository or asset
-  name is wrong; `✗ no …/Casks/<name>.rb` means the tap or cask name is.
+  name is wrong; `✗ no clone of <tap>` means the tap name is, or the tap
+  is not tapped on this Mac; `✗ no Casks/<name>.rb` (said after pulling
+  the tap) means the cask name is, or the cask is not merged into the tap
+  yet.
 - `brew fetch --force --cask <user>/<tap>/<cask>` downloads with `gh` and
   checks the checksum, as the next bump will. A refusal naming an
   untrusted tap means the trust step is missing on this Mac.

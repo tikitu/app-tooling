@@ -36,7 +36,8 @@ _mac_dist_default_goal := $(.DEFAULT_GOAL)
 
 # The version, in this order:
 #   1. VERSION=… on the command line (a trial, no tag needed).
-#   2. An exact `vX.Y.Z` git tag at HEAD (the canonical `make dist` path).
+#   2. An exact `vX.Y.Z` git tag at HEAD (the canonical `make dist` path,
+#      which also requires a clean checkout).
 #   3. The VERSION file at the repo root (preview the pipeline before tagging).
 GIT_TAG_VERSION := $(shell git describe --tags --exact-match --match 'v[0-9]*' 2>/dev/null | sed 's/^v//')
 FILE_VERSION    := $(shell test -f VERSION && sed -n '1p' VERSION | tr -d '[:space:]')
@@ -91,6 +92,17 @@ check-version:
 	  echo "✗ make dist requires an exact 'vX.Y.Z' git tag at HEAD."; \
 	  echo "  HEAD currently has no matching tag; VERSION=$(VERSION) came from a fallback."; \
 	  echo "  Tag the release first:   git tag v$(VERSION) && make dist"; \
+	  exit 1; \
+	fi
+	@# The release carries the tag's name, so it must be exactly the tagged
+	@# commit: no changed files and no untracked ones (git-ignored build
+	@# output does not count). This runs before the clean and the build, so
+	@# only what was there beforehand is checked.
+	@if [ -n "$$(git status --porcelain)" ]; then \
+	  echo "✗ make dist requires a clean checkout. These would go into a release"; \
+	  echo "  labelled v$(VERSION) that does not contain them:"; \
+	  git status --short | sed 's/^/    /'; \
+	  echo "  Commit or remove them; build output belongs in .gitignore."; \
 	  exit 1; \
 	fi
 	@echo "→ release version $(VERSION)"
