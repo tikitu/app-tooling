@@ -20,6 +20,8 @@ APP          := build/Starter.app
 BUNDLE_ID    := org.example.starter
 LSREGISTER   := /System/Library/Frameworks/CoreServices.framework/Versions/Current/Frameworks/LaunchServices.framework/Versions/Current/Support/lsregister
 MIN_MACOS    := 26
+# The toolchain the pinned packages need (Xcode 27); `make deps` checks it.
+MIN_SWIFT    := 6.4
 
 APP_NAME      := Starter
 DISPLAY_NAME  := Starter App
@@ -129,6 +131,16 @@ deps:
 	  echo "  ✗ swift not on PATH. Install Xcode (App Store) or the Swift toolchain"; \
 	  echo "    from https://swift.org/install/macos/, then re-run."; exit 1; }
 	@SW_LINE=$$(swift --version 2>&1 | head -1); \
+	SW_VERSION=$$(echo "$$SW_LINE" | sed -nE 's/.*Swift version ([0-9]+\.[0-9]+).*/\1/p'); \
+	if [ -z "$$SW_VERSION" ]; then \
+	  echo "  ✗ could not read the Swift version from: $$SW_LINE"; exit 1; \
+	fi; \
+	if [ "$$(printf '%s\n%s\n' "$(MIN_SWIFT)" "$$SW_VERSION" | sort -t. -k1,1n -k2,2n | head -1)" != "$(MIN_SWIFT)" ]; then \
+	  echo "  ✗ Swift $$SW_VERSION — $(APP_NAME) requires Swift $(MIN_SWIFT) or newer (Xcode 27)."; \
+	  echo "    The pinned Point-Free packages name swift-issue-reporting only from Swift $(MIN_SWIFT)"; \
+	  echo "    on; an older toolchain reads their older manifests, which name xctest-dynamic-overlay."; \
+	  exit 1; \
+	fi; \
 	echo "  ✓ $$SW_LINE"
 	@for pkg in $(SHARED) $(PACKAGE); do \
 	  [ -f $$pkg/Package.swift ] || { echo "  ✗ $$pkg/Package.swift not found. Run make from the repo root."; exit 1; }; \
