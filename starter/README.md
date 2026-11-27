@@ -26,7 +26,8 @@ defaults.
 
 ## Build and run
 
-Needs macOS 26 and a Swift 6.2 toolchain (Xcode). There is no Xcode project:
+Needs macOS 26 and Xcode 27 (Swift 6.4): the pinned Point-Free packages
+need it, and `make deps` checks it. There is no Xcode project:
 SwiftPM builds it and `build.sh` bundles and signs it, ad-hoc by default.
 
 ```sh

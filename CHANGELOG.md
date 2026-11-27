@@ -4,6 +4,16 @@ What changed in each release of app-tooling. Each pattern has its own
 `CHANGELOG.md` with what a project must do to catch up; this file is the
 summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
+## Unreleased
+
+- **The starter says it needs Xcode 27 (Swift 6.4), and `make deps`
+  checks.** Since it moved to `swift-issue-reporting` (v0.1.0: "builds
+  with Xcode 27"), an older toolchain fails deep in SwiftPM: it reads the
+  Point-Free packages' older manifests, which name `xctest-dynamic-overlay`,
+  and finds two packages declaring `IssueReporting`. The README still said
+  Swift 6.2. A project made from the starter: the same `MIN_SWIFT` check in
+  its `deps` target, and the README line, if it wants the clearer failure.
+
 ## v0.11.0 (2026-11-27)
 
 - **New pattern `mac-dist`**: the starter's `make dist`, `make
