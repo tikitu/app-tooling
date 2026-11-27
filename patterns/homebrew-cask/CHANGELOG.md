@@ -1,6 +1,6 @@
 # homebrew-cask changelog
 
-## Unreleased
+## v0.11.0 (2026-11-27)
 
 First version, from the inbox item "A cask in a private tap": three apps
 had each copied `bump-cask.sh` and their install instructions from one

@@ -1,6 +1,6 @@
 # mac-dist changelog
 
-## Unreleased
+## v0.11.0 (2026-11-27)
 
 First version: the starter's `make dist` and `make github-release`, moved
 into `mk/mac-dist.mk`, from three apps that had each copied the starter's
