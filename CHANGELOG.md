@@ -14,6 +14,13 @@ summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 - **homebrew-cask: `make bump-cask` pulls the tap before looking for the
   cask**, so the first bump after a new cask is merged into the tap no
   longer fails. Nothing to do.
+- **The starter says it needs Xcode 27 (Swift 6.4), and `make deps`
+  checks.** Since it moved to `swift-issue-reporting` (v0.1.0: "builds
+  with Xcode 27"), an older toolchain fails deep in SwiftPM: it reads the
+  Point-Free packages' older manifests, which name `xctest-dynamic-overlay`,
+  and finds two packages declaring `IssueReporting`. The README still said
+  Swift 6.2. A project made from the starter: the same `MIN_SWIFT` check in
+  its `deps` target, and the README line, if it wants the clearer failure.
 
 ## v0.11.0 (2026-11-27)
 
