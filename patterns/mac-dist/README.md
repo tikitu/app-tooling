@@ -19,7 +19,9 @@ fixes by updating instead of by hand.
   every executable in the bundle, nested ones included, or notarization
   is refused.
 - **A release that does not match a commit.** `make dist` refuses to run
-  without an exact `vX.Y.Z` tag at `HEAD`.
+  without an exact `vX.Y.Z` tag at `HEAD`, or with changed or untracked
+  files in the checkout: they would be signed and notarized into a release
+  that carries the tag's name but is not what the tag holds.
 - **A zip without the ticket in it.** Notarization takes a zip; stapling
   changes the app; so the distributed zip is a second one, made after
   stapling.
@@ -38,6 +40,9 @@ fixes by updating instead of by hand.
   starter).
 - An exact `vX.Y.Z` tag per release, and a `VERSION` file for builds
   between releases.
+- A `.gitignore` that covers everything the build writes, so that a
+  checkout with earlier build output in it is still clean (`git status
+  --porcelain` prints nothing). `dist` checks before it cleans.
 - Once per team: a **Developer ID Application** certificate (only the
   Account Holder may create one), and for notarization an App Store Connect
   **team API key** with the **Developer** role. Neither needs an App ID, a
@@ -60,7 +65,7 @@ is inside it. The project names a target of its own as
 
 | Target | Does |
 |---|---|
-| `dist` | Checks the tag, cleans, builds, signs, notarizes, staples, zips, checksums and verifies. Leaves `dist/<Name>-<version>-macos.zip` and its `.sha256` |
+| `dist` | Checks the tag and that the checkout is clean, cleans, builds, signs, notarizes, staples, zips, checksums and verifies. Leaves `dist/<Name>-<version>-macos.zip` and its `.sha256` |
 | `verify-release` | The same without the tag check and the clean: `make verify-release VERSION=0.1.0` for a trial. It still uploads the build to Apple |
 | `github-release` | The tag's GitHub release, with the zip and checksum; notes generated from merged PRs, or `NOTES_FILE=<path>` (outside the worktree: `dist/` is deleted by the next `dist`) |
 | `notary-setup` | Once per Mac. `API_KEY=AuthKey_<id>.p8 API_KEY_ID=<id> API_ISSUER=<issuer>`, or `APPLE_ID=… TEAM_ID=…` in a real terminal |

@@ -6,6 +6,14 @@ summary. How to make a release is in [`RELEASING.md`](RELEASING.md).
 
 ## Unreleased
 
+- **mac-dist: `make dist` refuses a checkout with changed or untracked
+  files**, which it used to sign, notarize and label with the tag.
+  Git-ignored files do not count. A project with mac-dist: check that its
+  release build leaves `git status --porcelain` empty, and add whatever it
+  lists to `.gitignore` (the pattern's changelog).
+- **homebrew-cask: `make bump-cask` pulls the tap before looking for the
+  cask**, so the first bump after a new cask is merged into the tap no
+  longer fails. Nothing to do.
 - **The starter says it needs Xcode 27 (Swift 6.4), and `make deps`
   checks.** Since it moved to `swift-issue-reporting` (v0.1.0: "builds
   with Xcode 27"), an older toolchain fails deep in SwiftPM: it reads the

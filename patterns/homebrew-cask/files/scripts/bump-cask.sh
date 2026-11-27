@@ -37,15 +37,18 @@ done
 
 tap_dir="$(brew --repository "$tap")"
 cask="$tap_dir/Casks/$cask_name.rb"
-[ -f "$cask" ] || { echo "✗ no $cask — brew tap $tap first" >&2; exit 1; }
+[ -d "$tap_dir/.git" ] || { echo "✗ no clone of $tap at $tap_dir — brew tap $tap first" >&2; exit 1; }
+# Pull before looking for the cask: a cask added to the tap since this
+# clone was last updated is not in it yet.
+if [ -n "$(git -C "$tap_dir" status --porcelain)" ]; then
+	echo "✗ $tap_dir has uncommitted changes" >&2; exit 1
+fi
+git -C "$tap_dir" pull -q --ff-only || { echo "✗ could not fast-forward $tap_dir from its remote" >&2; exit 1; }
+[ -f "$cask" ] || { echo "✗ no Casks/$cask_name.rb in $tap, which is up to date: is the cask name right, and is it merged?" >&2; exit 1; }
 # The two lines this rewrites, in the form it rewrites; otherwise the sed
 # below would change nothing and report the cask as already up to date.
 grep -qE '^  version "[^"]*"' "$cask" && grep -qE '^  sha256 "[^"]*"' "$cask" || {
 	echo "✗ $cask has no '  version \"…\"' and '  sha256 \"…\"' lines to rewrite" >&2; exit 1; }
-if [ -n "$(git -C "$tap_dir" status --porcelain)" ]; then
-	echo "✗ $tap_dir has uncommitted changes" >&2; exit 1
-fi
-git -C "$tap_dir" pull -q --ff-only
 
 # The checksum of what was published, not of a local build: the cask has to
 # match what Homebrew will download.
